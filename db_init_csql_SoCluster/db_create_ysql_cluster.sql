@@ -79,7 +79,6 @@ CREATE TABLE customer (
   C_payment_cnt int NOT NULL,
   C_delivery_cnt int NOT NULL,
   C_data varchar(500) NOT NULL);
-
 -- insert from csv
 \copy customer from '/home/stuproj/cs4224j/project_data/data_files/customer.csv' WITH (FORMAT CSV, NULL 'null');
 select count(*) as no_imported_rows from customer;
@@ -103,7 +102,7 @@ CREATE TABLE orders (
   O_all_local decimal(1,0) NOT NULL,
   O_entry_d timestamp NOT NULL
 );
-
+-- insert from csv
 \copy orders from '/home/stuproj/cs4224j/project_data/data_files/order.csv' WITH (FORMAT CSV, NULL 'null');
 select count(*) as no_imported_rows from orders;
 
@@ -121,30 +120,6 @@ CREATE TABLE item (
 select count(*) as no_imported_rows from item;
 
 -- 2 relationship tables -- 
-DROP TABLE if EXISTS orderline CASCADE;
-CREATE TABLE orderline (
-  -- (OL W ID, OL D ID, OL O ID) is a foreign key that refers to Order table. 
-  -- OL I ID is a foreign key that refers to item table.
-  OL_W_id int NOT NULL, 
-  OL_D_id int NOT NULL, 
-  OL_O_id int NOT NULL,
-  FOREIGN KEY (OL_W_id, OL_D_id, OL_O_id) REFERENCES orders(O_W_id, O_D_id, O_id),
-  OL_number int NOT NULL,
-  -- PRIMARY KEY(OL_W_id, OL_D_id, OL_O_id, OL_number),
-  PRIMARY KEY((OL_W_id, OL_D_id, OL_O_id, OL_number) HASH),
-  OL_I_id int NOT NULL REFERENCES item(I_id),
-  
-  
-  OL_delivery_D timestamp, -- data has lots of null
-  OL_amount decimal(7,2) NOT NULL,
-  OL_supply_W_id int NOT NULL,
-  OL_quantity decimal(2,0) NOT NULL,
-  OL_dist_info char(24) NOT NULL
-);
-
-\copy orderline from '/home/stuproj/cs4224j/project_data/data_files/order-line.csv' WITH (FORMAT CSV, NULL 'null');
-select count(*) as no_imported_rows from "orderline";
-
 DROP TABLE if EXISTS stock CASCADE;
 CREATE TABLE stock (
   -- S I ID is a foreign key that refers to item table. 
@@ -169,11 +144,31 @@ CREATE TABLE stock (
   S_dist_10 char(24) NOT NULL,
   S_dist_data varchar(50) NOT NULL
 );
-
-
 \copy stock from '/home/stuproj/cs4224j/project_data/data_files/stock.csv' WITH (FORMAT CSV, NULL 'null');
 select count(*) as no_imported_rows from stock;
 
+DROP TABLE if EXISTS orderline CASCADE;
+CREATE TABLE orderline (
+  -- (OL W ID, OL D ID, OL O ID) is a foreign key that refers to Order table. 
+  -- OL I ID is a foreign key that refers to item table.
+  OL_W_id int NOT NULL, 
+  OL_D_id int NOT NULL, 
+  OL_O_id int NOT NULL,
+  FOREIGN KEY (OL_W_id, OL_D_id, OL_O_id) REFERENCES orders(O_W_id, O_D_id, O_id),
+  OL_number int NOT NULL,
+  -- PRIMARY KEY(OL_W_id, OL_D_id, OL_O_id, OL_number),
+  PRIMARY KEY((OL_W_id, OL_D_id, OL_O_id, OL_number) HASH),
+  OL_I_id int NOT NULL REFERENCES item(I_id),
+  
+  
+  OL_delivery_D timestamp, -- data has lots of null
+  OL_amount decimal(7,2) NOT NULL,
+  OL_supply_W_id int NOT NULL,
+  OL_quantity decimal(2,0) NOT NULL,
+  OL_dist_info char(24) NOT NULL
+);
+\copy orderline from '/home/stuproj/cs4224j/project_data/data_files/order-line.csv' WITH (FORMAT CSV, NULL 'null');
+select count(*) as no_imported_rows from "orderline";
 -- show all tables
 \dt;
 

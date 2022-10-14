@@ -23,11 +23,8 @@ USE dbycql;
 
 
 -- cql支持，键空间是一个定义节点上数据复制的命名空间。集群每个节点包含一个键空间，是否可以优化
--- cql的type, varchar == text
--- 似乎没有char
 
 --  5 entity tables --
--- drop table if exists warehouse;
 CREATE TABLE dbycql.warehouse (
   -- 1-10, so ok in tinyint for [-128	127]
   W_id int, 
@@ -47,7 +44,7 @@ CREATE TABLE dbycql.warehouse (
 copy dbycql.warehouse from '/home/stuproj/cs4224j/project_data/data_files/warehouse.csv'
 WITH NULL='null' AND INGESTRATE=5000;
 
--- drop table if exists district;
+
 CREATE TABLE dbycql.district (
   -- 1-10,
   D_W_id int,
@@ -70,7 +67,7 @@ CREATE TABLE dbycql.district (
 copy dbycql.district from '/home/stuproj/cs4224j/project_data/data_files/district.csv' 
 WITH NULL='null' AND INGESTRATE=5000;
 
--- drop table if exists customer;
+
 CREATE TABLE dbycql.customer (
   -- combined (C W ID, C D ID) is a foreign key that refers to district table.
   C_W_id int,
@@ -97,14 +94,13 @@ CREATE TABLE dbycql.customer (
   C_payment_cnt int,
   C_delivery_cnt int,
   C_data varchar);
-
 -- insert from csv
 copy dbycql.customer from '/home/stuproj/cs4224j/project_data/data_files/customer.csv'
 WITH NULL='null' AND INGESTRATE=5000;
-select count(*) as no_imported_rows from dbysql.customer;
+select count(*) as no_imported_rows from dbycql.customer;
 
--- Note: order is a keyword in SQL due to "order by"
--- drop table if exists orders;
+
+
 CREATE TABLE dbycql.orders (
   -- (O W ID, O D ID, O C ID) is a foreign key that refers to customer table.
   O_W_id int,
@@ -120,14 +116,13 @@ CREATE TABLE dbycql.orders (
   O_all_local decimal,
   O_entry_d timestamp
 );
-
+-- insert from csv
 copy dbycql.orders from '/home/stuproj/cs4224j/project_data/data_files/order.csv'
 WITH NULL='null' AND INGESTRATE=5000;
-select count(*) as row_imported_orders from dbysql.orders;
+select count(*) as row_imported_orders from dbycql.orders;
 -- select count(*) from orders where O_carrier_id == 'null';
 
 
--- drop table if exists item;
 CREATE TABLE dbycql.item (
   I_id int PRIMARY KEY,
   I_name varchar,
@@ -138,32 +133,9 @@ CREATE TABLE dbycql.item (
 -- insert from csv
 copy dbycql.item from '/home/stuproj/cs4224j/project_data/data_files/item.csv'
 WITH NULL='null' AND INGESTRATE=5000;
-select count(*) as no_imported_rows from dbysql.item;
+select count(*) as no_imported_rows from dbycql.item;
 
 -- 2 relationship tables -- 
--- drop table if exists orderline;
-CREATE TABLE dbycql.orderline (
-  -- OL I ID is a foreign key that refers to item table.
-  OL_W_id int, 
-  OL_D_id int, 
-  OL_O_id int,
-  OL_number int,
-  PRIMARY KEY((OL_W_id, OL_D_id, OL_O_id), OL_number),
-  OL_I_id int,
-  OL_delivery_D timestamp, -- data has lots of null
-  OL_amount decimal,
-  OL_supply_W_id int,
-  OL_quantity decimal,
-  OL_dist_info varchar
-);
-
-copy dbycql.orderline from '/home/stuproj/cs4224j/project_data/data_files/order-line.csv'
-WITH NULL='null' AND INGESTRATE=5000;
--- select * from "orderline" where OL_delivery_D is null;
-select count(*) as no_imported_rows from dbysql.orderline;
-
-
--- drop table if exists stock;
 CREATE TABLE dbycql.stock (
   -- S I ID is a primary key that refers to item table. 
   -- S W ID is a cluster key that refers to warehouse table.
@@ -191,7 +163,28 @@ CREATE TABLE dbycql.stock (
 
 copy dbycql.stock from '/home/stuproj/cs4224j/project_data/data_files/stock.csv'
 WITH NULL='null' AND INGESTRATE=5000;
-select count(*) as no_imported_stocks from dbysql.stock;
+select count(*) as no_imported_stocks from dbycql.stock;
+
+
+CREATE TABLE dbycql.orderline (
+  -- OL I ID is a foreign key that refers to item table.
+  OL_W_id int, 
+  OL_D_id int, 
+  OL_O_id int,
+  OL_number int,
+  PRIMARY KEY((OL_W_id, OL_D_id, OL_O_id), OL_number),
+  OL_I_id int,
+  OL_delivery_D timestamp, -- data has lots of null
+  OL_amount decimal,
+  OL_supply_W_id int,
+  OL_quantity decimal,
+  OL_dist_info varchar
+);
+copy dbycql.orderline from '/home/stuproj/cs4224j/project_data/data_files/order-line.csv'
+WITH NULL='null' AND INGESTRATE=7000;
+-- select * from "orderline" where OL_delivery_D is null;
+select count(*) as no_imported_rows from dbycql.orderline;
+
 
 -- show all tables
 DESCRIBE tables;

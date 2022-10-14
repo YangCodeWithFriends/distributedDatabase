@@ -102,7 +102,7 @@ CREATE TABLE dbycql.customer (
 -- insert from csv
 copy dbycql.customer from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/customer.csv'
 WITH NULL='null' AND INGESTRATE=5000;
-select count(*) as no_imported_rows from dbysql.customer;
+select count(*) as no_imported_rows from dbycql.customer;
 
 -- Note: order is a keyword in SQL due to "order by"
 -- drop table if exists orders;
@@ -124,7 +124,7 @@ CREATE TABLE dbycql.orders (
 
 copy dbycql.orders from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/order.csv'
 WITH NULL='null' AND INGESTRATE=5000;
-select count(*) as row_imported_orders from dbysql.orders;
+select count(*) as row_imported_orders from dbycql.orders;
 -- select count(*) from orders where O_carrier_id == 'null';
 
 
@@ -139,7 +139,7 @@ CREATE TABLE dbycql.item (
 -- insert from csv
 copy dbycql.item from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/item.csv'
 WITH NULL='null' AND INGESTRATE=5000;
-select count(*) as no_imported_rows from dbysql.item;
+select count(*) as no_imported_rows from dbycql.item;
 
 -- 2 relationship tables -- 
 -- drop table if exists orderline;
@@ -161,7 +161,7 @@ CREATE TABLE dbycql.orderline (
 copy dbycql.orderline from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/order-line.csv'
 WITH NULL='null' AND INGESTRATE=5000;
 -- select * from "orderline" where OL_delivery_D is null;
-select count(*) as no_imported_rows from dbysql.orderline;
+select count(*) as no_imported_rows from dbycql.orderline;
 
 
 -- drop table if exists stock;
@@ -192,7 +192,7 @@ CREATE TABLE dbycql.stock (
 
 copy dbycql.stock from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/stock.csv'
 WITH NULL='null' AND INGESTRATE=5000;
-select count(*) as no_imported_rows from dbysql.stock;
+select count(*) as no_imported_rows from dbycql.stock;
 
 -- show all tables
 DESCRIBE tables;
