@@ -4,11 +4,11 @@ DROP TABLE IF EXISTS dbycql.district;
 DROP TABLE IF EXISTS dbycql.customer;
 DROP TABLE IF EXISTS dbycql.orders;
 DROP TABLE IF EXISTS dbycql.item;
-DROP TABLE IF EXISTS dbycql.order_line;
+DROP TABLE IF EXISTS dbycql.orderline;
 DROP TABLE IF EXISTS dbycql.stock;
 DROP KEYSPACE IF EXISTS dbycql;
 
--- data path: /temp/project_data/data_files/
+-- data path: /home/stuproj/cs4224j/project_data/data_files/
 
 -- show all key spaces(DBs)
 CREATE KEYSPACE dbycql 
@@ -44,8 +44,8 @@ CREATE TABLE warehouse (
 );
 
 -- WITH NULL='null': set NULL='null' or whatever character you want for null value ...
-copy warehouse from '/temp/project_data/data_files/warehouse.csv'
-WITH NULL='null';
+copy dbycql.warehouse from '/home/stuproj/cs4224j/project_data/data_files/warehouse.csv'
+WITH NULL='null' AND INGESTRATE=5000;
 
 -- drop table if exists district;
 CREATE TABLE district (
@@ -67,8 +67,8 @@ CREATE TABLE district (
   D_next_O_id int
 );
 
-copy district from '/temp/project_data/data_files/district.csv' 
-WITH NULL='null';
+copy dbycql.district from '/home/stuproj/cs4224j/project_data/data_files/district.csv' 
+WITH NULL='null' AND INGESTRATE=5000;
 
 -- drop table if exists customer;
 CREATE TABLE customer (
@@ -99,8 +99,8 @@ CREATE TABLE customer (
   C_data varchar);
 
 -- insert from csv
-COPY customer from '/temp/project_data/data_files/customer.csv'
-WITH NULL='null';
+copy dbycql.customer from '/home/stuproj/cs4224j/project_data/data_files/customer.csv'
+WITH NULL='null' AND INGESTRATE=5000;
 select count(*) as no_imported_rows from customer;
 
 -- Note: order is a keyword in SQL due to "order by"
@@ -121,8 +121,8 @@ CREATE TABLE orders (
   O_entry_d timestamp
 );
 
-COPY orders from '/temp/project_data/data_files/order.csv'
-WITH NULL='null';
+copy dbycql.orders from '/home/stuproj/cs4224j/project_data/data_files/order.csv'
+WITH NULL='null' AND INGESTRATE=5000;
 select count(*) as row_imported_orders from orders;
 -- select count(*) from orders where O_carrier_id == 'null';
 
@@ -136,13 +136,13 @@ CREATE TABLE item (
   I_data varchar
 );
 -- insert from csv
-COPY item from '/temp/project_data/data_files/item.csv'
-WITH NULL='null';
+copy dbycql.item from '/home/stuproj/cs4224j/project_data/data_files/item.csv'
+WITH NULL='null' AND INGESTRATE=5000;
 select count(*) as no_imported_rows from item;
 
 -- 2 relationship tables -- 
--- drop table if exists order_line;
-CREATE TABLE order_line (
+-- drop table if exists orderline;
+CREATE TABLE orderline (
   -- OL I ID is a foreign key that refers to item table.
   OL_W_id int, 
   OL_D_id int, 
@@ -157,10 +157,10 @@ CREATE TABLE order_line (
   OL_dist_info varchar
 );
 
-COPY order_line from '/temp/project_data/data_files/order-line.csv'
-WITH NULL='null';
--- select * from "order_line" where OL_delivery_D is null;
-select count(*) as no_imported_rows from order_line;
+copy dbycql.orderline from '/home/stuproj/cs4224j/project_data/data_files/order-line.csv'
+WITH NULL='null' AND INGESTRATE=5000;
+-- select * from "orderline" where OL_delivery_D is null;
+select count(*) as no_imported_rows from orderline;
 
 
 -- drop table if exists stock;
@@ -189,8 +189,8 @@ CREATE TABLE stock (
 );
 
 
-COPY stock from '/temp/project_data/data_files/stock.csv'
-WITH NULL='null';
+copy dbycql.stock from '/home/stuproj/cs4224j/project_data/data_files/stock.csv'
+WITH NULL='null' AND INGESTRATE=5000;
 select count(*) as no_imported_stocks from stock;
 
 -- show all tables

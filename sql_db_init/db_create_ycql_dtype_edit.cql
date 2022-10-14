@@ -32,7 +32,7 @@ CREATE TABLE warehouse (
 
 -- insert from csv
 -- WITH NULL='null': set NULL='null' or whatever character you want for null value ...
-copy warehouse from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/warehouse.csv'
+copy dbycql.warehouse from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/warehouse.csv'
 WITH NULL='null';
 
 
@@ -56,7 +56,7 @@ CREATE TABLE district (
   D_next_O_id int
 );
 
-copy district from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/district.csv' 
+copy dbycql.district from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/district.csv' 
 WITH NULL='null';
 
 
@@ -89,7 +89,7 @@ CREATE TABLE customer (
   C_data varchar);
 
 -- insert from csv
-\copy customer from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/customer.csv'
+\copy dbycql.customer from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/customer.csv'
 WITH NULL='null';
 -- select count(*) from customer;
 
@@ -112,7 +112,7 @@ CREATE TABLE orders (
   O_entry_d timestamp
 );
 
-\copy orders from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/order.csv'
+\copy dbycql.orders from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/order.csv'
 WITH NULL='null';
 -- select count(*) from orders where O_carrier_id is null;
 
@@ -125,7 +125,7 @@ CREATE TABLE item (
 );
 
 -- insert from csv
-\copy item from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/item.csv'
+\copy dbycql.item from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/item.csv'
 WITH NULL='null';
 
 -- 2 relationship tables -- 
@@ -148,7 +148,7 @@ CREATE TABLE order_line (
   OL_dist_info varchar
 );
 
-\copy order_line from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/order-line.csv'
+\copy dbycql.order_line from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/order-line.csv'
 WITH NULL='null';
 -- select * from "order_line" where OL_delivery_D is null;
 
@@ -177,7 +177,7 @@ CREATE TABLE stock (
 );
 
 
-\copy stock from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/stock.csv'
+\copy dbycql.stock from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/stock.csv'
 WITH NULL='null';
 
 -- show all tables
