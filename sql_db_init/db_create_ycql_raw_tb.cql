@@ -7,7 +7,7 @@ DROP TABLE IF EXISTS dbycql.district;
 DROP TABLE IF EXISTS dbycql.customer;
 DROP TABLE IF EXISTS dbycql.orders;
 DROP TABLE IF EXISTS dbycql.item;
-DROP TABLE IF EXISTS dbycql.order_line;
+DROP TABLE IF EXISTS dbycql.orderline;
 DROP TABLE IF EXISTS dbycql.stock;
 DROP KEYSPACE IF EXISTS dbycql;
 
@@ -102,7 +102,7 @@ CREATE TABLE dbycql.customer (
 -- insert from csv
 copy dbycql.customer from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/customer.csv'
 WITH NULL='null' AND INGESTRATE=5000;
-select count(*) as no_imported_rows from customer;
+select count(*) as no_imported_rows from dbysql.customer;
 
 -- Note: order is a keyword in SQL due to "order by"
 -- drop table if exists orders;
@@ -124,7 +124,7 @@ CREATE TABLE dbycql.orders (
 
 copy dbycql.orders from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/order.csv'
 WITH NULL='null' AND INGESTRATE=5000;
-select count(*) as row_imported_orders from orders where;
+select count(*) as row_imported_orders from dbysql.orders;
 -- select count(*) from orders where O_carrier_id == 'null';
 
 
@@ -139,11 +139,11 @@ CREATE TABLE dbycql.item (
 -- insert from csv
 copy dbycql.item from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/item.csv'
 WITH NULL='null' AND INGESTRATE=5000;
-select count(*) as no_imported_rows from item;
+select count(*) as no_imported_rows from dbysql.item;
 
 -- 2 relationship tables -- 
--- drop table if exists order_line;
-CREATE TABLE dbycql.order_line (
+-- drop table if exists orderline;
+CREATE TABLE dbycql.orderline (
   -- OL I ID is a foreign key that refers to item table.
   OL_W_id int, 
   OL_D_id int, 
@@ -158,10 +158,10 @@ CREATE TABLE dbycql.order_line (
   OL_dist_info varchar
 );
 
-copy dbycql.order_line from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/order-line.csv'
+copy dbycql.orderline from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/order-line.csv'
 WITH NULL='null' AND INGESTRATE=5000;
--- select * from "order_line" where OL_delivery_D is null;
-select count(*) as no_imported_rows from order_line;
+-- select * from "orderline" where OL_delivery_D is null;
+select count(*) as no_imported_rows from dbysql.orderline;
 
 
 -- drop table if exists stock;
@@ -192,7 +192,7 @@ CREATE TABLE dbycql.stock (
 
 copy dbycql.stock from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/stock.csv'
 WITH NULL='null' AND INGESTRATE=5000;
-select count(*) as no_imported_rows from stock;
+select count(*) as no_imported_rows from dbysql.stock;
 
 -- show all tables
 DESCRIBE tables;

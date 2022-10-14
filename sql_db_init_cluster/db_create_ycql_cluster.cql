@@ -101,7 +101,7 @@ CREATE TABLE dbycql.customer (
 -- insert from csv
 copy dbycql.customer from '/home/stuproj/cs4224j/project_data/data_files/customer.csv'
 WITH NULL='null' AND INGESTRATE=5000;
-select count(*) as no_imported_rows from customer;
+select count(*) as no_imported_rows from dbysql.customer;
 
 -- Note: order is a keyword in SQL due to "order by"
 -- drop table if exists orders;
@@ -123,7 +123,7 @@ CREATE TABLE dbycql.orders (
 
 copy dbycql.orders from '/home/stuproj/cs4224j/project_data/data_files/order.csv'
 WITH NULL='null' AND INGESTRATE=5000;
-select count(*) as row_imported_orders from orders;
+select count(*) as row_imported_orders from dbysql.orders;
 -- select count(*) from orders where O_carrier_id == 'null';
 
 
@@ -138,7 +138,7 @@ CREATE TABLE dbycql.item (
 -- insert from csv
 copy dbycql.item from '/home/stuproj/cs4224j/project_data/data_files/item.csv'
 WITH NULL='null' AND INGESTRATE=5000;
-select count(*) as no_imported_rows from item;
+select count(*) as no_imported_rows from dbysql.item;
 
 -- 2 relationship tables -- 
 -- drop table if exists orderline;
@@ -160,7 +160,7 @@ CREATE TABLE dbycql.orderline (
 copy dbycql.orderline from '/home/stuproj/cs4224j/project_data/data_files/order-line.csv'
 WITH NULL='null' AND INGESTRATE=5000;
 -- select * from "orderline" where OL_delivery_D is null;
-select count(*) as no_imported_rows from orderline;
+select count(*) as no_imported_rows from dbysql.orderline;
 
 
 -- drop table if exists stock;
@@ -191,7 +191,7 @@ CREATE TABLE dbycql.stock (
 
 copy dbycql.stock from '/home/stuproj/cs4224j/project_data/data_files/stock.csv'
 WITH NULL='null' AND INGESTRATE=5000;
-select count(*) as no_imported_stocks from stock;
+select count(*) as no_imported_stocks from dbysql.stock;
 
 -- show all tables
 DESCRIBE tables;

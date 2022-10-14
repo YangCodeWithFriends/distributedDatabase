@@ -129,7 +129,7 @@ CREATE TABLE dbycql.item (
 WITH NULL='null' AND INGESTRATE=5000;
 
 -- 2 relationship tables -- 
-CREATE TABLE dbycql.order_line (
+CREATE TABLE dbycql.orderline (
   -- (OL W ID, OL D ID, OL O ID) is a foreign key that refers to Order table. 
   -- OL I ID is a foreign key that refers to item table.
   OL_W_id int, 
@@ -148,9 +148,9 @@ CREATE TABLE dbycql.order_line (
   OL_dist_info varchar
 );
 
-\copy dbycql.order_line from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/order-line.csv'
+\copy dbycql.orderline from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/order-line.csv'
 WITH NULL='null' AND INGESTRATE=5000;
--- select * from "order_line" where OL_delivery_D is null;
+-- select * from "orderline" where OL_delivery_D is null;
 
 CREATE TABLE dbycql.stock (
   -- S I ID is a foreign key that refers to item table. 
