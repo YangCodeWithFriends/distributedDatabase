@@ -28,7 +28,7 @@ USE dbycql;
 
 --  5 entity tables --
 -- drop table if exists warehouse;
-CREATE TABLE warehouse (
+CREATE TABLE dbycql.warehouse (
   -- 1-10, so ok in tinyint for [-128	127]
   W_id int, 
   -- partition key and primary key
@@ -48,7 +48,7 @@ copy dbycql.warehouse from '/home/stuproj/cs4224j/project_data/data_files/wareho
 WITH NULL='null' AND INGESTRATE=5000;
 
 -- drop table if exists district;
-CREATE TABLE district (
+CREATE TABLE dbycql.district (
   -- 1-10,
   D_W_id int,
   -- 1-10,
@@ -71,7 +71,7 @@ copy dbycql.district from '/home/stuproj/cs4224j/project_data/data_files/distric
 WITH NULL='null' AND INGESTRATE=5000;
 
 -- drop table if exists customer;
-CREATE TABLE customer (
+CREATE TABLE dbycql.customer (
   -- combined (C W ID, C D ID) is a foreign key that refers to district table.
   C_W_id int,
   C_D_id int,
@@ -105,7 +105,7 @@ select count(*) as no_imported_rows from customer;
 
 -- Note: order is a keyword in SQL due to "order by"
 -- drop table if exists orders;
-CREATE TABLE orders (
+CREATE TABLE dbycql.orders (
   -- (O W ID, O D ID, O C ID) is a foreign key that refers to customer table.
   O_W_id int,
   O_D_id int,
@@ -128,7 +128,7 @@ select count(*) as row_imported_orders from orders;
 
 
 -- drop table if exists item;
-CREATE TABLE item (
+CREATE TABLE dbycql.item (
   I_id int PRIMARY KEY,
   I_name varchar,
   I_tax decimal,
@@ -142,7 +142,7 @@ select count(*) as no_imported_rows from item;
 
 -- 2 relationship tables -- 
 -- drop table if exists orderline;
-CREATE TABLE orderline (
+CREATE TABLE dbycql.orderline (
   -- OL I ID is a foreign key that refers to item table.
   OL_W_id int, 
   OL_D_id int, 
@@ -164,7 +164,7 @@ select count(*) as no_imported_rows from orderline;
 
 
 -- drop table if exists stock;
-CREATE TABLE stock (
+CREATE TABLE dbycql.stock (
   -- S I ID is a primary key that refers to item table. 
   -- S W ID is a cluster key that refers to warehouse table.
   S_W_id int,

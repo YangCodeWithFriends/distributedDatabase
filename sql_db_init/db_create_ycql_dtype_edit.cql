@@ -15,7 +15,7 @@ USE dbycql;
 
 --  5 entity tables --
 Drop table warehouse;
-CREATE TABLE warehouse (
+CREATE TABLE dbycql.warehouse (
   -- 1-10, so ok in tinyint for [-128	127]
   W_id tinyint, 
   -- partition key and primary key
@@ -33,10 +33,10 @@ CREATE TABLE warehouse (
 -- insert from csv
 -- WITH NULL='null': set NULL='null' or whatever character you want for null value ...
 copy dbycql.warehouse from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/warehouse.csv'
-WITH NULL='null';
+WITH NULL='null' AND INGESTRATE=5000;
 
 
-CREATE TABLE district (
+CREATE TABLE dbycql.district (
   -- D W ID is a foreign key that refers to warehouse table.
   -- 1-10,
   D_W_id tinyint REFERENCES warehouse(W_id),
@@ -57,10 +57,10 @@ CREATE TABLE district (
 );
 
 copy dbycql.district from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/district.csv' 
-WITH NULL='null';
+WITH NULL='null' AND INGESTRATE=5000;
 
 
-CREATE TABLE customer (
+CREATE TABLE dbycql.customer (
   -- combined (C W ID, C D ID) is a foreign key that refers to district table.
   C_W_id int,
   C_D_id int,
@@ -90,11 +90,11 @@ CREATE TABLE customer (
 
 -- insert from csv
 \copy dbycql.customer from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/customer.csv'
-WITH NULL='null';
+WITH NULL='null' AND INGESTRATE=5000;
 -- select count(*) from customer;
 
 -- Note: order is a keyword in SQL due to "order by"
-CREATE TABLE orders (
+CREATE TABLE dbycql.orders (
   -- (O W ID, O D ID, O C ID) is a foreign key that refers to customer table.
   O_W_id int,
   O_D_id int,
@@ -113,10 +113,10 @@ CREATE TABLE orders (
 );
 
 \copy dbycql.orders from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/order.csv'
-WITH NULL='null';
+WITH NULL='null' AND INGESTRATE=5000;
 -- select count(*) from orders where O_carrier_id is null;
 
-CREATE TABLE item (
+CREATE TABLE dbycql.item (
   I_id int PRIMARY KEY,
   I_name varchar,
   I_tax decimal,
@@ -126,10 +126,10 @@ CREATE TABLE item (
 
 -- insert from csv
 \copy dbycql.item from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/item.csv'
-WITH NULL='null';
+WITH NULL='null' AND INGESTRATE=5000;
 
 -- 2 relationship tables -- 
-CREATE TABLE order_line (
+CREATE TABLE dbycql.order_line (
   -- (OL W ID, OL D ID, OL O ID) is a foreign key that refers to Order table. 
   -- OL I ID is a foreign key that refers to item table.
   OL_W_id int, 
@@ -149,10 +149,10 @@ CREATE TABLE order_line (
 );
 
 \copy dbycql.order_line from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/order-line.csv'
-WITH NULL='null';
+WITH NULL='null' AND INGESTRATE=5000;
 -- select * from "order_line" where OL_delivery_D is null;
 
-CREATE TABLE stock (
+CREATE TABLE dbycql.stock (
   -- S I ID is a foreign key that refers to item table. 
   -- S W ID is a foreign key that refers to warehouse table.
   S_W_id int REFERENCES warehouse(W_id),
@@ -178,7 +178,7 @@ CREATE TABLE stock (
 
 
 \copy dbycql.stock from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/stock.csv'
-WITH NULL='null';
+WITH NULL='null' AND INGESTRATE=5000;
 
 -- show all tables
 \dt;
