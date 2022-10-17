@@ -107,9 +107,7 @@ CREATE TABLE dbycql.orders (
   O_D_id int,
   O_id int,
   O_C_id int,
-  PRIMARY KEY ((O_W_id, O_D_id), O_C_id),
-  -- Note: as compound foreign key
-
+  PRIMARY KEY ((O_W_id, O_D_id), O_id),
   -- The range of O CARRIER ID is [1,10]: use smallint is 16 bit in CQL, tinyint is 8
   O_carrier_id tinyint, -- data has lots of null
   O_OL_cnt decimal,
@@ -172,7 +170,7 @@ CREATE TABLE dbycql.orderline (
   OL_D_id int, 
   OL_O_id int,
   OL_number int,
-  PRIMARY KEY((OL_W_id, OL_D_id, OL_O_id), OL_number),
+  PRIMARY KEY((OL_W_id, OL_D_id), OL_O_id, OL_number),
   OL_I_id int,
   OL_delivery_D timestamp, -- data has lots of null
   OL_amount decimal,
