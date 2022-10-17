@@ -109,7 +109,7 @@ CREATE TABLE dbycql.orders (
   O_C_id int,
   PRIMARY KEY ((O_W_id, O_D_id), O_id),
   -- The range of O CARRIER ID is [1,10]: use smallint is 16 bit in CQL, tinyint is 8
-  O_carrier_id tinyint, -- data has lots of null
+  O_carrier_id int, -- data has lots of null
   O_OL_cnt decimal,
   O_all_local decimal,
   O_entry_d timestamp
