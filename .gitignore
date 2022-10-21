@@ -8,3 +8,6 @@ src/main/.DS_Store
 # ignore 老师给的数据和Xact文件
 *_files/
 
+
+# -- 基于前置表已经建好了之后，的小表, 导出为csv一劳永逸 -- 为了cql
+db_sql_join_subtb_4cql/
