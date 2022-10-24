@@ -4,7 +4,7 @@ import common.TransactionType;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.List;
+import java.util.*;
 
 /**
  * @Package PACKAGE_NAME
@@ -13,14 +13,57 @@ import java.util.List;
  * @Date 1/10/22 5:28 PM
  */
 public class ExecuteManager {
-    public void executeYCQLCommands(CqlSession cqlSession, List<Transaction> list) {
-        if (list == null) return;
+    private Set<TransactionType> skipSet;
+    private List<Statistics> transactionTypeList;
+
+    public ExecuteManager() {
+        transactionTypeList = new ArrayList<>(8);
+        skipSet = new HashSet<>(8);
+        System.out.println(TransactionType.values());
+        transactionTypeList.add(new Statistics(TransactionType.NEW_ORDER));
+        transactionTypeList.add(new Statistics(TransactionType.PAYMENT));
+        transactionTypeList.add(new Statistics(TransactionType.DELIVERY));
+        transactionTypeList.add(new Statistics(TransactionType.ORDER_STATUS));
+        transactionTypeList.add(new Statistics(TransactionType.STOCK_LEVEL));
+        transactionTypeList.add(new Statistics(TransactionType.POPULAR_ITEM));
+        transactionTypeList.add(new Statistics(TransactionType.TOP_BALANCE));
+        transactionTypeList.add(new Statistics(TransactionType.RELATED_CUSTOMER));
+
+        // 正选逻辑
+//        skipSet.add(TransactionType.NEW_ORDER);
+//        skipSet.add(TransactionType.DELIVERY);
+//        skipSet.add(TransactionType.RELATED_CUSTOMER);
+
+        // 反选逻辑
+        skipSet.addAll(Arrays.asList(TransactionType.values()));
+        skipSet.remove(TransactionType.NEW_ORDER);
+    }
+
+    public void executeYSQL(Connection conn, List<Transaction> list) throws SQLException {
+        System.out.printf("Execute YSQL transactions\n");
+        for (Transaction transaction : list) {
+            if (skipSet.contains(transaction.getTransactionType())) continue;
+            long executionTime = transaction.executeYSQL(conn);
+            transactionTypeList.get(transaction.getTransactionType().index).addNewData(executionTime);
+            report();
+        }
+    }
+
+    public void executeYCQL(CqlSession session, List<Transaction> list) {
         System.out.printf("Execute YCQL transactions\n");
         for (Transaction transaction : list) {
-            transaction.executeYCQL(cqlSession);
+            if (skipSet.contains(transaction.getTransactionType())) continue;
+            long executionTime = transaction.executeYCQL(session);
+            transactionTypeList.get(transaction.getTransactionType().index).addNewData(executionTime);
+            report();
         }
     }
 
     public void report() {
+        System.out.println("---Statistics start---");
+        for (Statistics statistics : transactionTypeList) {
+            System.out.println(statistics);
+        }
+        System.out.println("---Statistics end---");
     }
 }

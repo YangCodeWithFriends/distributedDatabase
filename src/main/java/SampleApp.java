@@ -1,20 +1,3 @@
-
-/**
- * Copyright 2022 Yugabyte
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 import com.datastax.oss.driver.api.core.CqlSession;
 import common.Transaction;
 import common.TransactionType;
@@ -22,43 +5,73 @@ import common.transactionImpl.*;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.*;
 
 public class SampleApp {
+    private static Connection conn;
     private static CqlSession cqlSession;
 
-    public static void main(String[] args){
-        // 1. Establish a DB connection
-        cqlSession = DataSource.getSession();
-        System.out.println(">>>> Successfully connected to YugabyteDB!-YCQL");
-        if (cqlSession == null) return;
-
-        // 2. Construct requests from files.
+    public static void main(String[] args) {
+        // 1. Construct requests from files.
         List<Transaction> list = null;
         try {
             list = readFile();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
+        if (list == null) throw new RuntimeException("Input list is null! Please check input files");
+
+        // 2. Establish a DB connection
+        try {
+            if (DataSource.MODE.equals(DataSource.YSQL)) {
+                System.out.println("Connecting to DB. Your mode is YSQL.");
+                conn = DataSource.getSQLConnection();
+                System.out.println("Isolation level=" + conn.getTransactionIsolation());
+            } else {
+                System.out.println("Connecting to DB. Your mode is YCQL.");
+                cqlSession = DataSource.getCQLSession();
+            }
+            System.out.println(">>>> Successfully connected to YugabyteDB.");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
 
         // 3. execute and report
-        ExecuteManager manager = new ExecuteManager();
-        manager.executeYCQLCommands(cqlSession, list);
-        manager.report();
+        ExecuteManager executeManager = new ExecuteManager();
+        if (DataSource.MODE.equals(DataSource.YSQL)) {
+            try {
+                executeManager.executeYSQL(conn, list);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        } else {
+            try {
+                executeManager.executeYCQL(cqlSession, list);
+            }
+            finally {
+                cqlSession.close();
+            }
+        }
+        executeManager.report();
     }
 
 
     private static List<Transaction> readFile() throws FileNotFoundException {
-        String inputFileName = "src/main/resources/xact_files/0.txt";
+        String inputFileName = "src/main/resources/xact_files/2.txt";
         Scanner scanner = new Scanner(new File(inputFileName));
         List<Transaction> list = new ArrayList<>();
         while (scanner.hasNextLine()) {
             String[] firstLine = scanner.nextLine().split(",");
             String type = firstLine[0];
             Transaction transaction = null;
-            if (!type.equals(TransactionType.STOCK_LEVEL.type)) continue;
             if (type.equals(TransactionType.PAYMENT.type)) {
                 transaction = assemblePaymentTransaction(firstLine, scanner);
             } else if (type.equals(TransactionType.DELIVERY.type)) {

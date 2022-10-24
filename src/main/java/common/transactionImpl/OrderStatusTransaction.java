@@ -6,6 +6,10 @@ import com.datastax.oss.driver.api.core.cql.Row;
 import common.Transaction;
 
 import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,13 +20,14 @@ import java.util.List;
  * @Version V1.0
  * @Date 2/10/22 11:06 AM
  */
+// YSQL:72008ms , YCQL: 200ms
 public class OrderStatusTransaction extends Transaction {
     int C_W_ID;
     int C_D_ID;
     int C_ID;
 
     @Override
-    protected void execute(CqlSession cqlSession) {
+    protected void YCQLExecute(CqlSession cqlSession) {
         ResultSet rs = null;
         List<Row> rows = null;
 
@@ -40,7 +45,7 @@ public class OrderStatusTransaction extends Transaction {
         }
 
         // CQL2
-        String CQL2 = String.format("select O_ID, O_ENTRY_D, O_CARRIER_ID from dbycql.Orders where O_W_ID = %d and O_D_ID = %d and O_C_ID = %d order by O_ID desc limit 1 allow filtering", C_W_ID, C_D_ID, C_ID);
+        String CQL2 = String.format("select O_ID, O_ENTRY_D, O_CARRIER_ID from dbycql.Orders where O_W_ID = %d and O_D_ID = %d and O_C_ID = %d order by O_ID desc limit 1", C_W_ID, C_D_ID, C_ID);
         //select O_ID, O_ENTRY_D, O_CARRIER_ID from Orders where O_W_ID = 'C_W_ID' and O_D_ID = 'C_D_ID' and O_C_ID = 'C_ID' allow filtering order by O_ID desc limit 1
         rs = cqlSession.execute(CQL2);
         rows = rs.all();
@@ -74,6 +79,75 @@ public class OrderStatusTransaction extends Transaction {
                 Instant OL_DELIVERY_D = row.getInstant(4);
                 System.out.printf("OL_I_ID=%d,OL_SUPPLY_W_ID=%d,OL_QUANTITY=%s,OL_AMOUNT=%s,OL_DELIVERY_D=%s\n", OL_I_ID, OL_SUPPLY_W_ID, OL_QUANTITY, OL_AMOUNT, OL_DELIVERY_D);
             }
+        }
+    }
+
+    @Override
+    protected void YSQLExecute(Connection conn) throws SQLException {
+        conn.setAutoCommit(false);
+        try {
+            String SQL1 = "select C_FIRST, C_MIDDLE, C_LAST, C_BALANCE from Customer where C_W_ID = ? and C_D_ID = ? and C_ID = ?";
+            PreparedStatement statement = conn.prepareStatement(SQL1);
+            statement.setInt(1, C_W_ID);
+            statement.setInt(2, C_D_ID);
+            statement.setInt(3, C_ID);
+            java.sql.ResultSet rs = statement.executeQuery();
+            while (rs.next()) {
+                String C_FIRST = rs.getString(1);
+                String C_MIDDLE = rs.getString(2);
+                String C_LAST = rs.getString(3);
+                double C_BALANCE = rs.getDouble(4);
+                System.out.printf("C_FIRST=%s,C_MIDDLE=%s,C_LAST=%s,C_BALANCE=%f\n", C_FIRST, C_MIDDLE, C_LAST, C_BALANCE);
+            }
+
+            // get O_ID
+            String SQL2 = "select O_ID, O_ENTRY_D, O_CARRIER_ID from Orders where O_W_ID = ? and O_D_ID = ? and O_C_ID = ? order by O_ID desc limit 1";
+            statement = conn.prepareStatement(SQL2);
+            statement.setInt(1, C_W_ID);
+            statement.setInt(2, C_D_ID);
+            statement.setInt(3, C_ID);
+            rs = statement.executeQuery();
+            List<Integer> O_IDs = new ArrayList<>();
+            List<Timestamp> O_ENTRY_Ds = new ArrayList<>();
+            List<Integer> O_CARRIER_IDs = new ArrayList<>();
+            while (rs.next()) {
+                int O_ID = rs.getInt(1);
+                Timestamp O_ENTRY_D = rs.getTimestamp(2);
+                int O_CARRIER_ID = rs.getInt(3);
+                O_ENTRY_Ds.add(O_ENTRY_D);
+                O_CARRIER_IDs.add(O_CARRIER_ID);
+                O_IDs.add(O_ID);
+            }
+
+            for (int i = 0; i < O_IDs.size(); i++) {
+                int O_ID = O_IDs.get(i);
+                Timestamp O_ENTRY_D = O_ENTRY_Ds.get(i);
+                int O_CARRIER_ID = O_CARRIER_IDs.get(i);
+                System.out.printf("O_ID=%d,O_ENTRY_D=%s,O_CARRIER_ID=%d\n", O_ID, O_ENTRY_D, O_CARRIER_ID);
+                String SQL3 = "select OL_I_ID, OL_SUPPLY_W_ID, OL_QUANTITY, OL_AMOUNT, OL_DELIVERY_D from OrderLine where OL_W_ID = ? and OL_D_ID = ? and OL_O_ID = ?";
+                statement = conn.prepareStatement(SQL3);
+                statement.setInt(1, C_W_ID);
+                statement.setInt(2, C_D_ID);
+                statement.setInt(3, O_ID);
+                rs = statement.executeQuery();
+                while (rs.next()) {
+                    int OL_I_ID = rs.getInt(1); // INT
+                    int OL_SUPPLY_W_ID = rs.getInt(2); // INT
+                    int OL_QUANTITY = rs.getInt(3); // DECIMAL(2,0);
+                    double OL_AMOUNT = rs.getDouble(4); // DECIMAL(6,2);
+                    Timestamp OL_DELIVERY_D = rs.getTimestamp(5); // TIMESTAMP
+                    System.out.printf("OL_I_ID=%d,OL_SUPPLY_W_ID=%d,OL_QUANTITY=%d,OL_AMOUNT=%f,OL_DELIVERY_D=%s\n", OL_I_ID, OL_SUPPLY_W_ID, OL_QUANTITY, OL_AMOUNT, OL_DELIVERY_D);
+                }
+            }
+            conn.commit();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            if (conn != null) {
+                System.err.print("Transaction is being rolled back\n");
+                conn.rollback();
+            }
+        } finally {
+            conn.setAutoCommit(true);
         }
     }
 
