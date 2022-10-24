@@ -123,7 +123,7 @@ select count(*) as row_imported_orders from dbycql.orders;
 CREATE TABLE dbycql.item (
   I_id int PRIMARY KEY,
   I_name varchar,
-  I_tax decimal,
+  i_price decimal,
   I_im_id int,
   I_data varchar
 );

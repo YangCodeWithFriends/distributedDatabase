@@ -111,7 +111,7 @@ CREATE TABLE item (
   I_id int NOT NULL,
   PRIMARY KEY(I_id HASH),
   I_name varchar(24) NOT NULL,
-  I_tax decimal(5,2) NOT NULL,
+  i_price decimal(5,2) NOT NULL,
   I_im_id int NOT NULL,
   I_data varchar(50) NOT NULL
 );

@@ -119,7 +119,7 @@ WITH NULL='null' AND INGESTRATE=5000;
 CREATE TABLE item (
   I_id int PRIMARY KEY,
   I_name varchar,
-  I_tax decimal,
+  i_price decimal,
   I_im_id int,
   I_data varchar
 );
