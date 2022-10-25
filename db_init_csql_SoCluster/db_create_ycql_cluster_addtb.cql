@@ -68,13 +68,40 @@ copy dbycql.district from '/home/stuproj/cs4224j/project_data/data_files/distric
 WITH NULL='null' AND INGESTRATE=5000;
 
 
+-- CREATE TABLE dbycql.customer (
+--   C_W_id int,
+--   C_D_id int,
+--   C_id int,
+--   -- Note: as compound foreign key
+--   PRIMARY KEY((C_W_id, C_D_id), C_id),
+  
+--   C_first varchar,
+--   C_middle varchar,
+--   C_last varchar,
+--   C_street_1 varchar,
+--   C_street_2 varchar,
+--   C_city varchar,
+--   C_state varchar,
+--   C_zip varchar,
+--   C_phone varchar,
+--   C_since timestamp,
+--   C_credit varchar,
+--   C_credit_lim decimal,
+--   C_discount decimal,
+--   C_balance decimal,
+--   C_ytd_payment int,
+--   C_payment_cnt int,
+--   C_delivery_cnt int,
+--   C_data varchar);
+-- -- insert from csv
+-- copy dbycql.customer from '/home/stuproj/cs4224j/project_data/data_files/customer.csv'
+-- WITH NULL='null' AND INGESTRATE=5000;
+-- select count(*) as no_imported_rows from dbycql.customer;
+
 CREATE TABLE dbycql.customer (
   C_W_id int,
   C_D_id int,
   C_id int,
-  -- Note: as compound foreign key
-  PRIMARY KEY((C_W_id, C_D_id), C_id),
-  
   C_first varchar,
   C_middle varchar,
   C_last varchar,
@@ -89,17 +116,19 @@ CREATE TABLE dbycql.customer (
   C_credit_lim decimal,
   C_discount decimal,
   C_balance decimal,
-  C_ytd_payment int,
+  C_ytd_payment DECIMAL,
   C_payment_cnt int,
   C_delivery_cnt int,
-  C_data varchar);
--- insert from csv
-copy dbycql.customer from '/home/stuproj/cs4224j/project_data/data_files/customer.csv'
+  C_data varchar,
+  PRIMARY KEY ((C_W_ID, C_D_ID), C_BALANCE, C_ID))
+WITH CLUSTERING ORDER BY (C_BALANCE DESC, C_ID ASC);
+
+copy dbycql.customer (C_W_id,C_D_id,C_id,C_first,C_middle,C_last,C_street_1,C_street_2,C_city,C_state,C_zip,C_phone,C_since,C_credit,C_credit_lim,C_discount,C_balance,C_ytd_payment,C_payment_cnt,C_delivery_cnt,C_data)
+from '/home/stuproj/cs4224j/project_data/data_files/customer.csv' 
 WITH NULL='null' AND INGESTRATE=5000;
-select count(*) as no_imported_rows from dbycql.customer;
 
 
-
+-- orders
 CREATE TABLE dbycql.orders (
   -- (O W ID, O D ID, O C ID) is a foreign key that refers to customer table.
   O_W_id int,
@@ -120,6 +149,7 @@ select count(*) as row_imported_orders from dbycql.orders;
 -- select count(*) from orders where O_carrier_id == 'null';
 
 
+-- item
 CREATE TABLE dbycql.item (
   I_id int PRIMARY KEY,
   I_name varchar,
@@ -131,6 +161,7 @@ CREATE TABLE dbycql.item (
 copy dbycql.item from '/home/stuproj/cs4224j/project_data/data_files/item.csv'
 WITH NULL='null' AND INGESTRATE=5000;
 select count(*) as no_imported_rows from dbycql.item;
+
 
 -- 2 relationship tables -- 
 CREATE TABLE dbycql.stock (
@@ -164,44 +195,62 @@ WITH NULL='null' AND INGESTRATE=5000;
 select count(*) as no_imported_stocks from dbycql.stock;
 
 
+-- CREATE TABLE dbycql.orderline (
+--   -- OL I ID is a foreign key that refers to item table.
+--   OL_W_id int, 
+--   OL_D_id int, 
+--   OL_O_id int,
+--   OL_number int,
+--   PRIMARY KEY((OL_W_id, OL_D_id), OL_O_id, OL_number),
+--   OL_I_id int,
+--   OL_delivery_D timestamp, -- data has lots of null
+--   OL_amount decimal,
+--   OL_supply_W_id int,
+--   OL_quantity decimal,
+--   OL_dist_info varchar
+-- );
+-- copy dbycql.orderline from '/home/stuproj/cs4224j/project_data/data_files/order-line.csv'
+-- WITH NULL='null' AND INGESTRATE=7000;
+-- -- select * from "orderline" where OL_delivery_D is null;
+-- select count(*) as no_imported_rows from dbycql.orderline;
+
+-- 6. 新的 orderline
 CREATE TABLE dbycql.orderline (
-  -- OL I ID is a foreign key that refers to item table.
-  OL_W_id int, 
-  OL_D_id int, 
-  OL_O_id int,
-  OL_number int,
-  PRIMARY KEY((OL_W_id, OL_D_id), OL_O_id, OL_number),
-  OL_I_id int,
-  OL_delivery_D timestamp, -- data has lots of null
-  OL_amount decimal,
-  OL_supply_W_id int,
-  OL_quantity decimal,
-  OL_dist_info varchar
-);
-copy dbycql.orderline from '/home/stuproj/cs4224j/project_data/data_files/order-line.csv'
-WITH NULL='null' AND INGESTRATE=7000;
--- select * from "orderline" where OL_delivery_D is null;
-select count(*) as no_imported_rows from dbycql.orderline;
+    ol_w_id int,
+    ol_d_id int,
+    ol_o_id int,
+    ol_number int,
+    ol_i_id int,
+    ol_delivery_d timestamp,
+    ol_amount decimal,
+    ol_supply_w_id int,
+    ol_quantity decimal,
+    ol_dist_info text,
+    PRIMARY KEY ((ol_w_id, ol_d_id), ol_quantity, ol_o_id, ol_number)
+) WITH CLUSTERING ORDER BY (ol_quantity DESC, ol_o_id ASC, ol_number ASC);
+
+copy dbycql.orderline (ol_w_id, ol_d_id, ol_o_id, ol_number, ol_i_id, ol_delivery_d, ol_amount, ol_supply_w_id, ol_quantity, ol_dist_info)
+from '/home/stuproj/cs4224j/project_data/data_files/order-line.csv' 
+WITH NULL='null' AND INGESTRATE=10000;
 
 
 
 -- 新加表
 -- customer_item: warehouse，district，customer，order，item
--- cql: (CI_W_ID),CI_D_ID,CI_C_ID,CI_O_ID,CI_I_ID
-create table customer_item(
-  CI_W_ID int, 
-  CI_D_ID int, 
-  CI_C_ID int, 
-  CI_O_ID int, 
-  CI_I_ID int,
-  primary key((CI_W_ID),CI_D_ID,CI_C_ID,CI_O_ID,CI_I_ID)
-);
+-- cql: (CI_W_ID),CI_D_ID,CI_C_ID,CI_O_ID,CI_I_ID,
+
+create table dbycql.customer_item(
+		CI_W_ID int, 
+		CI_D_ID int, 
+		CI_C_ID int, 
+		CI_O_ID int, 
+		CI_I_ID int,
+		-- CI_I_NUMBER int,
+primary key((CI_W_ID),CI_D_ID,CI_C_ID,CI_O_ID,CI_I_ID));
 
 -- cql
 copy customer_item from '/home/stuproj/cs4224j/project_data/data_files/customer_item.csv' 
-WITH NULL='null' AND INGESTRATE=6000;
--- 
-
+WITH NULL='null' AND INGESTRATE=10000;
 
 
 -- show all tables
