@@ -106,6 +106,8 @@ CREATE TABLE orders (
 \copy orders from '/home/stuproj/cs4224j/project_data/data_files/order.csv' WITH (FORMAT CSV, NULL 'null');
 select count(*) as no_imported_orders from orders;
 
+
+-- 1e5
 DROP TABLE if EXISTS item CASCADE;
 CREATE TABLE item (
   I_id int NOT NULL,
@@ -119,7 +121,8 @@ CREATE TABLE item (
 \copy item from '/home/stuproj/cs4224j/project_data/data_files/item.csv' WITH (FORMAT CSV, NULL 'null');
 select count(*) as no_imported_Item from item;
 
--- 2 relationship tables -- 
+
+-- 1e6
 DROP TABLE if EXISTS stock CASCADE;
 CREATE TABLE stock (
   -- S I ID is a foreign key that refers to item table. 
@@ -147,6 +150,7 @@ CREATE TABLE stock (
 \copy stock from '/home/stuproj/cs4224j/project_data/data_files/stock.csv' WITH (FORMAT CSV, NULL 'null');
 select count(*) as no_imported_stock from stock;
 
+-- 300万
 DROP TABLE if EXISTS orderline CASCADE;
 CREATE TABLE orderline (
   -- (OL W ID, OL D ID, OL O ID) is a foreign key that refers to Order table. 
@@ -173,6 +177,7 @@ select count(*) as no_imported_OLine from "orderline";
 
 -- 新表
 -- 朱姐的 customer_item
+DROP TABLE if EXISTS customer_item CASCADE;
 create table customer_item(
 CI_W_ID int, 
 CI_D_ID int, 
@@ -180,8 +185,8 @@ CI_C_ID int,
 CI_O_ID int, 
 CI_I_ID int,
 primary key(CI_W_ID,CI_D_ID,CI_C_ID,CI_O_ID,CI_I_ID));
-\copy orderline from '/home/stuproj/cs4224j/project_data/data_files/customer_item.csv' WITH (FORMAT CSV, NULL 'null');
-select count(*) as no_imported_customer_item from customer_item; #
+\copy customer_item from '/home/stuproj/cs4224j/project_data/data_files/customer_item.csv' WITH (FORMAT CSV, NULL 'null');
+select count(*) as no_imported_customer_item from customer_item; 
 
 -- show all tables
 \dt;
