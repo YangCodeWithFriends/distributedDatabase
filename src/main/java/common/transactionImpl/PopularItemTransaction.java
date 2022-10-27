@@ -13,6 +13,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.sql.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @Package common.transactionImpl
@@ -26,21 +28,30 @@ public class PopularItemTransaction extends Transaction {
     int L;
 
     @Override
-    protected void YCQLExecute(CqlSession cqlSession) {
+    protected void YCQLExecute(CqlSession cqlSession, Logger logger) {
         ResultSet rs = null;
         List<Row> rows = null;
+        SimpleStatement simpleStatement = null;
 
-        System.out.printf("W_ID=%d,D_ID=%d,L=%d\n", W_ID, D_ID, L);
+       logger.log(Level.FINE, String.format("W_ID=%d,D_ID=%d,L=%d\n", W_ID, D_ID, L));
 
         // CQL1
         String CQL1 = String.format("select D_NEXT_O_ID from dbycql.District where D_W_ID = %d and D_ID = %d", W_ID, D_ID);
-        rs = cqlSession.execute(CQL1);
+//        rs = cqlSession.execute(CQL1);
+        simpleStatement = SimpleStatement.builder(CQL1)
+                .setExecutionProfileName("oltp")
+                .build();
+        rs = cqlSession.execute(simpleStatement);
         int N = rs.one().getInt(0);
 
         // CQL2
         String CQL2 = String.format("select O_C_ID, O_ID, O_ENTRY_D from dbycql.Orders where O_W_ID = %d and O_D_ID = %d and O_ID >= %d - %d and O_ID < %d", W_ID, D_ID, N, L, N);
         //-- 得到最新L个订单的信息 (O_C_ID, O_ID, O_ENTRY_D)
         rs = cqlSession.execute(CQL2);
+        simpleStatement = SimpleStatement.builder(CQL2)
+                .setExecutionProfileName("oltp")
+                .build();
+        rs = cqlSession.execute(simpleStatement);
         rows = rs.all();
         List<Integer> O_C_IDs = new ArrayList<>();
         List<Integer> O_IDs = new ArrayList<>();
@@ -63,23 +74,36 @@ public class PopularItemTransaction extends Transaction {
 
             // CQL3
             String CQL3 = String.format("select C_FIRST, C_MIDDLE, C_LAST from dbycql.Customer where C_W_ID = %d and C_D_ID = %d and C_ID = %d", W_ID, D_ID, O_C_ID);
-            rs = cqlSession.execute(CQL3);
+//            rs = cqlSession.execute(CQL3);
+            simpleStatement = SimpleStatement.builder(CQL3)
+                    .setExecutionProfileName("oltp")
+                    .build();
+            rs = cqlSession.execute(simpleStatement);
+
             Row onerow = rs.one();
             String C_FIRST = onerow.getString(0);
             String C_MIDDLE = onerow.getString(1);
             String C_LAST = onerow.getString(2);
-            System.out.printf("O_ID=%d,O_ENTRY_D=%s,C_FIRST=%s,C_MIDDLE=%s,C_LAST=%s\n", O_ID, O_ENTRY_D, C_FIRST, C_MIDDLE, C_LAST);
+           logger.log(Level.FINE, String.format("O_ID=%d,O_ENTRY_D=%s,C_FIRST=%s,C_MIDDLE=%s,C_LAST=%s\n", O_ID, O_ENTRY_D, C_FIRST, C_MIDDLE, C_LAST));
 
             // CQL4
             String CQL4 = String.format("select OL_W_ID, OL_D_ID, OL_O_ID, OL_QUANTITY from dbycql.OrderLine where OL_W_ID = %d and OL_D_ID = %d and OL_O_ID = %d limit 1;", W_ID, D_ID, O_ID);
-            rs = cqlSession.execute(CQL4);
+//            rs = cqlSession.execute(CQL4);
+            simpleStatement = SimpleStatement.builder(CQL4)
+                    .setExecutionProfileName("oltp")
+                    .build();
+            rs = cqlSession.execute(simpleStatement);
             onerow = rs.one();
             int OL_O_ID = onerow.getInt(2);
             BigDecimal MAX_OL_QUANTITY = onerow.getBigDecimal(3);
 
             // CQL5
             String CQL5 = String.format("select OL_W_ID, OL_D_ID, OL_O_ID, OL_I_ID from dbycql.OrderLine where OL_W_ID = %d and OL_D_ID = %d and OL_O_ID = %d and OL_QUANTITY = %f;", W_ID, D_ID, OL_O_ID, MAX_OL_QUANTITY);
-            rs = cqlSession.execute(CQL5);
+//            rs = cqlSession.execute(CQL5);
+            simpleStatement = SimpleStatement.builder(CQL5)
+                    .setExecutionProfileName("oltp")
+                    .build();
+            rs = cqlSession.execute(simpleStatement);
             List<Integer> OL_I_IDs = new ArrayList<>();
             rows = rs.all();
             for (Row row : rows) {
@@ -93,33 +117,41 @@ public class PopularItemTransaction extends Transaction {
             for (int OL_I_ID : OL_I_IDs) {
                 // CQL6
                 String CQL6 = String.format("select I_NAME from dbycql.Item where I_ID = %d;", OL_I_ID);
-                rs = cqlSession.execute(CQL6);
+//                rs = cqlSession.execute(CQL6);
+                simpleStatement = SimpleStatement.builder(CQL6)
+                        .setExecutionProfileName("oltp")
+                        .build();
+                rs = cqlSession.execute(simpleStatement);
                 String I_NAME = rs.one().getString(0);
-                System.out.printf("O_ID=%d,I_NAME=%s,MAX_OL_QUANTITY=%f\n", O_ID, I_NAME, MAX_OL_QUANTITY);
+               logger.log(Level.FINE, String.format("O_ID=%d,I_NAME=%s,MAX_OL_QUANTITY=%f\n", O_ID, I_NAME, MAX_OL_QUANTITY));
             }
         }
 
         for (int OL_I_ID : all_item_set) {
             // CQL7
             String CQL7 = String.format("select I_NAME from dbycql.Item where I_ID = %d;", OL_I_ID);
-            rs = cqlSession.execute(CQL7);
+//            rs = cqlSession.execute(CQL7);
+            simpleStatement = SimpleStatement.builder(CQL7)
+                    .setExecutionProfileName("oltp")
+                    .build();
+            rs = cqlSession.execute(simpleStatement);
             String I_NAME = rs.one().getString(0);
 
             // CQL8
             String CQL8 = String.format("select count(OL_I_ID) as I_NUM from dbycql.OrderLine where OL_W_ID = %d and OL_D_ID = %d and OL_O_ID >= %d-%d and OL_O_ID < %d and OL_I_ID = %d;", W_ID, D_ID, N, L, N, OL_I_ID);
-            SimpleStatement simpleStatement = SimpleStatement.builder(CQL8)
+            simpleStatement = SimpleStatement.builder(CQL8)
                     .setExecutionProfileName("oltp")
                     .build();
             rs = cqlSession.execute(simpleStatement);
             long I_NUM = rs.one().getLong(0);
             double I_Percentage = I_NUM * 100.0 / L;
-            System.out.printf("I_NAME=%s, I_Percentage= %f%% \n", I_NAME, I_Percentage);
+           logger.log(Level.FINE, String.format("I_NAME=%s, I_Percentage= %f%% \n", I_NAME, I_Percentage));
         }
     }
 
     @Override
-    protected void YSQLExecute(Connection conn) throws SQLException {
-        System.out.printf("W_ID=%d,D_ID=%d,L=%d\n", W_ID, D_ID, L);
+    protected void YSQLExecute(Connection conn, Logger logger) throws SQLException {
+       logger.log(Level.FINE, String.format("W_ID=%d,D_ID=%d,L=%d\n", W_ID, D_ID, L));
         conn.setAutoCommit(false);
         try {
             // SQL1
@@ -152,7 +184,7 @@ public class PopularItemTransaction extends Transaction {
                 String C_FIRST = rs.getString(3);
                 String C_MIDDLE = rs.getString(4);
                 String C_LAST = rs.getString(5);
-                System.out.printf("O_ID=%d,O_ENTRY_D=%s,C_FIRST=%s,C_MIDDLE=%s,C_LAST=%s\n", O_ID, O_ENTRY_D, C_FIRST, C_MIDDLE, C_LAST);
+               logger.log(Level.FINE, String.format("O_ID=%d,O_ENTRY_D=%s,C_FIRST=%s,C_MIDDLE=%s,C_LAST=%s\n", O_ID, O_ENTRY_D, C_FIRST, C_MIDDLE, C_LAST));
             }
 
             // SQL3
@@ -169,7 +201,7 @@ public class PopularItemTransaction extends Transaction {
                 int O_ID = rs.getInt(1);
                 String I_NAME = rs.getString(2);
                 int OL_QUANTITY = rs.getInt(3);
-                System.out.printf("O_ID=%d,I_NAME=%s,OL_QUANTITY=%d\n", O_ID, I_NAME, OL_QUANTITY);
+               logger.log(Level.FINE, String.format("O_ID=%d,I_NAME=%s,OL_QUANTITY=%d\n", O_ID, I_NAME, OL_QUANTITY));
             }
 
 
@@ -187,14 +219,15 @@ public class PopularItemTransaction extends Transaction {
             while (rs.next()) {
                 String I_NAME = rs.getString(1);
                 double percentage = rs.getDouble(2);
-                System.out.printf("I_NAME=%s,Percentage=%f%%\n", I_NAME, percentage);
+               logger.log(Level.FINE, String.format("I_NAME=%s,Percentage=%f%%\n", I_NAME, percentage));
             }
 
             conn.commit();
         } catch (SQLException e) {
             e.printStackTrace();
             if (conn != null) {
-                System.err.print("Transaction is being rolled back\n");
+//                System.err.print("Transaction is being rolled back\n");
+                logger.log(Level.WARNING, "Transaction is being rolled back");
                 conn.rollback();
             }
         } finally {
