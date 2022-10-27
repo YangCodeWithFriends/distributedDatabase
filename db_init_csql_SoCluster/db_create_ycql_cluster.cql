@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS dbycql.orderline;
 DROP TABLE IF EXISTS dbycql.stock;
 DROP KEYSPACE IF EXISTS dbycql;
 
--- data path: /home/stuproj/cs4224j/project_data/data_files_old/
+-- data path: /home/stuproj/cs4224j/project_data/data_files/
 
 -- show all key spaces(DBs)
 CREATE KEYSPACE dbycql 
@@ -28,8 +28,6 @@ USE dbycql;
 CREATE TABLE dbycql.warehouse (
   -- 1-10, so ok in tinyint for [-128	127]
   W_id int, 
-  -- partition key and primary key
-  PRIMARY KEY(W_id), 
   W_name varchar,
   W_street_1 varchar,
   W_street_2 varchar,
@@ -37,11 +35,12 @@ CREATE TABLE dbycql.warehouse (
   W_state varchar,
   W_zip varchar,
   W_tax decimal,
-  W_ytd decimal
+  W_ytd decimal,
+  PRIMARY KEY(W_id)
 );
 
 -- WITH NULL='null': set NULL='null' or whatever character you want for null value ...
-copy dbycql.warehouse from '/home/stuproj/cs4224j/project_data/data_files_old/warehouse.csv'
+copy dbycql.warehouse from '/home/stuproj/cs4224j/project_data/data_files/warehouse.csv'
 WITH NULL='null' AND INGESTRATE=5000;
 
 
@@ -51,8 +50,6 @@ CREATE TABLE dbycql.district (
   -- 1-10,
   D_id int,
   -- Note: D_id is clustering key
-  PRIMARY KEY(D_W_id, D_id),
-
   D_name varchar,
   D_street_1 varchar,
   D_street_2 varchar,
@@ -61,10 +58,11 @@ CREATE TABLE dbycql.district (
   D_zip varchar,
   D_tax decimal,
   D_ytd decimal,
-  D_next_O_id int
+  D_next_O_id int,
+  PRIMARY KEY(D_W_id, D_id)
 );
 
-copy dbycql.district from '/home/stuproj/cs4224j/project_data/data_files_old/district.csv' 
+copy dbycql.district from '/home/stuproj/cs4224j/project_data/data_files/district.csv' 
 WITH NULL='null' AND INGESTRATE=5000;
 
 
@@ -74,8 +72,6 @@ CREATE TABLE dbycql.customer (
   C_D_id int,
   C_id int,
   -- Note: as compound foreign key
-  PRIMARY KEY((C_W_id, C_D_id), C_id),
-  
   C_first varchar,
   C_middle varchar,
   C_last varchar,
@@ -93,9 +89,11 @@ CREATE TABLE dbycql.customer (
   C_ytd_payment float,
   C_payment_cnt int,
   C_delivery_cnt int,
-  C_data varchar);
+  C_data varchar,
+  PRIMARY KEY((C_W_id, C_D_id), C_id)
+  );
 -- insert from csv
-copy dbycql.customer from '/home/stuproj/cs4224j/project_data/data_files_old/customer.csv'
+copy dbycql.customer from '/home/stuproj/cs4224j/project_data/data_files/customer.csv'
 WITH NULL='null' AND INGESTRATE=5000;
 select count(*) as no_imported_rows from dbycql.customer;
 
@@ -107,29 +105,30 @@ CREATE TABLE dbycql.orders (
   O_D_id int,
   O_id int,
   O_C_id int,
-  PRIMARY KEY ((O_W_id, O_D_id), O_id),
   -- The range of O CARRIER ID is [1,10]: use smallint is 16 bit in CQL, tinyint is 8
   O_carrier_id int, -- data has lots of null
   O_OL_cnt decimal,
   O_all_local decimal,
-  O_entry_d timestamp
+  O_entry_d timestamp,
+  PRIMARY KEY ((O_W_id, O_D_id), O_id)
 );
 -- insert from csv
-copy dbycql.orders from '/home/stuproj/cs4224j/project_data/data_files_old/order.csv'
+copy dbycql.orders from '/home/stuproj/cs4224j/project_data/data_files/order.csv'
 WITH NULL='null' AND INGESTRATE=5000;
 select count(*) as row_imported_orders from dbycql.orders;
 -- select count(*) from orders where O_carrier_id == 'null';
 
 
 CREATE TABLE dbycql.item (
-  I_id int PRIMARY KEY,
+  I_id int,
   I_name varchar,
   i_price decimal,
   I_im_id int,
-  I_data varchar
+  I_data varchar,
+  PRIMARY KEYI(I_id)
 );
 -- insert from csv
-copy dbycql.item from '/home/stuproj/cs4224j/project_data/data_files_old/item.csv'
+copy dbycql.item from '/home/stuproj/cs4224j/project_data/data_files/item.csv'
 WITH NULL='null' AND INGESTRATE=5000;
 select count(*) as no_imported_rows from dbycql.item;
 
@@ -139,7 +138,6 @@ CREATE TABLE dbycql.stock (
   -- S W ID is a cluster key that refers to warehouse table.
   S_W_id int,
   S_I_id int,
-  PRIMARY KEY(S_W_id, S_I_id),
   
   S_quantity decimal,
   S_ytd decimal,
@@ -155,11 +153,12 @@ CREATE TABLE dbycql.stock (
   S_dist_08 varchar,
   S_dist_09 varchar,
   S_dist_10 varchar,
-  S_data varchar
+  S_data varchar,
+  PRIMARY KEY(S_W_id, S_I_id)
 );
 
 
-copy dbycql.stock from '/home/stuproj/cs4224j/project_data/data_files_old/stock.csv'
+copy dbycql.stock from '/home/stuproj/cs4224j/project_data/data_files/stock.csv'
 WITH NULL='null' AND INGESTRATE=5000;
 select count(*) as no_imported_stocks from dbycql.stock;
 
@@ -170,15 +169,15 @@ CREATE TABLE dbycql.orderline (
   OL_D_id int, 
   OL_O_id int,
   OL_number int,
-  PRIMARY KEY((OL_W_id, OL_D_id), OL_O_id, OL_number),
   OL_I_id int,
   OL_delivery_D timestamp, -- data has lots of null
   OL_amount decimal,
   OL_supply_W_id int,
   OL_quantity decimal,
-  OL_dist_info varchar
+  OL_dist_info varchar,
+  PRIMARY KEY((OL_W_id, OL_D_id), OL_O_id, OL_number)
 );
-copy dbycql.orderline from '/home/stuproj/cs4224j/project_data/data_files_old/order-line.csv'
+copy dbycql.orderline from '/home/stuproj/cs4224j/project_data/data_files/order-line.csv'
 WITH NULL='null' AND INGESTRATE=7000;
 -- select * from "orderline" where OL_delivery_D is null;
 select count(*) as no_imported_rows from dbycql.orderline;
