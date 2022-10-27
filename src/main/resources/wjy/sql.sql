@@ -35,11 +35,9 @@ create table if not exists new_order_info
 insert into Orders (O_ID, O_D_ID, O_W_ID, O_C_ID, O_ENTRY_D, O_CARRIER_ID, O_OL_CNT, O_ALL_LOCAL)
 values ('N', 'D_ID', 'W_ID', 'C_ID', 'current_time', NULL, 'M', 'NO_ALL_LOCAL'); 
 
--- delete step4 
-
 --step5 - Stock
 update Stock
-set S_QUANTITY = ADJUSTED_QTY, S_YTD = S_YTD + NO_YTD, S_ORDER_CNT = NO_ORDER_CNT, S_REMOTE_CNT = S_REMOTE_CNT + NO_REMOTE_CNT -- change
+set S_QUANTITY = ADJUSTED_QTY, S_YTD = S_YTD + NO_YTD, S_ORDER_CNT = NO_ORDER_CNT, S_REMOTE_CNT = S_REMOTE_CNT + NO_REMOTE_CNT
 from (select
         t1.NO_SUPPLY_W_ID,
         t1.NO_I_ID,
@@ -57,6 +55,8 @@ select NO_W_ID, NO_D_ID, NO_O_ID, NO_N, NO_I_ID, NULL, NO_QUANTITY * I_PRICE as 
 from new_order_info t1
 left join District t2 on t1.NO_W_ID = t2.D_W_ID and t1.NO_D_ID = t2.D_ID
 left join Item t3 on t1.NO_I_ID = t3.I_ID;
+
+------------------ ##ignore begin 1 ## ------------------
 
 -- step6
 select sum(OL_AMOUNT) as TOTAL_AMOUNT from OrderLine where OL_O_ID = 'N' and OL_D_ID = 'D_ID' and OL_W_ID = 'W_ID';
@@ -78,6 +78,8 @@ left join Item t2 on t1.NO_I_ID = t2.I_ID
 left join Stock t3 on t1.NO_I_ID = t3.S_I_ID and t1.NO_SUPPLY_W_ID = t3.S_W_ID;
 --输出 NO_I_ID, I_NAME, NO_SUPPLY_W_ID, NO_QUANTITY, OL_AMOUNT, S_QUANTITY
 
+------------------ ##ignore end 1 ## --------------------
+
 -- 保存结果到customer_item
 insert into customer_item select NO_W_ID, NO_D_ID, NO_C_ID, NO_O_ID, NO_I_ID, NO_N from new_order_info;
 
@@ -85,16 +87,28 @@ insert into customer_item select NO_W_ID, NO_D_ID, NO_C_ID, NO_O_ID, NO_I_ID, NO
 drop table if exists new_order_info
 
 -- 4. Order-Status Transaction
-select C_FIRST, C_MIDDLE, C_LAST, C_BALANCE from Customer
+
+------------------ ##ignore begin 2 ## ------------------
+
+select C_FIRST, C_MIDDLE, C_LAST, C_BALANCE from Customer 
 where C_W_ID = 'C_W_ID' and C_D_ID = 'C_D_ID' and C_ID = 'C_ID';
+-- 输出 C_FIRST, C_MIDDLE, C_LAST, C_BALANCE
+
+------------------ ##ignore end 2 ## --------------------
 
 select O_ID, O_ENTRY_D, O_CARRIER_ID from Orders 
 where O_W_ID = 'C_W_ID' and O_D_ID = 'C_D_ID' and O_C_ID = 'C_ID'
 order by O_ID desc limit 1;
 -- 拿到'O_ID'
+------------------ ##ignore begin 3 ## ------------------
+
+-- 输出 O_ID, O_ENTRY_D, O_CARRIER_ID
 
 select OL_I_ID, OL_SUPPLY_W_ID, OL_QUANTITY, OL_AMOUNT, OL_DELIVERY_D from OrderLine
 where OL_W_ID = 'C_W_ID' and OL_D_ID = 'C_D_ID' and OL_O_ID = 'O_ID';
+-- 输出 OL_I_ID, OL_SUPPLY_W_ID, OL_QUANTITY, OL_AMOUNT, OL_DELIVERY_D
+
+------------------ ##ignore end 3 ## --------------------
 
 -- 5. Stock-Level Transaction
 
@@ -105,48 +119,59 @@ with last_l_ol_orders as (select * from OrderLine where OL_W_ID = 'W_ID' and OL_
 
 select count(distinct S_I_ID) as item_cnt from last_l_ol_orders t1
 left join Stock t2 on t1.OL_W_ID = t2.S_W_ID and t1.OL_I_ID = t2.S_I_ID where S_QUANTITY < 'T';
+
+------------------ ##ignore begin 4 ## ------------------
+
 -- 输出item_cnt
+
+------------------ ##ignore end 4 ## --------------------
 
 -- 6. Popular-Item Transaction
 
----- SQL1 start
+---- SQL1
 select D_NEXT_O_ID from District where D_W_ID = 'W_ID' and D_ID = 'D_ID'
 -- 得到 N = D_NEXT_O_ID
----- SQL1 end
 
----- SQL2 start
+------------------ ##ignore begin 5 ## ------------------
+
+-- 输出 'W_ID', 'D_ID', 'L'
+
+---- SQL2
 with last_l_orders as (select * from Orders where O_W_ID = 'W_ID' and O_D_ID = 'D_ID' and O_ID >= 'N'-'L' and O_ID < 'N')
-
 select t1.O_ID, t1.O_ENTRY_D, t2.C_FIRST, t2.C_MIDDLE, t2.C_LAST from last_l_orders t1 left join Customer t2
 on t1.O_W_ID = t2.C_W_ID and t1.O_D_ID = t2.C_D_ID and t1.O_ID = t2.C_ID;
----- SQL2 end
+-- 输出 O_ID, O_ENTRY_D, C_FIRST, C_MIDDLE, C_LAST 
 
----- SQL3 start
+------------------ ##ignore end 5 ## --------------------
+
+---- SQL3
 with last_l_orders as (select * from Orders where O_W_ID = 'W_ID' and O_D_ID = 'D_ID' and O_ID >= 'N'-'L' and O_ID < 'N'),
-
 last_l_orders_items as (
     select *, rank()over(partition by O_W_ID, O_D_ID, O_ID order by OL_QUANTITY desc) as rank
     from last_l_orders t1 left join OrderLine t2
     on t1.O_W_ID = t2.OL_W_ID and t1.O_D_ID = t2.OL_D_ID and t1.O_ID = t2.OL_O_ID)
-
 select t1.O_ID, t2.I_NAME, t1.OL_QUANTITY from last_l_orders_items t1 
 left join Item t2 on t1.OL_I_ID = t2.I_ID where t1.rank = 1 order by t1.O_ID;
----- SQL3 end
 
----- SQL4 start
+------------------ ##ignore begin 6 ## ------------------
+
+-- 输出 O_ID, I_NAME, OL_QUANTITY
+
+---- SQL4
 with last_l_orders as ( select * from Orders where O_W_ID = 'W_ID' and O_D_ID = 'D_ID' and O_ID >= 'N'-'L' and O_ID < 'N'),
-
 last_l_orders_items as (
     select *, rank()over(partition by O_W_ID, O_D_ID, O_ID order by OL_QUANTITY desc) as rank
     from last_l_orders t1 left join OrderLine t2
     on t1.O_W_ID = t2.OL_W_ID and t1.O_D_ID = t2.OL_D_ID and t1.O_ID = t2.OL_O_ID)
-
 select t3.I_NAME, count(t2.OL_I_ID) * 100 / 'L'  as I_Percentage
 from (select distinct OL_I_ID from last_l_orders_items where rank = 1) t1
 left join last_l_orders_items t2 on t1.OL_I_ID = t2.OL_I_ID
 left join Item t3 on t1.OL_I_ID = t3.I_ID
 group by t3.I_NAME;
----- SQL4 end
+
+-- 输出 I_NAME, I_Percentage
+
+------------------ ##ignore end 6 ## --------------------
 
 -- 7. Top-Balance Transaction
 
@@ -154,3 +179,9 @@ with top_10_customers as(select * from Customer order by C_BALANCE desc limit 10
 select t1.C_FIRST, t1.C_MIDDLE, t1.C_LAST, t1.C_BALANCE, t2.W_NAME, t3.D_NAME from top_10_customers t1 
 left join Warehouse t2 on t1.C_W_ID = t2.W_ID 
 left join District t3 on t1.C_D_ID = t3.D_ID;
+
+------------------ ##ignore begin 7 ## ------------------
+
+-- 输出 C_FIRST, C_MIDDLE, C_LAST, C_BALANCE, W_NAME, D_NAME
+
+------------------ ##ignore end 7 ## --------------------
