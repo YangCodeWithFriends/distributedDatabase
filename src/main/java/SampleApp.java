@@ -65,7 +65,7 @@ public class SampleApp {
 
 
     private static List<Transaction> readFile() throws FileNotFoundException {
-        String inputFileName = "src/main/resources/xact_files/2.txt";
+        String inputFileName = "src/main/resources/xact_files/0.txt";
         Scanner scanner = new Scanner(new File(inputFileName));
         List<Transaction> list = new ArrayList<>();
         while (scanner.hasNextLine()) {
