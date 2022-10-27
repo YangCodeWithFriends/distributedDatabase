@@ -25,7 +25,7 @@ CREATE TABLE warehouse (
 );
 
 -- insert from csv
-\copy warehouse from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/warehouse.csv' WITH (FORMAT CSV, NULL 'null');
+\copy warehouse from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files_old/warehouse.csv' WITH (FORMAT CSV, NULL 'null');
 
 
 DROP TABLE if EXISTS district CASCADE;
@@ -47,7 +47,7 @@ CREATE TABLE district (
   D_next_O_id int NOT NULL
 );
 
-\copy district from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/district.csv' WITH (FORMAT CSV, NULL 'null');
+\copy district from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files_old/district.csv' WITH (FORMAT CSV, NULL 'null');
 
 
 DROP TABLE if EXISTS customer CASCADE;
@@ -80,7 +80,7 @@ CREATE TABLE customer (
   C_data varchar(500) NOT NULL);
 
 -- insert from csv
-\copy customer from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/customer.csv' WITH (FORMAT CSV, NULL 'null');
+\copy customer from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files_old/customer.csv' WITH (FORMAT CSV, NULL 'null');
 select count(*) as no_imported_rows from customer;
 
 -- Note: order is a keyword in SQL due to "order by"
@@ -103,7 +103,7 @@ CREATE TABLE orders (
   O_entry_d timestamp NOT NULL
 );
 
-\copy orders from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/order.csv' WITH (FORMAT CSV, NULL 'null');
+\copy orders from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files_old/order.csv' WITH (FORMAT CSV, NULL 'null');
 select count(*) as no_imported_rows from orders;
 
 DROP TABLE if EXISTS item CASCADE;
@@ -116,7 +116,7 @@ CREATE TABLE item (
   I_data varchar(50) NOT NULL
 );
 -- insert from csv
-\copy item from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/item.csv' WITH (FORMAT CSV, NULL 'null');
+\copy item from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files_old/item.csv' WITH (FORMAT CSV, NULL 'null');
 select count(*) as no_imported_rows from item;
 
 -- 2 relationship tables -- 
@@ -141,7 +141,7 @@ CREATE TABLE orderline (
   OL_dist_info char(24) NOT NULL
 );
 
-\copy orderline from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/order-line.csv' WITH (FORMAT CSV, NULL 'null');
+\copy orderline from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files_old/order-line.csv' WITH (FORMAT CSV, NULL 'null');
 select count(*) as no_imported_rows from "orderline";
 
 DROP TABLE if EXISTS stock CASCADE;
@@ -166,11 +166,11 @@ CREATE TABLE stock (
   S_dist_08 char(24) NOT NULL,
   S_dist_09 char(24) NOT NULL,
   S_dist_10 char(24) NOT NULL,
-  S_dist_data varchar(50) NOT NULL
+  S_data varchar(50) NOT NULL
 );
 
 
-\copy stock from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/stock.csv' WITH (FORMAT CSV, NULL 'null');
+\copy stock from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files_old/stock.csv' WITH (FORMAT CSV, NULL 'null');
 select count(*) as no_imported_rows from stock;
 
 -- show all tables

@@ -1,7 +1,7 @@
 
 DROP KEYSPACE IF EXISTS dbycql;
 
--- /temp/project_data/data_files
+-- /temp/project_data/data_files_old
 
 -- show all key spaces(DBs)
 CREATE KEYSPACE dbycql WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': '1'} AND DURABLE_WRITES = true;
@@ -32,7 +32,7 @@ CREATE TABLE warehouse (
 
 -- insert from csv
 -- WITH NULL='null': set NULL='null' or whatever character you want for null value ...
-copy dbycql.warehouse from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/warehouse.csv'
+copy dbycql.warehouse from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files_old/warehouse.csv'
 WITH NULL='null' AND INGESTRATE=5000;
 
 
@@ -56,7 +56,7 @@ CREATE TABLE district (
   D_next_O_id int
 );
 
-copy dbycql.district from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/district.csv' 
+copy dbycql.district from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files_old/district.csv' 
 WITH NULL='null' AND INGESTRATE=5000;
 
 
@@ -89,7 +89,7 @@ CREATE TABLE customer (
   C_data varchar);
 
 -- insert from csv
-\copy dbycql.customer from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/customer.csv'
+\copy dbycql.customer from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files_old/customer.csv'
 WITH NULL='null' AND INGESTRATE=5000;
 -- select count(*) from customer;
 
@@ -112,7 +112,7 @@ CREATE TABLE orders (
   O_entry_d timestamp
 );
 
-\copy dbycql.orders from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/order.csv'
+\copy dbycql.orders from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files_old/order.csv'
 WITH NULL='null' AND INGESTRATE=5000;
 -- select count(*) from orders where O_carrier_id is null;
 
@@ -125,7 +125,7 @@ CREATE TABLE item (
 );
 
 -- insert from csv
-\copy dbycql.item from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/item.csv'
+\copy dbycql.item from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files_old/item.csv'
 WITH NULL='null' AND INGESTRATE=5000;
 
 -- 2 relationship tables -- 
@@ -148,7 +148,7 @@ CREATE TABLE order_line (
   OL_dist_info varchar
 );
 
-\copy dbycql.order_line from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/order-line.csv'
+\copy dbycql.order_line from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files_old/order-line.csv'
 WITH NULL='null' AND INGESTRATE=5000;
 -- select * from "order_line" where OL_delivery_D is null;
 
@@ -173,11 +173,11 @@ CREATE TABLE stock (
   S_dist_08 varchar,
   S_dist_09 varchar,
   S_dist_10 varchar,
-  S_dist_data varchar
+  S_data varchar
 );
 
 
-\copy dbycql.stock from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/stock.csv'
+\copy dbycql.stock from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files_old/stock.csv'
 WITH NULL='null' AND INGESTRATE=5000;
 
 -- show all tables

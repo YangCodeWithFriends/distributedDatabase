@@ -45,7 +45,7 @@ CREATE TABLE dbycql.warehouse (
 );
 
 -- WITH NULL='null': set NULL='null' or whatever character you want for null value ...
-copy dbycql.warehouse from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/warehouse.csv'
+copy dbycql.warehouse from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files_old/warehouse.csv'
 WITH NULL='null' AND INGESTRATE=5000;
 
 -- drop table if exists district;
@@ -68,7 +68,7 @@ CREATE TABLE dbycql.district (
   D_next_O_id int
 );
 
-copy dbycql.district from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/district.csv' 
+copy dbycql.district from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files_old/district.csv' 
 WITH NULL='null' AND INGESTRATE=5000;
 
 -- drop table if exists customer;
@@ -100,7 +100,7 @@ CREATE TABLE dbycql.customer (
   C_data varchar);
 
 -- insert from csv
-copy dbycql.customer from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/customer.csv'
+copy dbycql.customer from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files_old/customer.csv'
 WITH NULL='null' AND INGESTRATE=5000;
 select count(*) as no_imported_rows from dbycql.customer;
 
@@ -122,7 +122,7 @@ CREATE TABLE dbycql.orders (
   O_entry_d timestamp
 );
 
-copy dbycql.orders from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/order.csv'
+copy dbycql.orders from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files_old/order.csv'
 WITH NULL='null' AND INGESTRATE=5000;
 select count(*) as row_imported_orders from dbycql.orders;
 -- select count(*) from orders where O_carrier_id == 'null';
@@ -137,7 +137,7 @@ CREATE TABLE dbycql.item (
   I_data varchar
 );
 -- insert from csv
-copy dbycql.item from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/item.csv'
+copy dbycql.item from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files_old/item.csv'
 WITH NULL='null' AND INGESTRATE=5000;
 select count(*) as no_imported_rows from dbycql.item;
 
@@ -158,7 +158,7 @@ CREATE TABLE dbycql.orderline (
   OL_dist_info varchar
 );
 
-copy dbycql.orderline from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/order-line.csv'
+copy dbycql.orderline from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files_old/order-line.csv'
 WITH NULL='null' AND INGESTRATE=5000;
 -- select * from "orderline" where OL_delivery_D is null;
 select count(*) as no_imported_rows from dbycql.orderline;
@@ -186,11 +186,11 @@ CREATE TABLE dbycql.stock (
   S_dist_08 varchar,
   S_dist_09 varchar,
   S_dist_10 varchar,
-  S_dist_data varchar
+  S_data varchar
 );
 
 
-copy dbycql.stock from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/stock.csv'
+copy dbycql.stock from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files_old/stock.csv'
 WITH NULL='null' AND INGESTRATE=5000;
 select count(*) as no_imported_rows from dbycql.stock;
 
