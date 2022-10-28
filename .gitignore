@@ -10,7 +10,7 @@ src/main/.DS_Store
 # 删除列之后的，数据文件
 
 # 集群配置文件
-*.conf
+# *.conf
 
 # -- 基于前置表已经建好了之后，的小表, 导出为csv一劳永逸 -- 为了cql
 db_sql_join_subtb_4cql/
