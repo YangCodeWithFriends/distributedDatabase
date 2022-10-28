@@ -102,16 +102,16 @@ public class RelatedCustomerTransaction extends Transaction {
                 }
             }
             // 拿到了outputLine作为一个以List为key，MutableInteger为value的hashMap，后面对这个解析输出即可
-            Set<List<Integer>> tmpSet = outputLine.keySet();
-            Iterator<List<Integer>> it1 = tmpSet.iterator();
-            while(it1.hasNext()){
-                List<Integer> tmpKey = it1.next();
-                int val = outputLine.get(tmpKey);
-                if (val > 1) {
-                    System.out.println(tmpKey);
-                    System.out.println(val);
-                }
-            }
+//            Set<List<Integer>> tmpSet = outputLine.keySet();
+//            Iterator<List<Integer>> it1 = tmpSet.iterator();
+//            while(it1.hasNext()){
+//                List<Integer> tmpKey = it1.next();
+//                int val = outputLine.get(tmpKey);
+//                if (val > 1) {
+//                    System.out.println(tmpKey);
+//                    System.out.println(val);
+//                }
+//            }
         }
     }
 
