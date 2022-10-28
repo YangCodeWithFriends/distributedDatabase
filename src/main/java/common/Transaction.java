@@ -1,7 +1,12 @@
 package common;
 
+import com.datastax.oss.driver.api.core.CqlSession;
+
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @Package common
@@ -12,36 +17,41 @@ import java.util.concurrent.TimeUnit;
 public abstract class Transaction {
     // define template method for transaction execution
     TransactionType transactionType;
-    long startTimeStamp;
+    private long startTimeStamp;
+    private long executionTime;
 
-    public void executeYSQL(Connection conn) {
-        beforeActuallyExecute();
-        YSQLExecute(conn);
-        postActuallyExecute();
+    public long executeYSQL(Connection conn, Logger logger) throws SQLException {
+        beforeExecute(logger);
+        YSQLExecute(conn, logger);
+        postExecute(logger);
+        return executionTime;
     }
 
-    public void executeYCQL(Connection conn) {
-        beforeActuallyExecute();
-        YCQLExecute(conn);
-        postActuallyExecute();
+    public long executeYCQL(CqlSession cqlSession, Logger logger) {
+        beforeExecute(logger);
+        YCQLExecute(cqlSession, logger);
+        postExecute(logger);
+        return executionTime;
     }
 
-    protected void beforeActuallyExecute() {
+    protected void beforeExecute(Logger logger) {
         startTimeStamp = System.currentTimeMillis();
-        System.out.printf(transactionType.type + " Transaction begins\n");
+       logger.log(Level.FINE, String.format(transactionType.type + " begins\n"));
     }
 
-    protected void YSQLExecute(Connection conn) {
-
-    }
-    protected void YCQLExecute(Connection conn) {
+    protected void YSQLExecute(Connection conn, Logger logger) throws SQLException {
 
     }
 
-    protected void postActuallyExecute() {
+    protected void YCQLExecute(CqlSession cqlSession, Logger logger) {
+
+    }
+
+    protected void postExecute(Logger logger) {
         long endTimeStamp = System.currentTimeMillis();
-        long seconds = TimeUnit.MICROSECONDS.toSeconds(endTimeStamp - startTimeStamp);
-        System.out.printf("%s completes,takes %d seconds\n",transactionType, seconds);
+        long millis = TimeUnit.MILLISECONDS.toMillis(endTimeStamp - startTimeStamp);
+        executionTime = millis;
+       logger.log(Level.FINE, String.format("%s completes,takes %d milliseconds\n",transactionType, millis));
     }
 
     public TransactionType getTransactionType() {
