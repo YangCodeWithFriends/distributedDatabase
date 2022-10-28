@@ -65,9 +65,9 @@ public class Statistics {
                 transactionType +
                 ", timeSum=" + timeSum +
                 ", cnt=" + cnt +
+                ", min=" + min +
                 ", avg=" + avg +
                 ", max=" + max +
-                ", min=" + min +
                 '}';
     }
 }

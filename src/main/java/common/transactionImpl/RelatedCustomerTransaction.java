@@ -10,13 +10,16 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Duration;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class RelatedCustomerTransaction extends Transaction {
     int C_W_ID;
     int C_D_ID;
     int C_ID;
 
-    protected void YSQLExecute(Connection conn) throws SQLException {
+    protected void YSQLExecute(Connection conn, Logger logger) throws SQLException {
+        conn.setAutoCommit(true);
         Statement stmt = conn.createStatement();
         stmt.executeQuery(String.format("with target_orderline as(" +
                 "select " +
@@ -45,8 +48,8 @@ public class RelatedCustomerTransaction extends Transaction {
     }
 
 
-    protected void YCQLExecute(CqlSession session) {
-        System.out.println("执行related cql中..");
+    protected void YCQLExecute(CqlSession session, Logger logger) {
+       logger.log(Level.FINE, "执行related cql中..");
         HashMap<List<Integer>, Integer> outputLine = new HashMap<List<Integer>, Integer>();
         SimpleStatement stmt = SimpleStatement.newInstance(String.format("select " +
                 "O_W_ID, " +
@@ -102,16 +105,16 @@ public class RelatedCustomerTransaction extends Transaction {
                 }
             }
             // 拿到了outputLine作为一个以List为key，MutableInteger为value的hashMap，后面对这个解析输出即可
-//            Set<List<Integer>> tmpSet = outputLine.keySet();
-//            Iterator<List<Integer>> it1 = tmpSet.iterator();
-//            while(it1.hasNext()){
-//                List<Integer> tmpKey = it1.next();
-//                int val = outputLine.get(tmpKey);
-//                if (val > 1) {
-//                    System.out.println(tmpKey);
-//                    System.out.println(val);
-//                }
-//            }
+            Set<List<Integer>> tmpSet = outputLine.keySet();
+            Iterator<List<Integer>> it1 = tmpSet.iterator();
+            while(it1.hasNext()){
+                List<Integer> tmpKey = it1.next();
+                int val = outputLine.get(tmpKey);
+                if (val > 1) {
+                   logger.log(Level.FINE, tmpKey.toString());
+                   logger.log(Level.FINE, String.valueOf(val));
+                }
+            }
         }
     }
 

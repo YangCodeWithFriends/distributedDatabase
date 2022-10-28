@@ -11,6 +11,8 @@ import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @Package common.transactionImpl
@@ -20,7 +22,7 @@ import java.util.List;
  */
 public class TopBalanceTransaction extends Transaction {
     @Override
-    protected void YCQLExecute(CqlSession cqlSession) {
+    protected void YCQLExecute(CqlSession cqlSession, Logger logger) {
         ResultSet rs = null;
         List<Row> rows = null;
         SimpleStatement simpleStatement = null;
@@ -36,7 +38,7 @@ public class TopBalanceTransaction extends Transaction {
         for (int C_W_ID = 1; C_W_ID <= 10; C_W_ID++) {
             for (int C_D_ID = 1; C_D_ID <= 10; C_D_ID++) {
                 // CQL2
-                String CQL2 = String.format("select C_W_ID, C_D_ID, C_ID, C_FIRST, C_MIDDLE, C_LAST, C_BALANCE from dbycql.customer_balance where C_W_ID = %d and C_D_ID = %d limit 10;", C_W_ID, C_D_ID);
+                String CQL2 = String.format("select C_W_ID, C_D_ID, C_ID, C_FIRST, C_MIDDLE, C_LAST, C_BALANCE from dbycql.customer where C_W_ID = %d and C_D_ID = %d limit 10;", C_W_ID, C_D_ID);
 //                System.out.println(CQL2);
                 rs = cqlSession.execute(CQL2);
                 rows = rs.all();
@@ -52,7 +54,11 @@ public class TopBalanceTransaction extends Transaction {
                     // CQL3
                     String CQL3 = String.format("insert into dbycql.customer_balance_top10 (CB_TOP10, CB_W_ID, CB_D_ID, CB_ID, CB_FIRST, CB_MIDDLE, CB_LAST, CB_BALANCE, CB_TIME) values ('top10', %d, %d, %d, '%s', '%s', '%s', %f,now());", C_W_ID, C_D_ID, C_ID, C_FIRST, C_MIDDLE, C_LAST, C_BALANCE);
 //                    System.out.println(CQL3);
-                    cqlSession.execute(CQL3);
+//                    cqlSession.execute(CQL3);
+                    simpleStatement = SimpleStatement.builder(CQL3)
+                            .setExecutionProfileName("oltp")
+                            .build();
+                    cqlSession.execute(simpleStatement);
                 }
             }
         }
@@ -81,10 +87,10 @@ public class TopBalanceTransaction extends Transaction {
             rs = cqlSession.execute(CQL6);
 //            System.out.println(CQL6);
             String D_NAME = rs.one().getString(0);
-            System.out.printf("C_FIRST=%s,C_MIDDLE=%s,C_LAST=%s,C_BALANCE=%f,W_NAME=%s,D_NAME=%s\n", C_FIRST, C_MIDDLE, C_LAST, C_BALANCE, W_NAME, D_NAME);
+           logger.log(Level.FINE, String.format("C_FIRST=%s,C_MIDDLE=%s,C_LAST=%s,C_BALANCE=%f,W_NAME=%s,D_NAME=%s\n", C_FIRST, C_MIDDLE, C_LAST, C_BALANCE, W_NAME, D_NAME));
         }
         // CQL7
-        String CQL7 = String.format("DROP TABLE dbycql.customer_balance_top10;");
+        String CQL7 = String.format("DROP TABLE IF EXISTS dbycql.customer_balance_top10;");
 //        System.out.println(CQL7);
         simpleStatement = SimpleStatement.builder(CQL7)
                 .setExecutionProfileName("oltp")
@@ -94,7 +100,7 @@ public class TopBalanceTransaction extends Transaction {
     }
 
     @Override
-    protected void YSQLExecute(Connection conn) throws SQLException {
+    protected void YSQLExecute(Connection conn, Logger logger) throws SQLException {
         conn.setAutoCommit(false);
         try {
             java.sql.ResultSet rs = conn.createStatement().executeQuery(String.format(SQLEnum.TopBalanceTransaction1.SQL));
@@ -105,12 +111,14 @@ public class TopBalanceTransaction extends Transaction {
                 double C_BALANCE = rs.getDouble(4);
                 String W_NAME = rs.getString(5);
                 String D_NAME = rs.getString(6);
-                System.out.printf("C_FIRST=%s,C_MIDDLE=%s,C_LAST=%s,C_BALANCE=%f,W_NAME=%s,D_NAME=%s\n", C_FIRST, C_MIDDLE, C_LAST, C_BALANCE, W_NAME, D_NAME);
+               logger.log(Level.FINE, String.format("C_FIRST=%s,C_MIDDLE=%s,C_LAST=%s,C_BALANCE=%f,W_NAME=%s,D_NAME=%s\n", C_FIRST, C_MIDDLE, C_LAST, C_BALANCE, W_NAME, D_NAME));
             }
+            conn.commit();
         } catch (SQLException e) {
             e.printStackTrace();
             if (conn != null) {
-                System.err.print("Transaction is being rolled back\n");
+//                System.err.print("Transaction is being rolled back\n");
+                logger.log(Level.WARNING, "Transaction is being rolled back");
                 conn.rollback();
             }
         } finally {
