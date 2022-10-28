@@ -191,7 +191,7 @@ where O_W_ID = 'W_ID' and O_D_ID = 'D_ID' and O_ID >= 'N'-'L' and O_ID < 'N';
 
 -- 新建top10 customer table
 -- CQL1
-CREATE TABLE dbycql.customer_balance_top10 (
+CREATE TABLE if not exists dbycql.customer_balance_top10 (
     cb_top10 text,
     cb_w_id int,
     cb_d_id int,
@@ -233,7 +233,7 @@ select CB_W_ID, CB_D_ID, CB_ID, CB_FIRST, CB_MIDDLE, CB_LAST, CB_BALANCE from db
 
 -- 删除临时表
 -- CQL7
-DROP TABLE dbycql.customer_balance_top10;
+DROP TABLE if exists dbycql.customer_balance_top10;
 
 
 -- create new tables at very first
@@ -286,3 +286,58 @@ WITH CLUSTERING ORDER BY (C_BALANCE DESC, C_ID ASC); -- change
 copy dbycql.customer (C_W_id,C_D_id,C_id,C_first,C_middle,C_last,C_street_1,C_street_2,C_city,C_state,C_zip,C_phone,C_since,C_credit,C_credit_lim,C_discount,C_balance,C_ytd_payment,C_payment_cnt,C_delivery_cnt,C_data)
 from '/home/stuproj/cs4224j/project_data/data_files/customer.csv' 
 WITH NULL='null' AND INGESTRATE=5000;
+
+
+
+-- NEW VERSION
+
+-- create new tables at very first
+
+CREATE TABLE dbycql.customer_balance_top10 (
+    cb_time_group timestamp,
+    cb_w_id int,
+    cb_d_id int,
+    cb_id int,
+    cb_first text,
+    cb_middle text,
+    cb_last text,
+    cb_balance decimal,
+    cb_time_add timeuuid,
+    PRIMARY KEY ((cb_time_group), cb_balance, cb_time_add)
+) WITH CLUSTERING ORDER BY (cb_balance DESC, cb_time_add);
+
+
+-- 7. Top-Balance Transaction
+
+-- 获取当前的时间 group_timestamp
+-- for every C_W_ID (1-10):
+    -- for every C_D_ID (1-10):
+        -- CQL2
+        select C_W_ID, C_D_ID, C_ID, C_FIRST, C_MIDDLE, C_LAST, C_BALANCE from dbycql.customer
+        where C_W_ID = 'C_W_ID' and C_D_ID = 'C_D_ID' limit 10;
+        -- 得到 'C_W_ID', 'C_D_ID', 'C_ID', 'C_FIRST', 'C_MIDDLE', 'C_LAST', 'C_BALANCE'
+        -- 一条一条插入数据 for every record(10条):
+            -- CQL3
+            insert into dbycql.customer_balance_top10 (CB_TIME_GROUP, CB_W_ID, CB_D_ID, CB_ID, CB_FIRST, CB_MIDDLE, CB_LAST, CB_BALANCE, CB_TIME_ADD) 
+            values (group_timestamp, 'C_W_ID', 'C_D_ID', 'C_ID', 'C_FIRST', 'C_MIDDLE', 'C_LAST', 'C_BALANCE', now());
+
+--get all top10 customer
+-- CQL4
+select CB_W_ID, CB_D_ID, CB_ID, CB_FIRST, CB_MIDDLE, CB_LAST, CB_BALANCE from dbycql.customer_balance_top10 
+where CB_TIME_GROUP = group_timestamp limit 10;
+-- 得到 'C_W_ID', 'C_D_ID', 'C_ID', 'C_FIRST', 'C_MIDDLE', 'C_LAST', 'C_BALANCE'
+
+------------------ ##ignore begin 10 ## ------------------
+
+-- for every top10 customer:
+    -- CQL5
+    select W_NAME from dbycql.Warehouse where W_ID = 'C_W_ID';
+    -- CQL6
+    select D_NAME from dbycql.District where D_W_ID = 'C_W_ID' and D_ID = 'C_D_ID';
+    -- 输出当前customer: C_FIRST, C_MIDDLE, C_LAST, C_BALANCE, C_W_ID, C_D_ID, W_NAME, D_NAME
+
+------------------ ##ignore end 10 ## --------------------
+
+-- 删除数据
+-- CQL7
+delete from dbycql.customer_balance_top10 where CB_TIME_GROUP = group_timestamp;
