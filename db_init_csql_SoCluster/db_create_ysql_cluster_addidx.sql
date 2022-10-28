@@ -1,11 +1,11 @@
 
-DROP DATABASE IF EXISTS ysql_idx;
-CREATE DATABASE ysql_idx;
+DROP DATABASE IF EXISTS dbysql;
+CREATE DATABASE dbysql;
 -- show all tables
 -- \dt;
 
--- USE ysql_idx5424J; MySQL 
-\c ysql_idx;
+-- USE dbysql5424J; MySQL 
+\c dbysql;
 
 -- data path: /home/stuproj/cs4224j/project_data/data_files/
 

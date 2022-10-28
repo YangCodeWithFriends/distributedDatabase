@@ -81,9 +81,12 @@ CREATE TABLE customer (
   C_data varchar(500) NOT NULL);
 -- insert from csv
 \copy customer from '/home/stuproj/cs4224j/project_data/data_files/customer.csv' WITH (FORMAT CSV, NULL 'null');
-select count(*) as no_imported_rows from customer;
+select count(*) as no_imported_customers from customer;
+
+
 
 -- Note: order is a keyword in SQL due to "order by"
+-- 3e5
 DROP TABLE if EXISTS orders CASCADE;
 CREATE TABLE orders (
   -- (O W ID, O D ID, O C ID) is a foreign key that refers to customer table.
@@ -104,8 +107,10 @@ CREATE TABLE orders (
 );
 -- insert from csv
 \copy orders from '/home/stuproj/cs4224j/project_data/data_files/order.csv' WITH (FORMAT CSV, NULL 'null');
-select count(*) as no_imported_rows from orders;
+select count(*) as no_imported_orders from orders;
 
+
+-- 1e5
 DROP TABLE if EXISTS item CASCADE;
 CREATE TABLE item (
   I_id int NOT NULL,
@@ -117,9 +122,10 @@ CREATE TABLE item (
 );
 -- insert from csv
 \copy item from '/home/stuproj/cs4224j/project_data/data_files/item.csv' WITH (FORMAT CSV, NULL 'null');
-select count(*) as no_imported_rows from item;
+select count(*) as no_imported_Item from item;
 
--- 2 relationship tables -- 
+
+-- 1e6
 DROP TABLE if EXISTS stock CASCADE;
 CREATE TABLE stock (
   -- S I ID is a foreign key that refers to item table. 
@@ -145,8 +151,12 @@ CREATE TABLE stock (
   S_data varchar(50) NOT NULL
 );
 \copy stock from '/home/stuproj/cs4224j/project_data/data_files/stock.csv' WITH (FORMAT CSV, NULL 'null');
-select count(*) as no_imported_rows from stock;
+select count(*) as no_imported_stock from stock;
 
+
+
+
+-- 3749590
 DROP TABLE if EXISTS orderline CASCADE;
 CREATE TABLE orderline (
   -- (OL W ID, OL D ID, OL O ID) is a foreign key that refers to Order table. 
@@ -168,7 +178,38 @@ CREATE TABLE orderline (
   OL_dist_info char(24) NOT NULL
 );
 \copy orderline from '/home/stuproj/cs4224j/project_data/data_files/order-line.csv' WITH (FORMAT CSV, NULL 'null');
-select count(*) as no_imported_rows from "orderline";
+select count(*) as no_imported_OLine from "orderline";
+
+
+-- 新表
+-- 朱姐的 customer_item, 3749590
+DROP TABLE if EXISTS customer_item CASCADE;
+create table customer_item(
+CI_W_ID int, 
+CI_D_ID int, 
+CI_C_ID int, 
+CI_O_ID int, 
+CI_I_ID int,
+primary key(CI_W_ID,CI_D_ID,CI_C_ID,CI_O_ID,CI_I_ID));
+\copy customer_item from '/home/stuproj/cs4224j/project_data/data_files/customer_item.csv' WITH (FORMAT CSV, NULL 'null');
+select count(*) as no_imported_customer_item from customer_item; 
+
+
+-- 输出看导入结果
+select count(*) as no_imported_district from district;
+select count(*) as no_imported_orders from orders;
+select count(*) as no_imported_customers from customer;
+select count(*) as no_imported_Item from item;
+select count(*) as no_imported_stock from stock;
+select count(*) as no_imported_OLine from orderline;
+select count(*) as no_imported_customer_item from customer_item; 
+
+-- idx
+-- drop index if exists _idx;
+-- create index if not exists _idx on dbycql. ();
+
+
+
 -- show all tables
 \dt;
 

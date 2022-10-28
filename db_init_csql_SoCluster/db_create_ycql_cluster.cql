@@ -6,6 +6,7 @@ DROP TABLE IF EXISTS dbycql.orders;
 DROP TABLE IF EXISTS dbycql.item;
 DROP TABLE IF EXISTS dbycql.orderline;
 DROP TABLE IF EXISTS dbycql.stock;
+DROP TABLE IF EXISTS dbycql.customer_item;
 DROP KEYSPACE IF EXISTS dbycql;
 
 -- data path: /home/stuproj/cs4224j/project_data/data_files/
@@ -14,7 +15,7 @@ DROP KEYSPACE IF EXISTS dbycql;
 CREATE KEYSPACE dbycql 
 WITH REPLICATION = {
   'class': 'SimpleStrategy', 
-  'replication_factor': '1'} 
+  'replication_factor': '3'} 
   ;
   -- AND DURABLE_WRITES = true;
 
@@ -41,7 +42,7 @@ CREATE TABLE dbycql.warehouse (
 
 -- WITH NULL='null': set NULL='null' or whatever character you want for null value ...
 copy dbycql.warehouse from '/home/stuproj/cs4224j/project_data/data_files/warehouse.csv'
-WITH NULL='null' AND INGESTRATE=5000;
+WITH NULL='null';
 
 
 CREATE TABLE dbycql.district (
@@ -63,15 +64,45 @@ CREATE TABLE dbycql.district (
 );
 
 copy dbycql.district from '/home/stuproj/cs4224j/project_data/data_files/district.csv' 
-WITH NULL='null' AND INGESTRATE=5000;
+WITH NULL='null';
 
 
+-- CREATE TABLE dbycql.customer (
+--   C_W_id int,
+--   C_D_id int,
+--   C_id int,
+--   -- Note: as compound foreign key
+--   PRIMARY KEY((C_W_id, C_D_id), C_id),
+  
+--   C_first varchar,
+--   C_middle varchar,
+--   C_last varchar,
+--   C_street_1 varchar,
+--   C_street_2 varchar,
+--   C_city varchar,
+--   C_state varchar,
+--   C_zip varchar,
+--   C_phone varchar,
+--   C_since timestamp,
+--   C_credit varchar,
+--   C_credit_lim decimal,
+--   C_discount decimal,
+--   C_balance decimal,
+--   C_ytd_payment int,
+--   C_payment_cnt int,
+--   C_delivery_cnt int,
+--   C_data varchar);
+-- -- insert from csv
+-- copy dbycql.customer from '/home/stuproj/cs4224j/project_data/data_files/customer.csv'
+-- WITH NULL='null' AND INGESTRATE=7000;
+-- select count(*) as no_imported_rows from dbycql.customer;
+
+-- 3e5
+DROP TABLE IF EXISTS dbycql.customer;
 CREATE TABLE dbycql.customer (
-  -- combined (C W ID, C D ID) is a foreign key that refers to district table.
   C_W_id int,
   C_D_id int,
   C_id int,
-  -- Note: as compound foreign key
   C_first varchar,
   C_middle varchar,
   C_last varchar,
@@ -90,15 +121,17 @@ CREATE TABLE dbycql.customer (
   C_payment_cnt int,
   C_delivery_cnt int,
   C_data varchar,
-  PRIMARY KEY((C_W_id, C_D_id), C_id)
-  );
--- insert from csv
-copy dbycql.customer from '/home/stuproj/cs4224j/project_data/data_files/customer.csv'
-WITH NULL='null' AND INGESTRATE=5000;
-select count(*) as no_imported_rows from dbycql.customer;
+  PRIMARY KEY ((C_W_ID, C_D_ID), C_BALANCE, C_ID))
+WITH CLUSTERING ORDER BY (C_BALANCE DESC, C_ID ASC);
+
+copy dbycql.customer (C_W_id,C_D_id,C_id,C_first,C_middle,C_last,C_street_1,C_street_2,C_city,C_state,C_zip,C_phone,C_since,C_credit,C_credit_lim,C_discount,C_balance,C_ytd_payment,C_payment_cnt,C_delivery_cnt,C_data)
+from '/home/stuproj/cs4224j/project_data/data_files/customer.csv' 
+WITH NULL='null' AND INGESTRATE=7000;
+select count(*) as no_imported_customer from dbycql.customer;
 
 
 
+-- orders 3e5
 CREATE TABLE dbycql.orders (
   -- (O W ID, O D ID, O C ID) is a foreign key that refers to customer table.
   O_W_id int,
@@ -114,23 +147,25 @@ CREATE TABLE dbycql.orders (
 );
 -- insert from csv
 copy dbycql.orders from '/home/stuproj/cs4224j/project_data/data_files/order.csv'
-WITH NULL='null' AND INGESTRATE=5000;
+WITH NULL='null' AND INGESTRATE=7000;
 select count(*) as row_imported_orders from dbycql.orders;
--- select count(*) from orders where O_carrier_id == 'null';
+-- select count(*) from orders;
 
 
+-- item 1e6
 CREATE TABLE dbycql.item (
   I_id int,
   I_name varchar,
   i_price decimal,
   I_im_id int,
   I_data varchar,
-  PRIMARY KEYI(I_id)
+  PRIMARY KEY(I_id)
 );
 -- insert from csv
 copy dbycql.item from '/home/stuproj/cs4224j/project_data/data_files/item.csv'
-WITH NULL='null' AND INGESTRATE=5000;
-select count(*) as no_imported_rows from dbycql.item;
+WITH NULL='null' AND INGESTRATE=7000;
+select count(*) as no_imported_Item from dbycql.item;
+
 
 -- 2 relationship tables -- 
 CREATE TABLE dbycql.stock (
@@ -138,8 +173,8 @@ CREATE TABLE dbycql.stock (
   -- S W ID is a cluster key that refers to warehouse table.
   S_W_id int,
   S_I_id int,
-  
   S_quantity decimal,
+  -- S_ytd decimal,
   S_ytd decimal,
   S_order_cnt int,
   S_remote_cnt int,
@@ -159,29 +194,79 @@ CREATE TABLE dbycql.stock (
 
 
 copy dbycql.stock from '/home/stuproj/cs4224j/project_data/data_files/stock.csv'
-WITH NULL='null' AND INGESTRATE=5000;
+WITH NULL='null' AND INGESTRATE=10000;
 select count(*) as no_imported_stocks from dbycql.stock;
 
 
-CREATE TABLE dbycql.orderline (
-  -- OL I ID is a foreign key that refers to item table.
-  OL_W_id int, 
-  OL_D_id int, 
-  OL_O_id int,
-  OL_number int,
-  OL_I_id int,
-  OL_delivery_D timestamp, -- data has lots of null
-  OL_amount decimal,
-  OL_supply_W_id int,
-  OL_quantity decimal,
-  OL_dist_info varchar,
-  PRIMARY KEY((OL_W_id, OL_D_id), OL_O_id, OL_number)
-);
-copy dbycql.orderline from '/home/stuproj/cs4224j/project_data/data_files/order-line.csv'
-WITH NULL='null' AND INGESTRATE=7000;
--- select * from "orderline" where OL_delivery_D is null;
-select count(*) as no_imported_rows from dbycql.orderline;
+-- CREATE TABLE dbycql.orderline (
+--   -- OL I ID is a foreign key that refers to item table.
+--   OL_W_id int, 
+--   OL_D_id int, 
+--   OL_O_id int,
+--   OL_number int,
+--   PRIMARY KEY((OL_W_id, OL_D_id), OL_O_id, OL_number),
+--   OL_I_id int,
+--   OL_delivery_D timestamp, -- data has lots of null
+--   OL_amount decimal,
+--   OL_supply_W_id int,
+--   OL_quantity decimal,
+--   OL_dist_info varchar
+-- );
+-- copy dbycql.orderline from '/home/stuproj/cs4224j/project_data/data_files/order-line.csv'
+-- WITH NULL='null' AND INGESTRATE=7000;
+-- -- select * from "orderline" where OL_delivery_D is null;
+-- select count(*) as no_imported_rows from dbycql.orderline;
 
+-- 6. 新的 orderline 3749590
+DROP TABLE IF EXISTS dbycql.orderline;
+CREATE TABLE dbycql.orderline (
+    ol_w_id int,
+    ol_d_id int,
+    ol_o_id int,
+    ol_number int,
+    ol_i_id int,
+    ol_delivery_d timestamp,
+    ol_amount decimal,
+    ol_supply_w_id int,
+    ol_quantity decimal,
+    ol_dist_info text,
+    PRIMARY KEY ((ol_w_id, ol_d_id), ol_quantity, ol_o_id, ol_number)
+) WITH CLUSTERING ORDER BY (ol_quantity DESC, ol_o_id ASC, ol_number ASC);
+
+copy dbycql.orderline (ol_w_id, ol_d_id, ol_o_id, ol_number, ol_i_id, ol_delivery_d, ol_amount, ol_supply_w_id, ol_quantity, ol_dist_info)
+from '/home/stuproj/cs4224j/project_data/data_files/order-line.csv' 
+WITH NULL='null' AND INGESTRATE=11000;
+-- select count(*) as no_imported_OL from dbycql.orderline;
+
+
+-- 新加表
+-- customer_item, 3749590: warehouse，district，customer，order，item
+-- cql: (CI_W_ID),CI_D_ID,CI_C_ID,CI_O_ID,CI_I_ID, 
+DROP TABLE IF EXISTS dbycql.customer_item;
+create table dbycql.customer_item(
+		CI_W_ID int, 
+		CI_D_ID int, 
+		CI_C_ID int, 
+		CI_O_ID int, 
+		CI_I_ID int,
+		-- CI_I_NUMBER int,
+    primary key((CI_W_ID),CI_D_ID,CI_C_ID,CI_O_ID,CI_I_ID)
+);
+-- cql
+copy customer_item from '/home/stuproj/cs4224j/project_data/data_files/customer_item.csv' 
+WITH NULL='null' AND INGESTRATE=10000;
+-- select count(*) as no_imported_customer_item from dbycql.orderline;
+
+
+
+-- 输出看导入结果
+select count(*) as no_imported_district from district;
+select count(*) as no_imported_orders from orders;
+select count(*) as no_imported_customers from customer;
+select count(*) as no_imported_Item from item;
+select count(*) as no_imported_stock from stock;
+-- select count(*) as no_imported_OLine from orderline;
+-- select count(*) as no_imported_customer_item from customer_item; 
 
 -- show all tables
 DESCRIBE tables;
