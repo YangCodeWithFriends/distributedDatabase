@@ -1,24 +1,11 @@
 
-DROP TABLE IF EXISTS dbycql.warehouse;
-DROP TABLE IF EXISTS dbycql.district;
-DROP TABLE IF EXISTS dbycql.customer;
-DROP TABLE IF EXISTS dbycql.orders;
-DROP TABLE IF EXISTS dbycql.item;
-DROP TABLE IF EXISTS dbycql.order_line;
-DROP TABLE IF EXISTS dbycql.stock;
 DROP KEYSPACE IF EXISTS dbycql;
 
--- data path: /temp/project_data/data_files/
+-- /temp/project_data/data_files
 
 -- show all key spaces(DBs)
-CREATE KEYSPACE dbycql 
-WITH REPLICATION = {
-  'class': 'SimpleStrategy', 
-  'replication_factor': '1'} 
-  ;
-  -- AND DURABLE_WRITES = true;
-
--- DESCRIBE dbycql;
+CREATE KEYSPACE dbycql WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': '1'} AND DURABLE_WRITES = true;
+DESCRIBE dbycql;
 USE dbycql;
 
 
@@ -27,12 +14,11 @@ USE dbycql;
 -- 似乎没有char
 
 --  5 entity tables --
--- drop table if exists warehouse;
+Drop table warehouse;
 CREATE TABLE warehouse (
   -- 1-10, so ok in tinyint for [-128	127]
-  W_id int, 
+  W_id tinyint, 
   -- partition key and primary key
-  PRIMARY KEY(W_id), 
   W_name varchar,
   W_street_1 varchar,
   W_street_2 varchar,
@@ -40,20 +26,23 @@ CREATE TABLE warehouse (
   W_state varchar,
   W_zip varchar,
   W_tax decimal,
-  W_ytd decimal
+  W_ytd decimal,
+  PRIMARY KEY(W_id)
 );
 
+-- insert from csv
 -- WITH NULL='null': set NULL='null' or whatever character you want for null value ...
-copy warehouse from '/temp/project_data/data_files/warehouse.csv'
-WITH NULL='null';
+copy dbycql.warehouse from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/warehouse.csv'
+WITH NULL='null' AND INGESTRATE=5000;
 
--- drop table if exists district;
+
 CREATE TABLE district (
+  -- D W ID is a foreign key that refers to warehouse table.
   -- 1-10,
-  D_W_id int,
+  D_W_id tinyint REFERENCES warehouse(W_id),
   -- 1-10,
-  D_id int,
-  -- Note: D_id is clustering key
+  D_id tinyint,
+  -- Note: as compound foreign key
   PRIMARY KEY(D_W_id, D_id),
 
   D_name varchar,
@@ -67,17 +56,18 @@ CREATE TABLE district (
   D_next_O_id int
 );
 
-copy district from '/temp/project_data/data_files/district.csv' 
-WITH NULL='null';
+copy dbycql.district from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/district.csv' 
+WITH NULL='null' AND INGESTRATE=5000;
 
--- drop table if exists customer;
+
 CREATE TABLE customer (
   -- combined (C W ID, C D ID) is a foreign key that refers to district table.
   C_W_id int,
   C_D_id int,
+  FOREIGN KEY (C_W_id, C_D_id) REFERENCES district(D_W_id, D_id),
   C_id int,
   -- Note: as compound foreign key
-  PRIMARY KEY((C_W_id, C_D_id), C_id),
+  PRIMARY KEY(C_W_id, C_D_id, C_id),
   
   C_first varchar,
   C_middle varchar,
@@ -99,20 +89,21 @@ CREATE TABLE customer (
   C_data varchar);
 
 -- insert from csv
-COPY customer from '/temp/project_data/data_files/customer.csv'
-WITH NULL='null';
-select count(*) as no_imported_rows from customer;
+\copy dbycql.customer from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/customer.csv'
+WITH NULL='null' AND INGESTRATE=5000;
+-- select count(*) from customer;
 
 -- Note: order is a keyword in SQL due to "order by"
--- drop table if exists orders;
 CREATE TABLE orders (
   -- (O W ID, O D ID, O C ID) is a foreign key that refers to customer table.
   O_W_id int,
   O_D_id int,
   O_id int,
+  PRIMARY KEY(O_W_id, O_D_id, O_id),
   O_C_id int,
-  PRIMARY KEY ((O_W_id, O_D_id), O_C_id),
+  FOREIGN KEY (O_W_id, O_D_id, O_C_id) REFERENCES customer(C_W_id, C_D_id, C_id),
   -- Note: as compound foreign key
+  
 
   -- The range of O CARRIER ID is [1,10]: use smallint is 16 bit in CQL, tinyint is 8
   O_carrier_id tinyint, -- data has lots of null
@@ -121,35 +112,35 @@ CREATE TABLE orders (
   O_entry_d timestamp
 );
 
-COPY orders from '/temp/project_data/data_files/order.csv'
-WITH NULL='null';
-select count(*) as row_imported_orders from orders;
--- select count(*) from orders where O_carrier_id == 'null';
+\copy dbycql.orders from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/order.csv'
+WITH NULL='null' AND INGESTRATE=5000;
+-- select count(*) from orders where O_carrier_id is null;
 
-
--- drop table if exists item;
 CREATE TABLE item (
   I_id int PRIMARY KEY,
   I_name varchar,
-  I_tax decimal,
+  i_price decimal,
   I_im_id int,
   I_data varchar
 );
+
 -- insert from csv
-COPY item from '/temp/project_data/data_files/item.csv'
-WITH NULL='null';
-select count(*) as no_imported_rows from item;
+\copy dbycql.item from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/item.csv'
+WITH NULL='null' AND INGESTRATE=5000;
 
 -- 2 relationship tables -- 
--- drop table if exists order_line;
 CREATE TABLE order_line (
+  -- (OL W ID, OL D ID, OL O ID) is a foreign key that refers to Order table. 
   -- OL I ID is a foreign key that refers to item table.
   OL_W_id int, 
   OL_D_id int, 
   OL_O_id int,
+  FOREIGN KEY (OL_W_id, OL_D_id, OL_O_id) REFERENCES orders(O_W_id, O_D_id, O_id),
   OL_number int,
-  PRIMARY KEY((OL_W_id, OL_D_id, OL_O_id), OL_number),
-  OL_I_id int,
+  PRIMARY KEY(OL_W_id, OL_D_id, OL_O_id, OL_number),
+  OL_I_id int REFERENCES item(I_id),
+  
+  
   OL_delivery_D timestamp, -- data has lots of null
   OL_amount decimal,
   OL_supply_W_id int,
@@ -157,18 +148,15 @@ CREATE TABLE order_line (
   OL_dist_info varchar
 );
 
-COPY order_line from '/temp/project_data/data_files/order-line.csv'
-WITH NULL='null';
+\copy dbycql.order_line from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/order-line.csv'
+WITH NULL='null' AND INGESTRATE=5000;
 -- select * from "order_line" where OL_delivery_D is null;
-select count(*) as no_imported_rows from order_line;
 
-
--- drop table if exists stock;
 CREATE TABLE stock (
-  -- S I ID is a primary key that refers to item table. 
-  -- S W ID is a cluster key that refers to warehouse table.
-  S_W_id int,
-  S_I_id int,
+  -- S I ID is a foreign key that refers to item table. 
+  -- S W ID is a foreign key that refers to warehouse table.
+  S_W_id int REFERENCES warehouse(W_id),
+  S_I_id int REFERENCES item(I_id),
   PRIMARY KEY(S_W_id, S_I_id),
   
   S_quantity decimal,
@@ -185,13 +173,13 @@ CREATE TABLE stock (
   S_dist_08 varchar,
   S_dist_09 varchar,
   S_dist_10 varchar,
-  S_dist_data varchar
+  S_data varchar
 );
 
 
-COPY stock from '/temp/project_data/data_files/stock.csv'
-WITH NULL='null';
-select count(*) as no_imported_stocks from stock;
+\copy dbycql.stock from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/stock.csv'
+WITH NULL='null' AND INGESTRATE=5000;
 
 -- show all tables
-DESCRIBE tables;
+\dt;
+
