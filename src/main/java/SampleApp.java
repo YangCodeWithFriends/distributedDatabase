@@ -1,68 +1,138 @@
-
-/**
- * Copyright 2022 Yugabyte
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+import com.datastax.oss.driver.api.core.CqlSession;
 import common.Transaction;
 import common.TransactionType;
 import common.transactionImpl.*;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
+import java.util.logging.Level;
 
 public class SampleApp {
-    private static final String TABLE_NAME = "DemoAccount";
-    private static Connection conn;
+    private Connection conn;
+    private CqlSession cqlSession;
+    private static final int N = 20;
+    private static int countDownLatchTimeout = 8;
 
     public static void main(String[] args) {
-        // 1. Establish a DB connection
+        String MODE = DataSource.YSQL;// by default, run YSQL
+        if (args != null && args.length != 0 && args[0].equals(DataSource.YCQL)) MODE = DataSource.YCQL;
+        String[] inputFileList = new String[N];
+        String[] outputFileList = new String[N];
+        for (int i = 0; i < N; i++) {
+            inputFileList[i] = "src/main/resources/xact_files/" + i + ".txt";
+            outputFileList[i] = "log" + i + ".txt";
+            Logger logger = Logger.getLogger(outputFileList[i]);
+            try {
+                Handler handler = new FileHandler(outputFileList[i]);
+                handler.setFormatter(new SimpleFormatter());
+                logger.addHandler(handler);
+                logger.setLevel(Level.FINEST);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        CountDownLatch countDownLatch = new CountDownLatch(N);
+        ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
+
+        for (int i = 0; i < N; i++) {
+            String finalMODE = MODE;
+            int finalI = i;
+            cachedThreadPool.execute(() -> {
+                Logger logger = Logger.getLogger(outputFileList[finalI]);
+                try {
+                    logger.log(Level.INFO, Thread.currentThread().getName() + " starts ");
+                    new SampleApp().doWork(finalMODE, inputFileList[finalI], logger);
+                } catch (Exception e) {
+                    logger.log(Level.WARNING, Thread.currentThread().getName() + " exception ");
+                } finally {
+                    logger.log(Level.INFO, Thread.currentThread().getName() + " ends ");
+                    countDownLatch.countDown();
+                }
+            });
+        }
+
+        System.out.println("Main thread waits");
         try {
-            conn = DataSource.getConnection();
-            System.out.println(">>>> Successfully connected to YugabyteDB!");
-        } catch (SQLException e) {
+            System.out.println("CountDownLatchTimeout = " + countDownLatchTimeout);
+            countDownLatch.await(countDownLatchTimeout, TimeUnit.HOURS);
+        } catch (InterruptedException e) {
+            System.out.println("Exception: await interrupted exception");
+        } finally {
+            System.out.println("countDownLatch: " + countDownLatch.toString());
+        }
+        System.out.println("Main thread ends");
+
+        cachedThreadPool.shutdown();
+    }
+
+    public void doWork(String MODE, String inputFileName, Logger logger) {
+        logger.log(Level.INFO, Thread.currentThread().getName() + "do work");
+
+        // 1. Construct requests from files.
+        List<Transaction> list = new ArrayList<>();
+        try {
+            readFile(inputFileName, list, logger);
+        } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-        if (conn == null) return;
+        if (list == null) throw new RuntimeException("Input list is null! Please check input files");
 
-        // 2. Construct requests from files.
-        List<Transaction> list = null;
+        // 2. Establish a DB connection
         try {
-            list = readFile();
-        } catch (FileNotFoundException e) {
+            if (MODE.equals(DataSource.YSQL)) {
+                logger.log(Level.INFO, Thread.currentThread().getName() + "do work");
+                logger.log(Level.INFO, "Connecting to DB. Your mode is YSQL.");
+                conn = new DataSource(MODE).getSQLConnection();
+                logger.log(Level.INFO, "Conn = "+ conn.getClientInfo());
+//                logger.log(Level.INFO, "Isolation level=" + conn.getTransactionIsolation());
+            } else {
+                logger.log(Level.INFO, "Connecting to DB. Your mode is YCQL.");
+                cqlSession = new DataSource(MODE).getCQLSession();
+                logger.log(Level.INFO, "CQLSession = "+ cqlSession.getName());
+            }
+            logger.log(Level.INFO, ">>>> Successfully connected to YugabyteDB.");
+        } catch (SQLException e) {
             e.printStackTrace();
         }
 
         // 3. execute and report
-        ExecuteManager manager = new ExecuteManager();
-        manager.executeYSQLCommands(conn, list);
-        manager.report();
+        ExecuteManager executeManager = new ExecuteManager();
+        if (MODE.equals(DataSource.YSQL)) {
+            try {
+                executeManager.executeYSQL(conn, list, logger);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        } else {
+            try {
+                executeManager.executeYCQL(cqlSession, list, logger);
+            } finally {
+                cqlSession.close();
+            }
+        }
+        executeManager.report(logger);
     }
 
 
-
-    private static List<Transaction> readFile() throws FileNotFoundException {
-        String inputFileName = "src/main/resources/xact_files/0.txt";
-        Scanner scanner = new Scanner(new File(inputFileName));
-        List<Transaction> list = new ArrayList<>();
+    private static List<Transaction> readFile(String fileName, List<Transaction> list, Logger logger) throws FileNotFoundException {
+        logger.log(Level.INFO, Thread.currentThread().getName() + " reads from file " + fileName);
+        Scanner scanner = new Scanner(new File(fileName));
         while (scanner.hasNextLine()) {
             String[] firstLine = scanner.nextLine().split(",");
             String type = firstLine[0];
@@ -86,7 +156,7 @@ public class SampleApp {
             }
             if (transaction != null) list.add(transaction);
         }
-        System.out.printf("Read {%d} orders from file={%s}\n",list.size(),inputFileName);
+        logger.log(Level.INFO, Thread.currentThread().getName() + " reads " + list.size() + " requests from " + fileName);
         return list;
     }
 
@@ -105,7 +175,7 @@ public class SampleApp {
     private static Transaction assembleTopBalanceTransaction(String[] firstLine, Scanner scanner) {
         TopBalanceTransaction topBalanceTransaction = new TopBalanceTransaction();
         topBalanceTransaction.setTransactionType(TransactionType.TOP_BALANCE);
-//        System.out.println("add a top balance item trans");
+//        logger.log(Level.INFO, "add a top balance item trans");
         return topBalanceTransaction;
     }
 
@@ -113,9 +183,9 @@ public class SampleApp {
         int W_ID = Integer.parseInt(firstLine[1]);
         int D_ID = Integer.parseInt(firstLine[2]);
         int L = Integer.parseInt(firstLine[3]);
-        PopularItemTransaction popularItemTransaction = new PopularItemTransaction(W_ID,D_ID,L);
+        PopularItemTransaction popularItemTransaction = new PopularItemTransaction(W_ID, D_ID, L);
         popularItemTransaction.setTransactionType(TransactionType.POPULAR_ITEM);
-//        System.out.println("add a popular item trans");
+//        logger.log(Level.INFO, "add a popular item trans");
         return popularItemTransaction;
     }
 
@@ -124,9 +194,9 @@ public class SampleApp {
         int D_ID = Integer.parseInt(firstLine[2]);
         int T = Integer.parseInt(firstLine[3]);
         int L = Integer.parseInt(firstLine[4]);
-        StockLevelTransaction stockLevelTransaction = new StockLevelTransaction(W_ID,D_ID,T,L);
+        StockLevelTransaction stockLevelTransaction = new StockLevelTransaction(W_ID, D_ID, T, L);
         stockLevelTransaction.setTransactionType(TransactionType.STOCK_LEVEL);
-//        System.out.println("add a stock level trans");
+//        logger.log(Level.INFO, "add a stock level trans");
         return stockLevelTransaction;
     }
 
@@ -134,9 +204,9 @@ public class SampleApp {
         int C_W_ID = Integer.parseInt(firstLine[1]);
         int C_D_ID = Integer.parseInt(firstLine[2]);
         int C_ID = Integer.parseInt(firstLine[3]);
-        OrderStatusTransaction orderStatusTransaction = new OrderStatusTransaction(C_W_ID,C_D_ID,C_ID);
+        OrderStatusTransaction orderStatusTransaction = new OrderStatusTransaction(C_W_ID, C_D_ID, C_ID);
         orderStatusTransaction.setTransactionType(TransactionType.ORDER_STATUS);
-        System.out.println("add a order status trans");
+//        logger.log(Level.INFO, "add a order status trans");
         return orderStatusTransaction;
     }
 
@@ -172,7 +242,7 @@ public class SampleApp {
         newOrderTransaction.setSupplierWarehouses(suppliers);
         return newOrderTransaction;
     }
-    
+
     private static Transaction assembleDeliveryTransaction(String[] firstLine, Scanner scanner) {
         DeliveryTransaction deliveryTransaction = new DeliveryTransaction();
         int W_ID = Integer.parseInt(firstLine[1]);
@@ -195,65 +265,5 @@ public class SampleApp {
         paymentTransaction.setC_W_ID(C_W_ID);
         paymentTransaction.set_PAYMENT(PAYMENT);
         return paymentTransaction;
-    }
-
-    private static void createDatabase(Connection conn) throws SQLException {
-        Statement stmt = conn.createStatement();
-
-        stmt.execute("DROP TABLE IF EXISTS " + TABLE_NAME);
-
-        stmt.execute("CREATE TABLE " + TABLE_NAME +
-                "(" +
-                "id int PRIMARY KEY," +
-                "name varchar," +
-                "age int," +
-                "country varchar," +
-                "balance int" +
-                ")");
-
-        stmt.execute("INSERT INTO " + TABLE_NAME + " VALUES" +
-                "(1, 'Jessica', 28, 'USA', 10000)," +
-                "(2, 'John', 28, 'Canada', 9000)");
-
-        System.out.println(">>>> Successfully created " + TABLE_NAME + " table.");
-    }
-
-    private static void selectAccounts(Connection conn) throws SQLException {
-        Statement stmt = conn.createStatement();
-
-        System.out.println(">>>> Selecting accounts:");
-
-        ResultSet rs = stmt.executeQuery("SELECT * FROM " + TABLE_NAME);
-
-        while (rs.next()) {
-            System.out.println(String.format("name = %s, age = %s, country = %s, balance = %s",
-                    rs.getString(2), rs.getString(3),
-                    rs.getString(4), rs.getString(5)));
-        }
-    }
-
-    private static void transferMoneyBetweenAccounts(Connection conn, int amount) throws SQLException {
-        Statement stmt = conn.createStatement();
-
-        try {
-            stmt.execute(
-                    "BEGIN TRANSACTION;" +
-                            "UPDATE " + TABLE_NAME + " SET balance = balance - " + amount + ""
-                            + " WHERE name = 'Jessica';" +
-                            "UPDATE " + TABLE_NAME + " SET balance = balance + " + amount + "" + " WHERE name = 'John';"
-                            +
-                            "COMMIT;");
-        } catch (SQLException e) {
-            if (e.getSQLState().equals("40001")) {
-                System.err.println("The operation is aborted due to a concurrent transaction that is" +
-                        " modifying the same set of rows. Consider adding retry logic or using the pessimistic locking.");
-                e.printStackTrace();
-            } else {
-                throw e;
-            }
-        }
-
-        System.out.println();
-        System.out.println(">>>> Transferred " + amount + " between accounts.");
     }
 }
