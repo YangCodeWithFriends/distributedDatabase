@@ -7,7 +7,7 @@ CREATE DATABASE dbysql;
 -- USE dbysql5424J; MySQL 
 \c dbysql;
 
--- data path: /temp/project_data/data_files/
+-- data path: /home/stuproj/cs4224j/project_data/data_files/
 
 --  5 entity tables --
 DROP TABLE if EXISTS warehouse CASCADE;
@@ -26,7 +26,7 @@ CREATE TABLE warehouse (
 );
 
 -- insert from csv
-\copy warehouse from '/temp/project_data/data_files/warehouse.csv' WITH (FORMAT CSV, NULL 'null');
+\copy warehouse from '/home/stuproj/cs4224j/project_data/data_files/warehouse.csv' WITH (FORMAT CSV, NULL 'null');
 
 
 DROP TABLE if EXISTS district CASCADE;
@@ -48,7 +48,7 @@ CREATE TABLE district (
   D_next_O_id int NOT NULL
 );
 
-\copy district from '/temp/project_data/data_files/district.csv' WITH (FORMAT CSV, NULL 'null');
+\copy district from '/home/stuproj/cs4224j/project_data/data_files/district.csv' WITH (FORMAT CSV, NULL 'null');
 
 
 DROP TABLE if EXISTS customer CASCADE;
@@ -79,12 +79,14 @@ CREATE TABLE customer (
   C_payment_cnt int NOT NULL,
   C_delivery_cnt int NOT NULL,
   C_data varchar(500) NOT NULL);
-
 -- insert from csv
-\copy customer from '/temp/project_data/data_files/customer.csv' WITH (FORMAT CSV, NULL 'null');
-select count(*) as no_imported_rows from customer;
+\copy customer from '/home/stuproj/cs4224j/project_data/data_files/customer.csv' WITH (FORMAT CSV, NULL 'null');
+select count(*) as no_imported_customers from customer;
+
+
 
 -- Note: order is a keyword in SQL due to "order by"
+-- 3e5
 DROP TABLE if EXISTS orders CASCADE;
 CREATE TABLE orders (
   -- (O W ID, O D ID, O C ID) is a foreign key that refers to customer table.
@@ -103,48 +105,27 @@ CREATE TABLE orders (
   O_all_local decimal(1,0) NOT NULL,
   O_entry_d timestamp NOT NULL
 );
+-- insert from csv
+\copy orders from '/home/stuproj/cs4224j/project_data/data_files/order.csv' WITH (FORMAT CSV, NULL 'null');
+select count(*) as no_imported_orders from orders;
 
-\copy orders from '/temp/project_data/data_files/order.csv' WITH (FORMAT CSV, NULL 'null');
-select count(*) as no_imported_rows from orders;
 
+-- 1e5
 DROP TABLE if EXISTS item CASCADE;
 CREATE TABLE item (
   I_id int NOT NULL,
   PRIMARY KEY(I_id HASH),
   I_name varchar(24) NOT NULL,
-  I_tax decimal(5,2) NOT NULL,
+  i_price decimal(5,2) NOT NULL,
   I_im_id int NOT NULL,
   I_data varchar(50) NOT NULL
 );
 -- insert from csv
-\copy item from '/temp/project_data/data_files/item.csv' WITH (FORMAT CSV, NULL 'null');
-select count(*) as no_imported_rows from item;
+\copy item from '/home/stuproj/cs4224j/project_data/data_files/item.csv' WITH (FORMAT CSV, NULL 'null');
+select count(*) as no_imported_Item from item;
 
--- 2 relationship tables -- 
-DROP TABLE if EXISTS orderline CASCADE;
-CREATE TABLE orderline (
-  -- (OL W ID, OL D ID, OL O ID) is a foreign key that refers to Order table. 
-  -- OL I ID is a foreign key that refers to item table.
-  OL_W_id int NOT NULL, 
-  OL_D_id int NOT NULL, 
-  OL_O_id int NOT NULL,
-  FOREIGN KEY (OL_W_id, OL_D_id, OL_O_id) REFERENCES orders(O_W_id, O_D_id, O_id),
-  OL_number int NOT NULL,
-  -- PRIMARY KEY(OL_W_id, OL_D_id, OL_O_id, OL_number),
-  PRIMARY KEY((OL_W_id, OL_D_id, OL_O_id, OL_number) HASH),
-  OL_I_id int NOT NULL REFERENCES item(I_id),
-  
-  
-  OL_delivery_D timestamp, -- data has lots of null
-  OL_amount decimal(7,2) NOT NULL,
-  OL_supply_W_id int NOT NULL,
-  OL_quantity decimal(2,0) NOT NULL,
-  OL_dist_info char(24) NOT NULL
-);
 
-\copy orderline from '/temp/project_data/data_files/order-line.csv' WITH (FORMAT CSV, NULL 'null');
-select count(*) as no_imported_rows from "orderline";
-
+-- 1e6
 DROP TABLE if EXISTS stock CASCADE;
 CREATE TABLE stock (
   -- S I ID is a foreign key that refers to item table. 
@@ -167,12 +148,67 @@ CREATE TABLE stock (
   S_dist_08 char(24) NOT NULL,
   S_dist_09 char(24) NOT NULL,
   S_dist_10 char(24) NOT NULL,
-  S_dist_data varchar(50) NOT NULL
+  S_data varchar(50) NOT NULL
 );
+\copy stock from '/home/stuproj/cs4224j/project_data/data_files/stock.csv' WITH (FORMAT CSV, NULL 'null');
+select count(*) as no_imported_stock from stock;
 
 
-\copy stock from '/temp/project_data/data_files/stock.csv' WITH (FORMAT CSV, NULL 'null');
-select count(*) as no_imported_rows from stock;
+
+
+-- 3749590
+DROP TABLE if EXISTS orderline CASCADE;
+CREATE TABLE orderline (
+  -- (OL W ID, OL D ID, OL O ID) is a foreign key that refers to Order table. 
+  -- OL I ID is a foreign key that refers to item table.
+  OL_W_id int NOT NULL, 
+  OL_D_id int NOT NULL, 
+  OL_O_id int NOT NULL,
+  FOREIGN KEY (OL_W_id, OL_D_id, OL_O_id) REFERENCES orders(O_W_id, O_D_id, O_id),
+  OL_number int NOT NULL,
+  -- PRIMARY KEY(OL_W_id, OL_D_id, OL_O_id, OL_number),
+  PRIMARY KEY((OL_W_id, OL_D_id, OL_O_id, OL_number) HASH),
+  OL_I_id int NOT NULL REFERENCES item(I_id),
+  
+  
+  OL_delivery_D timestamp, -- data has lots of null
+  OL_amount decimal(7,2) NOT NULL,
+  OL_supply_W_id int NOT NULL,
+  OL_quantity decimal(2,0) NOT NULL,
+  OL_dist_info char(24) NOT NULL
+);
+\copy orderline from '/home/stuproj/cs4224j/project_data/data_files/order-line.csv' WITH (FORMAT CSV, NULL 'null');
+select count(*) as no_imported_OLine from "orderline";
+
+
+-- 新表
+-- 朱姐的 customer_item, 3749590
+DROP TABLE if EXISTS customer_item CASCADE;
+create table customer_item(
+CI_W_ID int, 
+CI_D_ID int, 
+CI_C_ID int, 
+CI_O_ID int, 
+CI_I_ID int,
+primary key(CI_W_ID,CI_D_ID,CI_C_ID,CI_O_ID,CI_I_ID));
+\copy customer_item from '/home/stuproj/cs4224j/project_data/data_files/customer_item.csv' WITH (FORMAT CSV, NULL 'null');
+select count(*) as no_imported_customer_item from customer_item; 
+
+
+-- 输出看导入结果
+select count(*) as no_imported_district from district;
+select count(*) as no_imported_orders from orders;
+select count(*) as no_imported_customers from customer;
+select count(*) as no_imported_Item from item;
+select count(*) as no_imported_stock from stock;
+select count(*) as no_imported_OLine from orderline;
+select count(*) as no_imported_customer_item from customer_item; 
+
+-- idx
+-- drop index if exists _idx;
+-- create index if not exists _idx on dbycql. ();
+
+
 
 -- show all tables
 \dt;
