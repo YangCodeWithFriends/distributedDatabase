@@ -60,7 +60,9 @@ public class SampleApp {
                 cqlSession.close();
             }
         }
+        // add conn statement
         executeManager.report();
+        executeManager.reportCSV(conn, cqlSession);
     }
 
 
