@@ -145,7 +145,6 @@ on t1.O_W_ID = t2.C_W_ID and t1.O_D_ID = t2.C_D_ID and t1.O_ID = t2.C_ID;
 ------------------ ##ignore end 5 ## --------------------
 
 ---- SQL3
-
 with last_l_orders_top1 as(
     select * from (select *, rank()over(partition by OL_W_ID, OL_D_ID, OL_O_ID order by OL_QUANTITY desc) as rank
     from OrderLine where OL_W_ID = 'W_ID' and OL_D_ID = 'D_ID' and OL_O_ID >= 'N'-'L' and OL_O_ID < 'N') t where rank = 1)
