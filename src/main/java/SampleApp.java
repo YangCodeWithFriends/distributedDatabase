@@ -22,6 +22,12 @@ public class SampleApp {
     private CqlSession cqlSession;
     private static final int N = 1;
     private static int countDownLatchTimeout = 8;
+    // 用来存20个client各自的transaction throughput
+    private static ArrayList<Long> throughput_list = new ArrayList<Long>();
+    private static long min = 0;
+    private static long max = 0;
+    private static long avg = 0;
+    private static long sum = 0;
 
     public static void main(String[] args) {
         String MODE = DataSource.YSQL;// by default, run YSQL
@@ -46,6 +52,8 @@ public class SampleApp {
         CountDownLatch countDownLatch = new CountDownLatch(N);
         ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
 
+        // 创建一个全局Array，然后存每一个线程池执行完的时间，后续在report中计算avg，max以及min时间
+
         for (int i = 0; i < N; i++) {
             String finalMODE = MODE;
             int finalI = i;
@@ -53,6 +61,7 @@ public class SampleApp {
                 Logger logger = Logger.getLogger(outputFileList[finalI]);
                 try {
                     logger.log(Level.INFO, Thread.currentThread().getName() + " starts ");
+                    // 每一个client执行都会在执行完成之后存一个throughput进arraylist
                     new SampleApp().doWork(finalMODE, inputFileList[finalI], logger);
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, Thread.currentThread().getName() + " exception ");
@@ -75,6 +84,14 @@ public class SampleApp {
         System.out.println("Main thread ends");
 
         cachedThreadPool.shutdown();
+        // 在线程池结束之后开始统计arraylist中的值,min, max, avg
+        for (long i : throughput_list) {
+            min = Math.min(min, i);
+            max = Math.max(max, i);
+            sum += i;
+        }
+        avg = sum / throughput_list.size();
+        System.out.println(avg);
     }
 
     public void doWork(String MODE, String inputFileName, Logger logger) {
@@ -128,7 +145,9 @@ public class SampleApp {
                 cqlSession.close();
             }
         }
+        // 这是一个client执行完所有的transaction之后最后做的report操作，所以1和2的操作都是在这里
         executeManager.report(logger);
+        throughput_list.add(executeManager.getThroughput());
     }
 
 
