@@ -45,17 +45,17 @@ public class ExecuteManager {
 //        skipSet.add(TransactionType.RELATED_CUSTOMER);
 
         // 反选逻辑
-//        skipSet.addAll(Arrays.asList(TransactionType.values()));
-//        skipSet.remove(TransactionType.PAYMENT);
+        skipSet.addAll(Arrays.asList(TransactionType.values()));
+        skipSet.remove(TransactionType.TOP_BALANCE);
     }
 
     public void executeYSQL(Connection conn, List<Transaction> list, Logger logger) throws SQLException {
         logger.log(Level.INFO, "Execute YSQL transactions\n");
         for (Transaction transaction : list) {
-//            if (skipSet.contains(transaction.getTransactionType())) continue;
-//            int cnt = skipMap.get(transaction.getTransactionType());
-//            if (cnt >= 1) continue;
-//            skipMap.put(transaction.getTransactionType(), cnt+1);
+            if (skipSet.contains(transaction.getTransactionType())) continue;
+            int cnt = skipMap.get(transaction.getTransactionType());
+            if (cnt >= 3) continue;
+            skipMap.put(transaction.getTransactionType(), cnt+1);
 
             long executionTime = transaction.executeYSQL(conn, logger);
             transactionTypeList.get(transaction.getTransactionType().index).addNewData(executionTime);
@@ -66,10 +66,10 @@ public class ExecuteManager {
     public void executeYCQL(CqlSession session, List<Transaction> list, Logger logger) {
         logger.log(Level.INFO, "Execute YCQL transactions\n");
         for (Transaction transaction : list) {
-//            if (skipSet.contains(transaction.getTransactionType())) continue;
-//            int cnt = skipMap.get(transaction.getTransactionType());
-//            if (cnt >= 1) continue;
-//            skipMap.put(transaction.getTransactionType(), cnt+1);
+            if (skipSet.contains(transaction.getTransactionType())) continue;
+            int cnt = skipMap.get(transaction.getTransactionType());
+            if (cnt >= 1) continue;
+            skipMap.put(transaction.getTransactionType(), cnt+1);
 
             long executionTime = transaction.executeYCQL(session, logger);
             transactionTypeList.get(transaction.getTransactionType().index).addNewData(executionTime);
@@ -79,12 +79,12 @@ public class ExecuteManager {
 
     public void report(Logger logger) {
         counter++; // print statistics every 5 transactions.
-        if (counter % 5 == 0) {
+//        if (counter % 5 == 0) {
             logger.log(Level.INFO, "---Statistics start---");
             for (Statistics statistics : transactionTypeList) {
                 logger.log(Level.INFO, statistics.toString());
             }
             logger.log(Level.INFO, "---Statistics end---");
-        }
+//        }
     }
 }

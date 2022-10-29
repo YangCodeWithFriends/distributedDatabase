@@ -36,7 +36,7 @@ public abstract class Transaction {
 
     protected void beforeExecute(Logger logger) {
         startTimeStamp = System.currentTimeMillis();
-       logger.log(Level.FINE, String.format(transactionType.type + " begins\n"));
+       logger.log(Level.INFO, String.format(transactionType.type + " begins\n"));
     }
 
     protected void YSQLExecute(Connection conn, Logger logger) throws SQLException {
@@ -51,7 +51,7 @@ public abstract class Transaction {
         long endTimeStamp = System.currentTimeMillis();
         long millis = TimeUnit.MILLISECONDS.toMillis(endTimeStamp - startTimeStamp);
         executionTime = millis;
-       logger.log(Level.FINE, String.format("%s completes,takes %d milliseconds\n",transactionType, millis));
+       logger.log(Level.INFO, String.format("%s completes,takes %d milliseconds\n",transactionType, millis));
     }
 
     public TransactionType getTransactionType() {

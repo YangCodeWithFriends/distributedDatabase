@@ -19,11 +19,11 @@ import java.util.logging.Level;
 public class SampleApp {
     private Connection conn;
     private CqlSession cqlSession;
-    private static final int N = 20;
+    private static final int N = 1;
     private static int countDownLatchTimeout = 8;
 
     public static void main(String[] args) {
-        String MODE = DataSource.YSQL;// by default, run YSQL
+        String MODE = DataSource.YCQL;// by default, run YSQL
         if (args != null && args.length != 0 && args[0].equals(DataSource.YCQL)) MODE = DataSource.YCQL;
         String[] inputFileList = new String[N];
         String[] outputFileList = new String[N];

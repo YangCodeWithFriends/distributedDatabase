@@ -10,6 +10,8 @@ import common.Transaction;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -26,20 +28,24 @@ public class TopBalanceTransaction extends Transaction {
         ResultSet rs = null;
         List<Row> rows = null;
         SimpleStatement simpleStatement = null;
+        /*
         // CQL1
         String CQL1 = String.format("CREATE TABLE IF NOT EXISTS dbycql.customer_balance_top10 ( cb_top10 text, cb_w_id int, cb_d_id int, cb_id int, cb_first text, cb_middle text, cb_last text, cb_balance decimal, cb_time timeuuid, PRIMARY KEY ((cb_top10), cb_balance, cb_time) ) WITH CLUSTERING ORDER BY (cb_balance DESC, cb_time);");
-//        System.out.println(CQL1);
         simpleStatement = SimpleStatement.builder(CQL1)
                 .setExecutionProfileName("oltp")
                 .build();
         cqlSession.execute(simpleStatement);
-//        cqlSession.execute(CQL1);
+         */
 
+        Timestamp current_time = Timestamp.from(Instant.now());
+        logger.log(Level.FINE, "Get current timestamp = " + current_time);
         for (int C_W_ID = 1; C_W_ID <= 10; C_W_ID++) {
             for (int C_D_ID = 1; C_D_ID <= 10; C_D_ID++) {
+
                 // CQL2
-                String CQL2 = String.format("select C_W_ID, C_D_ID, C_ID, C_FIRST, C_MIDDLE, C_LAST, C_BALANCE from dbycql.customer where C_W_ID = %d and C_D_ID = %d limit 10;", C_W_ID, C_D_ID);
-//                System.out.println(CQL2);
+                String CQL2 = String.format("select C_W_ID, C_D_ID, C_ID, C_FIRST, C_MIDDLE, C_LAST, C_BALANCE from dbycql.customer " +
+                        "where C_W_ID = %d and C_D_ID = %d limit 10;", C_W_ID, C_D_ID);
+                logger.log(Level.FINE, "CQL = " + CQL2);
                 rs = cqlSession.execute(CQL2);
                 rows = rs.all();
                 for (Row row : rows) {
@@ -52,9 +58,9 @@ public class TopBalanceTransaction extends Transaction {
                     BigDecimal C_BALANCE = row.getBigDecimal(6);
 
                     // CQL3
-                    String CQL3 = String.format("insert into dbycql.customer_balance_top10 (CB_TOP10, CB_W_ID, CB_D_ID, CB_ID, CB_FIRST, CB_MIDDLE, CB_LAST, CB_BALANCE, CB_TIME) values ('top10', %d, %d, %d, '%s', '%s', '%s', %f,now());", C_W_ID, C_D_ID, C_ID, C_FIRST, C_MIDDLE, C_LAST, C_BALANCE);
-//                    System.out.println(CQL3);
-//                    cqlSession.execute(CQL3);
+                    String CQL3 = String.format("insert into dbycql.customer_balance_top10 (CB_TIME_GROUP, CB_W_ID, CB_D_ID, CB_ID, CB_FIRST, CB_MIDDLE, CB_LAST, CB_BALANCE, CB_TIME) " +
+                            "values (%s, %d, %d, %d, '%s', '%s', '%s', %f,now());", current_time, C_W_ID, C_D_ID, C_ID, C_FIRST, C_MIDDLE, C_LAST, C_BALANCE);
+                    logger.log(Level.FINE, "CQL = " + CQL2);
                     simpleStatement = SimpleStatement.builder(CQL3)
                             .setExecutionProfileName("oltp")
                             .build();
@@ -62,9 +68,11 @@ public class TopBalanceTransaction extends Transaction {
                 }
             }
         }
+
         // CQL4
-        String CQL4 = String.format("select CB_W_ID, CB_D_ID, CB_ID, CB_FIRST, CB_MIDDLE, CB_LAST, CB_BALANCE from dbycql.customer_balance_top10 limit 10;");
-//        System.out.println(CQL4);
+        String CQL4 = String.format("select CB_W_ID, CB_D_ID, CB_ID, CB_FIRST, CB_MIDDLE, CB_LAST, CB_BALANCE from dbycql.customer_balance_top10 " +
+                "where CB_TIME_GROUP = %s limit 10;", current_time);
+        logger.log(Level.FINE, "CQL = " + CQL4);
         rs = cqlSession.execute(CQL4);
         rows = rs.all();
         for (Row row : rows) {
@@ -78,25 +86,25 @@ public class TopBalanceTransaction extends Transaction {
 
             // CQL5
             String CQL5 = String.format("select W_NAME from dbycql.Warehouse where W_ID = %d;", C_W_ID);
-//            System.out.println(CQL5);
+            logger.log(Level.FINE, "CQL = " + CQL5);
             rs = cqlSession.execute(CQL5);
             String W_NAME = rs.one().getString(0);
 
             // CQL6
             String CQL6 = String.format("select D_NAME from dbycql.District where D_W_ID = %d and D_ID = %d;", C_W_ID, C_D_ID);
             rs = cqlSession.execute(CQL6);
-//            System.out.println(CQL6);
+            logger.log(Level.FINE, "CQL = " + CQL6);
             String D_NAME = rs.one().getString(0);
            logger.log(Level.FINE, String.format("C_FIRST=%s,C_MIDDLE=%s,C_LAST=%s,C_BALANCE=%f,W_NAME=%s,D_NAME=%s\n", C_FIRST, C_MIDDLE, C_LAST, C_BALANCE, W_NAME, D_NAME));
         }
+
         // CQL7
-        String CQL7 = String.format("DROP TABLE IF EXISTS dbycql.customer_balance_top10;");
-//        System.out.println(CQL7);
+        String CQL7 = String.format("delete from dbycql.customer_balance_top10 where CB_TIME_GROUP = %s;",current_time);
+        logger.log(Level.FINE, "CQL = " + CQL7);
         simpleStatement = SimpleStatement.builder(CQL7)
                 .setExecutionProfileName("oltp")
                 .build();
         cqlSession.execute(simpleStatement);
-//        cqlSession.execute(CQL7);
     }
 
     @Override

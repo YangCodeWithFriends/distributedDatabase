@@ -30,11 +30,13 @@ public class NewOrderTransaction extends Transaction {
         PreparedStatement statement = null;
         ResultSet rs = null;
 
+        /*
         // Step 1,2
         // SQL2
         String SQL2 = "create table if not exists new_order_info (NO_O_ID int NOT NULL, NO_N int NOT NULL, NO_W_ID int NOT NULL, NO_D_ID int NOT NULL, NO_C_ID int NOT NULL, NO_I_CNT int NOT NULL, NO_I_ID int NOT NULL, NO_SUPPLY_W_ID int NOT NULL, NO_QUANTITY decimal(2,0) NOT NULL, primary key (NO_O_ID, NO_N, NO_W_ID, NO_D_ID, NO_C_ID));";
         statement = conn.prepareStatement(SQL2);
         statement.executeUpdate();
+         */
 
         try {
             // Transaction begin
@@ -89,13 +91,26 @@ public class NewOrderTransaction extends Transaction {
             statement.executeUpdate();
 
             // step 5 - Stock
-            String SQL5 = "update Stock set S_QUANTITY = ADJUSTED_QTY, S_YTD = S_YTD + NO_YTD, S_ORDER_CNT = NO_ORDER_CNT, S_REMOTE_CNT = S_REMOTE_CNT + NO_REMOTE_CNT from (select t1.NO_SUPPLY_W_ID, t1.NO_I_ID, case when t1.NO_QUANTITY - t2.S_QUANTITY < 10 then t1.NO_QUANTITY - t2.S_QUANTITY + 100 else t1.NO_QUANTITY - t2.S_QUANTITY end as ADJUSTED_QTY, t1.NO_QUANTITY as NO_YTD, t2.S_ORDER_CNT + 1 as NO_ORDER_CNT, S_REMOTE_CNT + case when t1.NO_SUPPLY_W_ID != t1.NO_W_ID then 1 else 0 end as NO_REMOTE_CNT from new_order_info t1 left join Stock t2 on t1.NO_SUPPLY_W_ID = t2.S_W_ID and t1.NO_I_ID = t2.S_I_ID) t where S_W_ID = t.NO_SUPPLY_W_ID and S_I_ID = t.NO_I_ID;";
+            String SQL5 = "update Stock set S_QUANTITY = ADJUSTED_QTY, S_YTD = S_YTD + NO_YTD, S_ORDER_CNT = NO_ORDER_CNT, S_REMOTE_CNT = S_REMOTE_CNT + NO_REMOTE_CNT from " +
+                    "(select t1.NO_SUPPLY_W_ID, t1.NO_I_ID, case when t1.NO_QUANTITY - t2.S_QUANTITY < 10 then t1.NO_QUANTITY - t2.S_QUANTITY + 100 else t1.NO_QUANTITY - t2.S_QUANTITY end as ADJUSTED_QTY, t1.NO_QUANTITY as NO_YTD, t2.S_ORDER_CNT + 1 as NO_ORDER_CNT, S_REMOTE_CNT + case when t1.NO_SUPPLY_W_ID != t1.NO_W_ID then 1 else 0 end as NO_REMOTE_CNT " +
+                    "from (select * from new_order_info where NO_W_ID = ? and NO_D_ID = ? and NO_O_ID = ? and NO_C_ID = ?) t1 " +
+                    "left join Stock t2 on t1.NO_SUPPLY_W_ID = t2.S_W_ID and t1.NO_I_ID = t2.S_I_ID) t where S_W_ID = t.NO_SUPPLY_W_ID and S_I_ID = t.NO_I_ID;";
             statement = conn.prepareStatement(SQL5);
+            statement.setInt(1, W_ID);
+            statement.setInt(2, D_ID);
+            statement.setInt(3, N);
+            statement.setInt(4, C_ID);
             statement.executeUpdate();
 
             // step 5 - OrderLine
-            String SQL6 = "insert into OrderLine select NO_W_ID, NO_D_ID, NO_O_ID, NO_N, NO_I_ID, NULL, NO_QUANTITY * I_PRICE as ITEM_AMOUNT, NO_SUPPLY_W_ID, NO_QUANTITY, CONCAT('S_DIST_', D_ID) as NO_DIST_INFO from new_order_info t1 left join District t2 on t1.NO_W_ID = t2.D_W_ID and t1.NO_D_ID = t2.D_ID left join Item t3 on t1.NO_I_ID = t3.I_ID;";
+            String SQL6 = "insert into OrderLine select NO_W_ID, NO_D_ID, NO_O_ID, NO_N, NO_I_ID, NULL, NO_QUANTITY * I_PRICE as ITEM_AMOUNT, NO_SUPPLY_W_ID, NO_QUANTITY, CONCAT('S_DIST_', D_ID) as NO_DIST_INFO " +
+                    "from (select * from new_order_info where NO_W_ID = ? and NO_D_ID = ? and NO_O_ID = ? and NO_C_ID = ?) t1 " +
+                    "left join District t2 on t1.NO_W_ID = t2.D_W_ID and t1.NO_D_ID = t2.D_ID left join Item t3 on t1.NO_I_ID = t3.I_ID;";
             statement = conn.prepareStatement(SQL6);
+            statement.setInt(1, W_ID);
+            statement.setInt(2, D_ID);
+            statement.setInt(3, N);
+            statement.setInt(4, C_ID);
             statement.executeUpdate();
 
             // step 6
@@ -126,8 +141,14 @@ public class NewOrderTransaction extends Transaction {
                 System.out.printf("W_ID=%d,D_ID=%d,C_ID=%d,C_LAST=%s,C_CREDIT=%s,C_DISCOUNT=%s,W_TAX=%f,D_TAX=%f,N=%d,current_time=%s,M=%d,TOTAL_AMOUNT=%f\n", W_ID, D_ID, C_ID, C_LAST, C_CREDIT, C_DISCOUNT, W_TAX, D_TAX, N, current_time, M, TOTAL_AMOUNT);
             }
 
-            String SQL9 = "select NO_I_ID, I_NAME, NO_SUPPLY_W_ID, NO_QUANTITY, NO_QUANTITY * I_PRICE as OL_AMOUNT, S_QUANTITY from new_order_info t1 left join Item t2 on t1.NO_I_ID = t2.I_ID left join Stock t3 on t1.NO_I_ID = t3.S_I_ID and t1.NO_SUPPLY_W_ID = t3.S_W_ID;";
+            String SQL9 = "select NO_I_ID, I_NAME, NO_SUPPLY_W_ID, NO_QUANTITY, NO_QUANTITY * I_PRICE as OL_AMOUNT, S_QUANTITY " +
+                    "from (select * from new_order_info where NO_W_ID = ? and NO_D_ID = ? and NO_O_ID = ? and NO_C_ID = ?) t1 " +
+                    "left join Item t2 on t1.NO_I_ID = t2.I_ID left join Stock t3 on t1.NO_I_ID = t3.S_I_ID and t1.NO_SUPPLY_W_ID = t3.S_W_ID;";
             statement = conn.prepareStatement(SQL9);
+            statement.setInt(1, W_ID);
+            statement.setInt(2, D_ID);
+            statement.setInt(3, N);
+            statement.setInt(4, C_ID);
             rs = statement.executeQuery();
             while (rs.next()) {
                 int NO_I_ID = rs.getInt(1);
@@ -139,8 +160,13 @@ public class NewOrderTransaction extends Transaction {
                 System.out.printf("NO_I_ID=%d,I_NAME=%s,NO_SUPPLY_W_ID=%d,NO_QUANTITY=%d,OL_AMOUNT=%f,S_QUANTITY=%f\n", NO_I_ID, I_NAME, NO_SUPPLY_W_ID, NO_QUANTITY, OL_AMOUNT, S_QUANTITY);
             }
 
-            String SQL10 = "insert into customer_item select NO_W_ID, NO_D_ID, NO_C_ID, NO_O_ID, NO_I_ID from new_order_info;";
+            String SQL10 = "insert into customer_item select NO_W_ID, NO_D_ID, NO_C_ID, NO_O_ID, NO_I_ID from " +
+                    "(select * from new_order_info where NO_W_ID = ? and NO_D_ID = ? and NO_O_ID = ? and NO_C_ID = ?) t;";
             statement = conn.prepareStatement(SQL10);
+            statement.setInt(1, W_ID);
+            statement.setInt(2, D_ID);
+            statement.setInt(3, N);
+            statement.setInt(4, C_ID);
             statement.executeUpdate();
 
             conn.commit();
@@ -156,9 +182,11 @@ public class NewOrderTransaction extends Transaction {
             conn.setAutoCommit(true);
         }
 
+        /*
         String SQL11 = "drop table if exists new_order_info;";
         statement = conn.prepareStatement(SQL11);
         statement.executeUpdate();
+         */
     }
 
     @Override
