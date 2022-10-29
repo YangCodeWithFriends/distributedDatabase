@@ -2,7 +2,6 @@ import com.datastax.oss.driver.api.core.CqlSession;
 import common.Transaction;
 import common.TransactionType;
 import common.transactionImpl.*;
-import groovy.util.logging.Log;
 
 import java.io.*;
 import java.sql.Connection;
@@ -19,7 +18,7 @@ import java.util.logging.*;
 public class SampleApp {
     private Connection conn;
     private CqlSession cqlSession;
-    private static final int numberOfThreads = 1;
+    private static final int numberOfThreads = 20;
     private static int countDownLatchTimeout = 8;
     // 用来存20个client各自的transaction throughput
     private static ArrayList<Long> throughput_list = new ArrayList<Long>(numberOfThreads);
@@ -31,9 +30,9 @@ public class SampleApp {
     public static void main(String[] args) {
         // Set mode
         String MODE = DataSource.YSQL;// by default, run YSQL
-        MODE = DataSource.YCQL;
         if (args != null && args.length != 0 && args[0].equals(DataSource.YCQL)) MODE = DataSource.YCQL;
 
+        System.out.printf("Number of Threads = %d\n", numberOfThreads);
         // config input and output file.
         String[] inputFileList = new String[numberOfThreads];
         String[] outputFileList = new String[numberOfThreads];

@@ -16,4 +16,5 @@ src/main/.DS_Store
 db_sql_join_subtb_4cql/
 
 # ignore log files
-log*txt*
+Y*QL-log*txt*
+throughput-statistics-Y*QL.txt

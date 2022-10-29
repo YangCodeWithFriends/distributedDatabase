@@ -51,7 +51,7 @@ public abstract class Transaction {
         long endTimeStamp = System.currentTimeMillis();
         long millis = TimeUnit.MILLISECONDS.toMillis(endTimeStamp - startTimeStamp);
         executionTime = millis;
-       logger.log(Level.WARNING, String.format("%s completes,takes %d milliseconds\n",transactionType, millis));
+       logger.log(Level.WARNING, String.format("%s completes,takes %d milliseconds\n",transactionType.type, millis));
     }
 
     public TransactionType getTransactionType() {
