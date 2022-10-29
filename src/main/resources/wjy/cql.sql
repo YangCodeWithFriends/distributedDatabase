@@ -6,6 +6,7 @@
 -- 7. Top-Balance Transaction (finished)
 
 -- 1. New Order Transaction
+
 --CQL1
 -- 读取第一行 N 后面的数据
 select D_NEXT_O_ID from dbycql.District where D_W_ID = 'W_ID' and D_ID = 'D_ID';
@@ -47,7 +48,11 @@ update dbycql.District set D_NEXT_O_ID = D_NEXT_O_ID + 1 where D_W_ID = 'W_ID' a
     insert into dbycql.customer_item (CI_W_ID, CI_D_ID, CI_C_ID, CI_O_ID, CI_I_ID, CI_I_NUMBER)
     values ('W_ID', 'D_ID', 'C_ID', 'N', 'OL_I_ID', i);
 
+    ------------------ ##ignore begin 1 ## ------------------
+
     -- 输出结果 i, I_NAME, 'OL_SUPPLY_W_ID', 'OL_QUANTITY', ITEM_AMOUNT, ADJUSTED_QTY
+
+    ------------------ ##ignore end 1 ## --------------------
 
 -- 结束循环
 
@@ -56,7 +61,8 @@ update dbycql.District set D_NEXT_O_ID = D_NEXT_O_ID + 1 where D_W_ID = 'W_ID' a
 insert into dbycql.Orders (O_ID, O_D_ID, O_W_ID, O_C_ID, O_ENTRY_D, O_CARRIER_ID, O_OL_CNT, O_ALL_LOCAL)
 values ('N', 'D_ID', 'W_ID', 'C_ID', toTimestamp(now()), NULL, 'M', 'NO_ALL_LOCAL');
 
--- step6
+------------------ ##ignore begin 2 ## ------------------
+
 -- CQL10
 select W_TAX from dbycql.Warehouse where W_ID = 'W_ID';
 -- CQL11
@@ -67,59 +73,58 @@ select C_LAST, C_CREDIT, C_DISCOUNT from dbycql.Customer where C_W_ID = 'W_ID' a
 
 -- 最后输出结果 'W_ID', 'D_ID', 'C_ID', C_LAST, C_CREDIT, C_DISCOUNT, W_TAX, D_TAX, 'N', 'current_time', 'M', TOTAL_AMOUNT
 
+------------------ ##ignore end 2 ## --------------------
 
 -- 4. Order-Status Transaction
+
+------------------ ##ignore begin 3 ## ------------------
 
 --CQL1
 select C_FIRST, C_MIDDLE, C_LAST, C_BALANCE from dbycql.Customer
 where C_W_ID = 'C_W_ID' and C_D_ID = 'C_D_ID' and C_ID = 'C_ID';
---copy
-select C_FIRST, C_MIDDLE, C_LAST, C_BALANCE from dbycql.Customer
-where C_W_ID = %d and C_D_ID = %d and C_ID = %d
+-- 输出 C_FIRST, C_MIDDLE, C_LAST, C_BALANCE 
+
+------------------ ##ignore end 3 ## --------------------
 
 --CQL2
 select O_ID, O_ENTRY_D, O_CARRIER_ID from dbycql.Orders
 where O_W_ID = 'C_W_ID' and O_D_ID = 'C_D_ID' and O_C_ID = 'C_ID'
 order by O_ID desc limit 1;
---copy
-select O_ID, O_ENTRY_D, O_CARRIER_ID from dbycql.Orders
-where O_W_ID = %d and O_D_ID = %d and O_C_ID = %d
-order by O_ID desc limit 1;
 -- 拿到'O_ID'
+
+------------------ ##ignore begin 4 ## ------------------
+
+-- 输出 O_ID, O_ENTRY_D, O_CARRIER_ID
 
 --CQL3
 select OL_I_ID, OL_SUPPLY_W_ID, OL_QUANTITY, OL_AMOUNT, OL_DELIVERY_D from dbycql.OrderLine
 where OL_W_ID = 'C_W_ID' and OL_D_ID = 'C_D_ID' and OL_O_ID = 'O_ID';
---copy
-select OL_I_ID, OL_SUPPLY_W_ID, OL_QUANTITY, OL_AMOUNT, OL_DELIVERY_D from dbycql.OrderLine
-where OL_W_ID = %d and OL_D_ID = %d and OL_O_ID = %d
+-- 输出 OL_I_ID, OL_SUPPLY_W_ID, OL_QUANTITY, OL_AMOUNT, OL_DELIVERY_D
+
+------------------ ##ignore end 4 ## --------------------
 
 -- 5. Stock-Level Transaction
 
 --CQL1
 select D_NEXT_O_ID from dbycql.District where D_W_ID = 'W_ID' and D_ID = 'D_ID';
---copy
-select D_NEXT_O_ID from dbycql.District where D_W_ID = %d and D_ID = %d
 -- 得到 N = D_NEXT_O_ID
 
 -- CQL2
 select OL_I_ID from dbycql.OrderLine
-where OL_W_ID = 'W_ID' and OL_D_ID = 'D_ID' and OL_O_ID >= 'N'-'L' and OL_O_ID < 'N'
-allow filtering;
---copy
-select OL_I_ID from dbycql.OrderLine
-where OL_W_ID = %d and OL_D_ID = %d and OL_O_ID >= %d - %d and OL_O_ID < %d
-allow filtering
+where OL_W_ID = 'W_ID' and OL_D_ID = 'D_ID' and OL_O_ID >= 'N'-'L' and OL_O_ID < 'N' allow filtering;
 -- 得到'OL_I_ID'的集合IL (需要对'OL_I_ID'去重)
 
 -- CQL3
 -- 设num = 0; 
 -- for OL_I_ID in IL:
-    select S_QUANTITY from dbycql.Stock
-    where S_W_ID = 'W_ID' and S_I_ID = 'OL_I_ID'
-    allow filtering;
+    select S_QUANTITY from dbycql.Stock where S_W_ID = 'W_ID' and S_I_ID = 'OL_I_ID' allow filtering;
     -- if S_QUANTITY < 'T', num += 1
+
+------------------ ##ignore begin 5 ## ------------------
+
 -- 循环结束后输出num
+
+------------------ ##ignore end 5 ## --------------------
 
 -- 6. Popular-Item Transaction
 
@@ -127,29 +132,50 @@ allow filtering
 select D_NEXT_O_ID from dbycql.District where D_W_ID = 'W_ID' and D_ID = 'D_ID';
 -- 得到 N = D_NEXT_O_ID
 
+------------------ ##ignore begin 6 ## ------------------
+
+-- 输出 'W_ID', 'D_ID', 'L'
+
 --CQL2
 select O_C_ID, O_ID, O_ENTRY_D from dbycql.Orders
 where O_W_ID = 'W_ID' and O_D_ID = 'D_ID' and O_ID >= 'N'-'L' and O_ID < 'N';
 -- 得到最新L个订单的信息 (O_C_ID, O_ID, O_ENTRY_D)
 
+------------------ ##ignore end 6 ## --------------------
+
 --for every O_ID:
+    
+    ------------------ ##ignore begin 7 ## ------------------
+
     -- CQL3
     select C_FIRST, C_MIDDLE, C_LAST from dbycql.Customer
     where C_W_ID = 'W_ID' and C_D_ID = 'D_ID' and C_ID = 'O_C_ID';
     -- 得到每个订单的用户信息 (C_FIRST, C_MIDDLE, C_LAST)
+    -- 输出 O_ID, O_ENTRY_D, C_FIRST, C_MIDDLE, C_LAST
+
+    ------------------ ##ignore end 7 ## --------------------
+
     -- CQL4
     select OL_W_ID, OL_D_ID, OL_O_ID, OL_QUANTITY from dbycql.OrderLine
     where OL_W_ID = 'W_ID' and OL_D_ID = 'D_ID' and OL_O_ID = 'O_ID' limit 1;
     -- 得到 MAX_OL_QUANTITY = OL_QUANTITY
+    
     -- CQL5
     select OL_W_ID, OL_D_ID, OL_O_ID, OL_I_ID from dbycql.OrderLine
     where OL_W_ID = 'W_ID' and OL_D_ID = 'D_ID' and OL_O_ID = 'OL_O_ID' and OL_QUANTITY = 'MAX_OL_QUANTITY';
 
     -- 得到当前订单的所有 OL_I_ID (并用另一个集合(all_item_set)记录下所有订单的 OL_I_ID(去重))
+
+    ------------------ ##ignore begin 8 ## ------------------
+
     -- for every OL_I_ID:
         -- CQL6
         select I_NAME from dbycql.Item where I_ID = 'OL_I_ID';
         -- 输出 I_NAME, MAX_OL_QUANTITY
+    
+    ------------------ ##ignore end 8 ## --------------------
+
+------------------ ##ignore begin 9 ## ------------------
 
 -- for every OL_I_ID in all_item_set:
     -- CQL7
@@ -159,11 +185,13 @@ where O_W_ID = 'W_ID' and O_D_ID = 'D_ID' and O_ID >= 'N'-'L' and O_ID < 'N';
     where OL_W_ID = 'W_ID' and OL_D_ID = 'D_ID' and OL_O_ID >= 'N'-'L' and OL_O_ID < 'N' and OL_I_ID = 'OL_I_ID';
     -- 输出 I_NAME, I_Percentage = I_NUM * 100 / 'L'
 
+------------------ ##ignore end 9 ## --------------------
+
 -- 7. Top-Balance Transaction
 
 -- 新建top10 customer table
 -- CQL1
-CREATE TABLE dbycql.customer_balance_top10 (
+CREATE TABLE if not exists dbycql.customer_balance_top10 (
     cb_top10 text,
     cb_w_id int,
     cb_d_id int,
@@ -192,6 +220,8 @@ CREATE TABLE dbycql.customer_balance_top10 (
 select CB_W_ID, CB_D_ID, CB_ID, CB_FIRST, CB_MIDDLE, CB_LAST, CB_BALANCE from dbycql.customer_balance_top10 limit 10;
 -- 得到 'C_W_ID', 'C_D_ID', 'C_ID', 'C_FIRST', 'C_MIDDLE', 'C_LAST', 'C_BALANCE'
 
+------------------ ##ignore begin 10 ## ------------------
+
 -- for every top10 customer:
     -- CQL5
     select W_NAME from dbycql.Warehouse where W_ID = 'C_W_ID';
@@ -199,9 +229,11 @@ select CB_W_ID, CB_D_ID, CB_ID, CB_FIRST, CB_MIDDLE, CB_LAST, CB_BALANCE from db
     select D_NAME from dbycql.District where D_W_ID = 'C_W_ID' and D_ID = 'C_D_ID';
     -- 输出当前customer: C_FIRST, C_MIDDLE, C_LAST, C_BALANCE, C_W_ID, C_D_ID, W_NAME, D_NAME
 
+------------------ ##ignore end 10 ## --------------------
+
 -- 删除临时表
 -- CQL7
-DROP TABLE dbycql.customer_balance_top10;
+DROP TABLE if exists dbycql.customer_balance_top10;
 
 
 -- create new tables at very first
@@ -254,3 +286,58 @@ WITH CLUSTERING ORDER BY (C_BALANCE DESC, C_ID ASC); -- change
 copy dbycql.customer (C_W_id,C_D_id,C_id,C_first,C_middle,C_last,C_street_1,C_street_2,C_city,C_state,C_zip,C_phone,C_since,C_credit,C_credit_lim,C_discount,C_balance,C_ytd_payment,C_payment_cnt,C_delivery_cnt,C_data)
 from '/home/stuproj/cs4224j/project_data/data_files/customer.csv' 
 WITH NULL='null' AND INGESTRATE=5000;
+
+
+
+-- NEW VERSION
+
+-- create new tables at very first
+
+CREATE TABLE dbycql.customer_balance_top10 (
+    cb_time_group timestamp,
+    cb_w_id int,
+    cb_d_id int,
+    cb_id int,
+    cb_first text,
+    cb_middle text,
+    cb_last text,
+    cb_balance decimal,
+    cb_time_add timeuuid,
+    PRIMARY KEY ((cb_time_group), cb_balance, cb_time_add)
+) WITH CLUSTERING ORDER BY (cb_balance DESC, cb_time_add);
+
+
+-- 7. Top-Balance Transaction
+
+-- 获取当前的时间 group_timestamp
+-- for every C_W_ID (1-10):
+    -- for every C_D_ID (1-10):
+        -- CQL2
+        select C_W_ID, C_D_ID, C_ID, C_FIRST, C_MIDDLE, C_LAST, C_BALANCE from dbycql.customer
+        where C_W_ID = 'C_W_ID' and C_D_ID = 'C_D_ID' limit 10;
+        -- 得到 'C_W_ID', 'C_D_ID', 'C_ID', 'C_FIRST', 'C_MIDDLE', 'C_LAST', 'C_BALANCE'
+        -- 一条一条插入数据 for every record(10条):
+            -- CQL3
+            insert into dbycql.customer_balance_top10 (CB_TIME_GROUP, CB_W_ID, CB_D_ID, CB_ID, CB_FIRST, CB_MIDDLE, CB_LAST, CB_BALANCE, CB_TIME_ADD) 
+            values (group_timestamp, 'C_W_ID', 'C_D_ID', 'C_ID', 'C_FIRST', 'C_MIDDLE', 'C_LAST', 'C_BALANCE', now());
+
+--get all top10 customer
+-- CQL4
+select CB_W_ID, CB_D_ID, CB_ID, CB_FIRST, CB_MIDDLE, CB_LAST, CB_BALANCE from dbycql.customer_balance_top10 
+where CB_TIME_GROUP = group_timestamp limit 10;
+-- 得到 'C_W_ID', 'C_D_ID', 'C_ID', 'C_FIRST', 'C_MIDDLE', 'C_LAST', 'C_BALANCE'
+
+------------------ ##ignore begin 10 ## ------------------
+
+-- for every top10 customer:
+    -- CQL5
+    select W_NAME from dbycql.Warehouse where W_ID = 'C_W_ID';
+    -- CQL6
+    select D_NAME from dbycql.District where D_W_ID = 'C_W_ID' and D_ID = 'C_D_ID';
+    -- 输出当前customer: C_FIRST, C_MIDDLE, C_LAST, C_BALANCE, C_W_ID, C_D_ID, W_NAME, D_NAME
+
+------------------ ##ignore end 10 ## --------------------
+
+-- 删除数据
+-- CQL7
+delete from dbycql.customer_balance_top10 where CB_TIME_GROUP = group_timestamp;

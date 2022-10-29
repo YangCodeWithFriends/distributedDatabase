@@ -2,60 +2,75 @@ import com.datastax.oss.driver.api.core.CqlSession;
 import common.Transaction;
 import common.TransactionType;
 import common.transactionImpl.*;
+import groovy.util.logging.Log;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.logging.FileHandler;
-import java.util.logging.Handler;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
-import java.util.logging.Level;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.*;
 
 public class SampleApp {
     private Connection conn;
     private CqlSession cqlSession;
-    private static final int N = 20;
+    private static final int numberOfThreads = 1;
     private static int countDownLatchTimeout = 8;
+    // 用来存20个client各自的transaction throughput
+    private static ArrayList<Long> throughput_list = new ArrayList<Long>(numberOfThreads);
+    private static long min = 0;
+    private static long max = 0;
+    private static long avg = 0;
+    private static long sum = 0;
 
     public static void main(String[] args) {
+        // Set mode
         String MODE = DataSource.YSQL;// by default, run YSQL
+        MODE = DataSource.YCQL;
         if (args != null && args.length != 0 && args[0].equals(DataSource.YCQL)) MODE = DataSource.YCQL;
-        String[] inputFileList = new String[N];
-        String[] outputFileList = new String[N];
-        for (int i = 0; i < N; i++) {
+
+        // config input and output file.
+        String[] inputFileList = new String[numberOfThreads];
+        String[] outputFileList = new String[numberOfThreads];
+        for (int i = 0; i < numberOfThreads; i++) {
             inputFileList[i] = "src/main/resources/xact_files/" + i + ".txt";
-            outputFileList[i] = "log" + i + ".txt";
+            outputFileList[i] = MODE + "-log-" + i + ".txt";
             Logger logger = Logger.getLogger(outputFileList[i]);
             try {
                 Handler handler = new FileHandler(outputFileList[i]);
                 handler.setFormatter(new SimpleFormatter());
                 logger.addHandler(handler);
-                logger.setLevel(Level.FINEST);
+                // SETLEVEL. Set the logger filtering level.
+                logger.setLevel(Level.WARNING);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
 
-        CountDownLatch countDownLatch = new CountDownLatch(N);
+        CountDownLatch countDownLatch = new CountDownLatch(numberOfThreads);
         ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
 
-        for (int i = 0; i < N; i++) {
+        // 创建一个全局Array，然后存每一个线程池执行完的时间，后续在report中计算avg，max以及min时间
+
+        for (int i = 0; i < numberOfThreads; i++) {
             String finalMODE = MODE;
             int finalI = i;
             cachedThreadPool.execute(() -> {
                 Logger logger = Logger.getLogger(outputFileList[finalI]);
                 try {
-                    logger.log(Level.INFO, Thread.currentThread().getName() + " starts ");
+                    logger.log(Level.SEVERE, Thread.currentThread().getName() + " starts ");
+                    // 每一个client执行都会在执行完成之后存一个throughput进arraylist
                     new SampleApp().doWork(finalMODE, inputFileList[finalI], logger);
                 } catch (Exception e) {
-                    logger.log(Level.WARNING, Thread.currentThread().getName() + " exception ");
+                    logger.log(Level.SEVERE, Thread.currentThread().getName() + " exception ");
+                    e.printStackTrace();
                 } finally {
-                    logger.log(Level.INFO, Thread.currentThread().getName() + " ends ");
+                    logger.log(Level.SEVERE, Thread.currentThread().getName() + " ends ");
                     countDownLatch.countDown();
                 }
             });
@@ -70,19 +85,46 @@ public class SampleApp {
         } finally {
             System.out.println("countDownLatch: " + countDownLatch.toString());
         }
-        System.out.println("Main thread ends");
 
+        System.out.println("Main thread ends");
         cachedThreadPool.shutdown();
+
+        // 在线程池结束之后开始统计arraylist中的值,min, max, avg
+        for (long i : throughput_list) {
+            min = Math.min(min, i);
+            max = Math.max(max, i);
+            sum += i;
+        }
+        if (!throughput_list.isEmpty()) {
+            avg = sum / throughput_list.size();
+        }
+
+        // Write throughput into file
+        String throughput_file = "throughput-statistics-" + MODE + ".txt";
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(throughput_file));
+            writer.append("min = ").append(String.valueOf(min));
+            writer.newLine();
+            writer.append("avg = ").append(String.valueOf(avg));
+            writer.newLine();
+            writer.append("max = ").append(String.valueOf(max));
+            writer.newLine();
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        System.out.printf("min=%d,avg=%d,max=%d\n",min,avg,max);
     }
 
     public void doWork(String MODE, String inputFileName, Logger logger) {
-        logger.log(Level.INFO, Thread.currentThread().getName() + "do work");
+        logger.log(Level.SEVERE, Thread.currentThread().getName() + "do work");
 
         // 1. Construct requests from files.
         List<Transaction> list = new ArrayList<>();
         try {
             readFile(inputFileName, list, logger);
         } catch (FileNotFoundException e) {
+            logger.log(Level.SEVERE, Thread.currentThread().getName() + " read file error");
             e.printStackTrace();
         }
         if (list == null) throw new RuntimeException("Input list is null! Please check input files");
@@ -90,17 +132,17 @@ public class SampleApp {
         // 2. Establish a DB connection
         try {
             if (MODE.equals(DataSource.YSQL)) {
-                logger.log(Level.INFO, Thread.currentThread().getName() + "do work");
-                logger.log(Level.INFO, "Connecting to DB. Your mode is YSQL.");
+                logger.log(Level.WARNING, "Connecting to DB. Your mode is YSQL.");
                 conn = new DataSource(MODE).getSQLConnection();
+                conn.setTransactionIsolation(1);
                 logger.log(Level.INFO, "Conn = "+ conn.getClientInfo());
 //                logger.log(Level.INFO, "Isolation level=" + conn.getTransactionIsolation());
             } else {
-                logger.log(Level.INFO, "Connecting to DB. Your mode is YCQL.");
+                logger.log(Level.WARNING, "Connecting to DB. Your mode is YCQL.");
                 cqlSession = new DataSource(MODE).getCQLSession();
                 logger.log(Level.INFO, "CQLSession = "+ cqlSession.getName());
             }
-            logger.log(Level.INFO, ">>>> Successfully connected to YugabyteDB.");
+            logger.log(Level.WARNING, ">>>> Successfully connected to YugabyteDB.");
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -126,12 +168,14 @@ public class SampleApp {
                 cqlSession.close();
             }
         }
+        // 这是一个client执行完所有的transaction之后最后做的report操作，所以1和2的操作都是在这里
         executeManager.report(logger);
+        throughput_list.add(executeManager.getThroughput());
     }
 
 
     private static List<Transaction> readFile(String fileName, List<Transaction> list, Logger logger) throws FileNotFoundException {
-        logger.log(Level.INFO, Thread.currentThread().getName() + " reads from file " + fileName);
+        logger.log(Level.WARNING, Thread.currentThread().getName() + " reads from file " + fileName);
         Scanner scanner = new Scanner(new File(fileName));
         while (scanner.hasNextLine()) {
             String[] firstLine = scanner.nextLine().split(",");
@@ -156,7 +200,7 @@ public class SampleApp {
             }
             if (transaction != null) list.add(transaction);
         }
-        logger.log(Level.INFO, Thread.currentThread().getName() + " reads " + list.size() + " requests from " + fileName);
+        logger.log(Level.WARNING, Thread.currentThread().getName() + " reads " + list.size() + " requests from " + fileName);
         return list;
     }
 
