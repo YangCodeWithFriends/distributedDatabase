@@ -23,6 +23,13 @@ public class ExecuteManager {
     private List<Statistics> transactionTypeList;
     private Map<TransactionType, Integer> skipMap;
     private int counter;
+    // 定义变量
+    private ArrayList<Long> time_lst = new ArrayList<Long>();
+    private long avg;
+    private long sum = 0;
+    private long cnt = 0;
+    private long throughput;
+    private long medium;
 
     public ExecuteManager() {
         transactionTypeList = new ArrayList<>(8);
@@ -86,10 +93,34 @@ public class ExecuteManager {
         if (counter % 5 == 0) {
             logger.log(Level.INFO, "---Statistics start---");
             for (Statistics statistics : transactionTypeList) {
+                // 这是所有transaction.txt执行完之后对应的特定transaction的执行时间。所以list中应该包含8个数字对应所有transaction的执行时间
+                time_lst.add(statistics.getTimeSum());
+                // 获得执行的所有transaction的个数
+                cnt += statistics.getCnt();
                 logger.log(Level.INFO, statistics.toString());
             }
+            // 将ArrayList排序方便计算中位数
+            Collections.sort(time_lst);
+            // 计算所有transaction的执行时间
+            for (long i : time_lst) {
+                sum += i;
+            }
+            // 计算平均数
+            avg = sum / time_lst.size();
+            if (time_lst.size() % 2 == 0) {
+                medium = (time_lst.get(time_lst.size()/2-1) + time_lst.get(time_lst.size()/2)) / 2;
+            }else {
+                medium = time_lst.get(time_lst.size()/2);
+            }
+            // 计算Transaction throughput
+            throughput = sum / cnt;
+
             logger.log(Level.INFO, "---Statistics end---");
         }
+    }
+
+    public long getThroughput() {
+        return throughput;
     }
 
     public void reportCSV(Connection conn, CqlSession session) {
