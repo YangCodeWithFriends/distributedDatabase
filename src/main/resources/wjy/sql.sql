@@ -145,13 +145,12 @@ on t1.O_W_ID = t2.C_W_ID and t1.O_D_ID = t2.C_D_ID and t1.O_ID = t2.C_ID;
 ------------------ ##ignore end 5 ## --------------------
 
 ---- SQL3
-with last_l_orders as (select * from Orders where O_W_ID = 'W_ID' and O_D_ID = 'D_ID' and O_ID >= 'N'-'L' and O_ID < 'N'),
-last_l_orders_items_top1 as (
-    select * from (select * from (select *, rank()over(partition by O_W_ID, O_D_ID, O_ID order by OL_QUANTITY desc) as rank
-    from last_l_orders) t where rank = 1) t1 
-    left join OrderLine t2 on t1.O_W_ID = t2.OL_W_ID and t1.O_D_ID = t2.OL_D_ID and t1.O_ID = t2.OL_O_ID)
-select t1.O_ID, t2.I_NAME, t1.OL_QUANTITY from last_l_orders_items_top1 t1 
-left join Item t2 on t1.OL_I_ID = t2.I_ID order by t1.O_ID;
+
+with last_l_orders_top1 as(
+    select * from (select *, rank()over(partition by OL_W_ID, OL_D_ID, OL_O_ID order by OL_QUANTITY desc) as rank
+    from OrderLine where OL_W_ID = 'W_ID' and OL_D_ID = 'D_ID' and OL_O_ID >= 'N'-'L' and OL_O_ID < 'N') t where rank = 1)
+select t1.OL_O_ID, t2.I_NAME, t1.OL_QUANTITY from last_l_orders_top1 t1 
+left join Item t2 on t1.OL_I_ID = t2.I_ID order by t1.OL_O_ID;
 
 ------------------ ##ignore begin 6 ## ------------------
 
@@ -274,3 +273,38 @@ from (select * from new_order_info where NO_W_ID = 'W_ID' and NO_D_ID = 'D_ID' a
 -- (select * from new_order_info where NO_W_ID = 'W_ID' and NO_D_ID = 'D_ID' and NO_O_ID = 'N' and NO_C_ID = 'C_ID')
 -- 最后一步保存结果到customer_item 增加t
 -- 检查commit和rowback
+
+
+with last_l_orders as (select * from Orders where O_W_ID = ? and O_D_ID = ? and O_ID >= ?-? and O_ID < ?),
+last_l_orders_items_top1 as (
+    select * from (select * from (select *, rank()over(partition by O_W_ID, O_D_ID, O_ID order by OL_QUANTITY desc) as rank
+    from last_l_orders) t where rank = 1) t1 
+    left join OrderLine t2 on t1.O_W_ID = t2.OL_W_ID and t1.O_D_ID = t2.OL_D_ID and t1.O_ID = t2.OL_O_ID)
+select t1.O_ID, t2.I_NAME, t1.OL_QUANTITY from last_l_orders_items_top1 t1 
+left join Item t2 on t1.OL_I_ID = t2.I_ID order by t1.O_ID;
+Zhang Yang对所有人说 (01:04)
+
+
+with last_l_orders as (select * from Orders where O_W_ID = 1 and O_D_ID = 5 and O_ID >= 3221-34 and O_ID < 3221),
+last_l_orders_items_top1 as (
+    select * from (select *, rank()over(partition by O_W_ID, O_D_ID, O_ID order by OL_QUANTITY desc) as rank
+    from last_l_orders t1 left join OrderLine t2
+    on t1.O_W_ID = t2.OL_W_ID and t1.O_D_ID = t2.OL_D_ID and t1.O_ID = t2.OL_O_ID)t where rank = 1)
+select t1.O_ID, t2.I_NAME, t1.OL_QUANTITY from last_l_orders_items_top1 t1 
+left join Item t2 on t1.OL_I_ID = t2.I_ID order by t1.O_ID;
+
+with last_l_orders_top1 as(
+    select * from (select *, rank()over(partition by OL_W_ID, OL_D_ID, OL_O_ID order by OL_QUANTITY desc) as rank
+    from OrderLine where OL_W_ID = 1 and OL_D_ID = 5 and OL_O_ID >= 3001-34 and OL_O_ID < 3001) t where rank = 1)
+select t1.OL_O_ID, t2.I_NAME, t1.OL_QUANTITY from last_l_orders_top1 t1 
+left join Item t2 on t1.OL_I_ID = t2.I_ID order by t1.OL_O_ID;
+
+with last_l_orders_top1 as(
+    select OL_W_ID, OL_D_ID, OL_O_ID, max(OL_QUANTITY) as OL_QUANTITY
+    from OrderLine where OL_W_ID = 1 and OL_D_ID = 5 and OL_O_ID >= 2999 and OL_O_ID < 3001
+    group by OL_W_ID, OL_D_ID, OL_O_ID)
+
+select t1.OL_O_ID, t2.I_NAME, t1.OL_QUANTITY from last_l_orders_top1 t1 
+left join Item t2 on t1.OL_I_ID = t2.I_ID order by t1.OL_O_ID;
+
+select * from OrderLine where OL_W_ID = 1 and OL_D_ID = 5 and OL_O_ID >= 2999 and OL_O_ID < 3001 limit 10;
