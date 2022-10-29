@@ -19,7 +19,7 @@ import java.util.logging.Level;
 public class SampleApp {
     private Connection conn;
     private CqlSession cqlSession;
-    private static final int N = 20;
+    private static final int N = 1;
     private static int countDownLatchTimeout = 8;
     // 用来存20个client各自的transaction throughput
     private static ArrayList<Long> throughput_list = new ArrayList<Long>();
@@ -156,7 +156,7 @@ public class SampleApp {
             String[] firstLine = scanner.nextLine().split(",");
             String type = firstLine[0];
             Transaction transaction = null;
-            if (type.equals(TransactionType.DELIVERY.type)) {
+            if (type.equals(TransactionType.PAYMENT.type)) {
                 transaction = assemblePaymentTransaction(firstLine, scanner);
             } else if (type.equals(TransactionType.DELIVERY.type)) {
                 transaction = assembleDeliveryTransaction(firstLine, scanner);
