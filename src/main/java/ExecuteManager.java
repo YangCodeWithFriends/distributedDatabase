@@ -63,7 +63,7 @@ public class ExecuteManager {
     public void executeYSQL(Connection conn, List<Transaction> list, Logger logger) throws SQLException {
         logger.log(Level.INFO, "Execute YSQL transactions\n");
         for (Transaction transaction : list) {
-//            if (skipSet.contains(transaction.getTransactionType())) continue;
+            if (skipSet.contains(transaction.getTransactionType())) continue;
 //            int cnt = skipMap.get(transaction.getTransactionType());
 //            if (cnt >= 1) continue;
 //            skipMap.put(transaction.getTransactionType(), cnt+1);

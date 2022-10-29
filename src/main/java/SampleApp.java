@@ -88,8 +88,8 @@ public class SampleApp {
             max = Math.max(max, i);
             sum += i;
         }
-//        avg = sum / throughput_list.size();
-        avg = sum / 1;
+        avg = sum / throughput_list.size();
+        System.out.println(avg);
     }
 
     public void doWork(String MODE, String inputFileName, Logger logger) {

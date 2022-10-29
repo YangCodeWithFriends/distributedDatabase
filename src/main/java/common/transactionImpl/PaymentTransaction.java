@@ -123,10 +123,10 @@ public class PaymentTransaction extends Transaction {
             while (rs4Iterator.hasNext()) {
                 Row row1 = rs4Iterator.next();
                 SimpleStatement stmt4 = SimpleStatement.newInstance(String.format("insert into dbycql.customer (C_W_id,C_D_id,C_id,C_first,C_middle,C_last,C_street_1,C_street_2,C_city,C_state,C_zip,C_phone,C_since,C_credit,C_credit_lim,C_discount,C_balance,C_ytd_payment,C_payment_cnt,C_delivery_cnt,C_data) " +
-                                "values (%d,%d,%d,\'%s\',\'%s\',\'%s\',\'%s\',\'%s\',\'%s\',\'%s\',\'%s\',\'%s\',NULL,\'%s\',%f,%f,%f,%f,%d,%d,\'%s\')", C_W_ID, C_D_ID, C_ID, row1.getString("C_first"), row1.getString("C_middle"), row1.getString("C_last"), row1.getString("C_street_1"), row1.getString("C_street_2"),
+                                "values (%d,%d,%d,\'%s\',\'%s\',\'%s\',\'%s\',\'%s\',\'%s\',\'%s\',\'%s\',\'%s\',NULL,\'%s\',%f,%f,%f,%f,%d,%d)", C_W_ID, C_D_ID, C_ID, row1.getString("C_first"), row1.getString("C_middle"), row1.getString("C_last"), row1.getString("C_street_1"), row1.getString("C_street_2"),
                         row1.getString("C_city"), row1.getString("C_state"), row1.getString("C_zip"), row1.getString("C_phone"), row1.getString("C_credit"), Objects.requireNonNull(row1.getBigDecimal("C_credit_lim")).floatValue(),
                         Objects.requireNonNull(row1.getBigDecimal("C_discount")).floatValue(), tmp_payment,
-                        tmp_ytd_payment, row1.getInt("C_payment_cnt"), row1.getInt("C_delivery_cnt")+1, row1.getString("C_data")));
+                        tmp_ytd_payment, row1.getInt("C_payment_cnt"), row1.getInt("C_delivery_cnt")+1));
                 session.execute(stmt4);
             }
 //            String fourth_cql = String.format("UPDATE dbycql.Customer SET C_BALANCE=%f, C_YTD_PAYMENT=%f, C_PAYMENT_CNT=C_PAYMENT_CNT+1 WHERE C_W_ID=%d AND C_D_ID=%d AND C_ID=%d", tmp_payment, tmp_ytd_payment, C_W_ID, C_D_ID, C_ID);
