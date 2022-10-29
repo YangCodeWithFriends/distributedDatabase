@@ -29,20 +29,20 @@ public class SampleApp {
     private static long sum = 0;
 
     public static void main(String[] args) {
+        // Set mode
+        String MODE = DataSource.YSQL;// by default, run YSQL
+        if (args != null && args.length != 0 && args[0].equals(DataSource.YCQL)) MODE = DataSource.YCQL;
+
         // Config logger for the main thread
         Logger mainLogger = Logger.getLogger(Thread.currentThread().getName());
         try {
-            FileHandler handler = new FileHandler("log-main-thread.txt");
+            FileHandler handler = new FileHandler("log-main-thread-" + MODE + " .txt");
             handler.setFormatter(new SimpleFormatter());
             mainLogger.addHandler(handler);
         } catch (IOException e) {
             e.printStackTrace();
         }
         mainLogger.setLevel(Level.WARNING);
-
-        // Set mode
-        String MODE = DataSource.YSQL;// by default, run YSQL
-        if (args != null && args.length != 0 && args[0].equals(DataSource.YCQL)) MODE = DataSource.YCQL;
 
         mainLogger.log(Level.SEVERE, "Number of Threads = " + numberOfThreads);
         mainLogger.log(Level.SEVERE, "Your mode = " + MODE);

@@ -29,14 +29,6 @@ public class TopBalanceTransaction extends Transaction {
         ResultSet rs = null;
         List<Row> rows = null;
         SimpleStatement simpleStatement = null;
-        /*
-        // CQL1
-        String CQL1 = String.format("CREATE TABLE IF NOT EXISTS dbycql.customer_balance_top10 ( cb_top10 text, cb_w_id int, cb_d_id int, cb_id int, cb_first text, cb_middle text, cb_last text, cb_balance decimal, cb_time timeuuid, PRIMARY KEY ((cb_top10), cb_balance, cb_time) ) WITH CLUSTERING ORDER BY (cb_balance DESC, cb_time);");
-        simpleStatement = SimpleStatement.builder(CQL1)
-                .setExecutionProfileName("oltp")
-                .build();
-        cqlSession.execute(simpleStatement);
-         */
 
         Timestamp current_time = Timestamp.from(Instant.now());
         logger.log(Level.INFO, "Get current timestamp = " + current_time);
@@ -85,6 +77,7 @@ public class TopBalanceTransaction extends Transaction {
             String C_LAST = row.getString(5);
             BigDecimal C_BALANCE = row.getBigDecimal(6);
 
+            /*
             // CQL5
             String CQL5 = String.format("select W_NAME from dbycql.Warehouse where W_ID = %d;", C_W_ID);
             logger.log(Level.INFO, "CQL = " + CQL5);
@@ -97,6 +90,8 @@ public class TopBalanceTransaction extends Transaction {
             logger.log(Level.INFO, "CQL = " + CQL6);
             String D_NAME = rs.one().getString(0);
            logger.log(Level.INFO, String.format("C_FIRST=%s,C_MIDDLE=%s,C_LAST=%s,C_BALANCE=%f,W_NAME=%s,D_NAME=%s\n", C_FIRST, C_MIDDLE, C_LAST, C_BALANCE, W_NAME, D_NAME));
+
+             */
         }
 
         // CQL7

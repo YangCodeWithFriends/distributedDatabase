@@ -132,7 +132,6 @@ where OL_W_ID = 'W_ID' and OL_D_ID = 'D_ID' and OL_O_ID >= 'N'-'L' and OL_O_ID <
 select D_NEXT_O_ID from dbycql.District where D_W_ID = 'W_ID' and D_ID = 'D_ID';
 -- 得到 N = D_NEXT_O_ID
 
------------------- ##ignore begin 6 ## ------------------
 
 -- 输出 'W_ID', 'D_ID', 'L'
 
@@ -141,7 +140,6 @@ select O_C_ID, O_ID, O_ENTRY_D from dbycql.Orders
 where O_W_ID = 'W_ID' and O_D_ID = 'D_ID' and O_ID >= 'N'-'L' and O_ID < 'N';
 -- 得到最新L个订单的信息 (O_C_ID, O_ID, O_ENTRY_D)
 
------------------- ##ignore end 6 ## --------------------
 
 --for every O_ID:
     

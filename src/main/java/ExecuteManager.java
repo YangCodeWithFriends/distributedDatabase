@@ -56,9 +56,8 @@ public class ExecuteManager {
 //        skipSet.add(TransactionType.RELATED_CUSTOMER);
 
         // 反选逻辑
-//        skipSet.addAll(Arrays.asList(TransactionType.values()));
-//        skipSet.remove(TransactionType.DELIVERY);
-//        skipSet.remove(TransactionType.PAYMENT);
+        skipSet.addAll(Arrays.asList(TransactionType.values()));
+        skipSet.remove(TransactionType.PAYMENT);
     }
 
     public void executeYSQL(Connection conn, List<Transaction> list, Logger logger) throws SQLException {
@@ -95,7 +94,7 @@ public class ExecuteManager {
 
     public void report(Logger logger) {
         counter++; // print statistics every 5 transactions.
-        if (counter % 100 == 0) {
+//        if (counter % 100 == 0) {
             logger.log(Level.SEVERE, "---Statistics start---");
             for (Statistics statistics : transactionTypeList) {
                 // 这是所有transaction.txt执行完之后对应的特定transaction的执行时间。所以list中应该包含8个数字对应所有transaction的执行时间
@@ -121,7 +120,7 @@ public class ExecuteManager {
             throughput = sum / cnt;
 
             logger.log(Level.SEVERE, "---Statistics end---");
-        }
+//        }
     }
 
     public long getThroughput() {
