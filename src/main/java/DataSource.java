@@ -49,11 +49,13 @@ public class DataSource {
             config.setJdbcUrl(jdbcUrl);
 
             ds = new HikariDataSource(config);
+            System.out.println("Connect to DB successfully");
         } else if (MODE.equals(YCQL)) {
             session = CqlSession
                     .builder()
                     .addContactPoint(new InetSocketAddress(settings.getProperty("host"), Integer.parseInt(settings.getProperty("port_cql"))))
                     .build();
+            System.out.println("Connect to DB successfully");
         }
         else throw new RuntimeException("mode in app.properties has to be YCQL/YSQL!");
     }

@@ -8,13 +8,14 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.logging.FileHandler;
-import java.util.logging.Handler;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
-import java.util.logging.Level;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.*;
 
 public class SampleApp {
     private Connection conn;
@@ -23,7 +24,8 @@ public class SampleApp {
     private static int countDownLatchTimeout = 8;
 
     public static void main(String[] args) {
-        String MODE = DataSource.YCQL;// by default, run YSQL
+        String MODE = DataSource.YSQL;// by default, run YSQL
+        MODE = DataSource.YCQL;
         if (args != null && args.length != 0 && args[0].equals(DataSource.YCQL)) MODE = DataSource.YCQL;
         String[] inputFileList = new String[N];
         String[] outputFileList = new String[N];
@@ -53,7 +55,7 @@ public class SampleApp {
                     logger.log(Level.INFO, Thread.currentThread().getName() + " starts ");
                     new SampleApp().doWork(finalMODE, inputFileList[finalI], logger);
                 } catch (Exception e) {
-                    logger.log(Level.WARNING, Thread.currentThread().getName() + " exception ");
+                    logger.log(Level.SEVERE, Thread.currentThread().getName() + " exception ");
                 } finally {
                     logger.log(Level.INFO, Thread.currentThread().getName() + " ends ");
                     countDownLatch.countDown();
@@ -96,8 +98,8 @@ public class SampleApp {
                 logger.log(Level.INFO, "Conn = "+ conn.getClientInfo());
 //                logger.log(Level.INFO, "Isolation level=" + conn.getTransactionIsolation());
             } else {
-                logger.log(Level.INFO, "Connecting to DB. Your mode is YCQL.");
                 cqlSession = new DataSource(MODE).getCQLSession();
+                logger.log(Level.INFO, "Connecting to DB. Your mode is YCQL.");
                 logger.log(Level.INFO, "CQLSession = "+ cqlSession.getName());
             }
             logger.log(Level.INFO, ">>>> Successfully connected to YugabyteDB.");
