@@ -59,8 +59,8 @@ public class TopBalanceTransaction extends Transaction {
                     BigDecimal C_BALANCE = row.getBigDecimal(6);
 
                     // CQL3
-                    String CQL3 = String.format("insert into dbycql.customer_balance_top10 (CB_TIME_GROUP, CB_W_ID, CB_D_ID, CB_ID, CB_FIRST, CB_MIDDLE, CB_LAST, CB_BALANCE, CB_TIME) " +
-                            "values (%s, %d, %d, %d, '%s', '%s', '%s', %f,now());", current_time, C_W_ID, C_D_ID, C_ID, C_FIRST, C_MIDDLE, C_LAST, C_BALANCE);
+                    String CQL3 = String.format("insert into dbycql.customer_balance_top10 (CB_TIME_GROUP, CB_W_ID, CB_D_ID, CB_ID, CB_FIRST, CB_MIDDLE, CB_LAST, CB_BALANCE, CB_TIME_ADD) " +
+                            "values ('%s', %d, %d, %d, '%s', '%s', '%s', %f,now());", current_time, C_W_ID, C_D_ID, C_ID, C_FIRST, C_MIDDLE, C_LAST, C_BALANCE);
                     logger.log(Level.INFO, "CQL = " + CQL2);
                     simpleStatement = SimpleStatement.builder(CQL3)
                             .setExecutionProfileName("oltp")
@@ -72,7 +72,7 @@ public class TopBalanceTransaction extends Transaction {
 
         // CQL4
         String CQL4 = String.format("select CB_W_ID, CB_D_ID, CB_ID, CB_FIRST, CB_MIDDLE, CB_LAST, CB_BALANCE from dbycql.customer_balance_top10 " +
-                "where CB_TIME_GROUP = %s limit 10;", current_time);
+                "where CB_TIME_GROUP = '%s' limit 10;", current_time);
         logger.log(Level.INFO, "CQL = " + CQL4);
         rs = cqlSession.execute(CQL4);
         rows = rs.all();
@@ -100,12 +100,13 @@ public class TopBalanceTransaction extends Transaction {
         }
 
         // CQL7
-        String CQL7 = String.format("delete from dbycql.customer_balance_top10 where CB_TIME_GROUP = %s;",current_time);
+        String CQL7 = String.format("delete from dbycql.customer_balance_top10 where CB_TIME_GROUP = '%s';",current_time);
         logger.log(Level.INFO, "CQL = " + CQL7);
         simpleStatement = SimpleStatement.builder(CQL7)
                 .setExecutionProfileName("oltp")
                 .build();
         cqlSession.execute(simpleStatement);
+        logger.log(Level.WARNING, "Top Balance ends");
     }
 
     @Override

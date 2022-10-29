@@ -138,7 +138,7 @@ public class NewOrderTransaction extends Transaction {
                 String C_CREDIT = rs.getString(4);
                 double C_DISCOUNT = rs.getDouble(5);
                 TOTAL_AMOUNT = TOTAL_AMOUNT * (1 + D_TAX + W_TAX) * (1 - C_DISCOUNT);
-                System.out.printf("W_ID=%d,D_ID=%d,C_ID=%d,C_LAST=%s,C_CREDIT=%s,C_DISCOUNT=%s,W_TAX=%f,D_TAX=%f,N=%d,current_time=%s,M=%d,TOTAL_AMOUNT=%f\n", W_ID, D_ID, C_ID, C_LAST, C_CREDIT, C_DISCOUNT, W_TAX, D_TAX, N, current_time, M, TOTAL_AMOUNT);
+                logger.log(Level.FINE, String.format("W_ID=%d,D_ID=%d,C_ID=%d,C_LAST=%s,C_CREDIT=%s,C_DISCOUNT=%s,W_TAX=%f,D_TAX=%f,N=%d,current_time=%s,M=%d,TOTAL_AMOUNT=%f\n", W_ID, D_ID, C_ID, C_LAST, C_CREDIT, C_DISCOUNT, W_TAX, D_TAX, N, current_time, M, TOTAL_AMOUNT));
             }
 
             String SQL9 = "select NO_I_ID, I_NAME, NO_SUPPLY_W_ID, NO_QUANTITY, NO_QUANTITY * I_PRICE as OL_AMOUNT, S_QUANTITY " +
@@ -157,7 +157,7 @@ public class NewOrderTransaction extends Transaction {
                 int NO_QUANTITY = rs.getInt(4);
                 double OL_AMOUNT = rs.getDouble(5);
                 double S_QUANTITY = rs.getDouble(6);
-                System.out.printf("NO_I_ID=%d,I_NAME=%s,NO_SUPPLY_W_ID=%d,NO_QUANTITY=%d,OL_AMOUNT=%f,S_QUANTITY=%f\n", NO_I_ID, I_NAME, NO_SUPPLY_W_ID, NO_QUANTITY, OL_AMOUNT, S_QUANTITY);
+                logger.log(Level.FINE, String.format("NO_I_ID=%d,I_NAME=%s,NO_SUPPLY_W_ID=%d,NO_QUANTITY=%d,OL_AMOUNT=%f,S_QUANTITY=%f\n", NO_I_ID, I_NAME, NO_SUPPLY_W_ID, NO_QUANTITY, OL_AMOUNT, S_QUANTITY));
             }
 
             String SQL10 = "insert into customer_item select NO_W_ID, NO_D_ID, NO_C_ID, NO_O_ID, NO_I_ID from " +
@@ -284,8 +284,8 @@ public class NewOrderTransaction extends Transaction {
                     .build();
             cqlSession.execute(simpleStatement);
 
-            System.out.printf("i=%d, I_NAME=%s, OL_SUPPLY_W_ID=%d, OL_QUANTITY=%d, ITEM_AMOUNT=%f, ADJUSTED_QTY=%f\n",
-                    i, I_NAME, OL_SUPPLY_W_ID, OL_QUANTITY, ITEM_AMOUNT, ADJUSTED_QTY);
+            logger.log(Level.FINE, String.format("i=%d, I_NAME=%s, OL_SUPPLY_W_ID=%d, OL_QUANTITY=%d, ITEM_AMOUNT=%f, ADJUSTED_QTY=%f\n",
+                    i, I_NAME, OL_SUPPLY_W_ID, OL_QUANTITY, ITEM_AMOUNT, ADJUSTED_QTY));
         }
 
         // CQL9

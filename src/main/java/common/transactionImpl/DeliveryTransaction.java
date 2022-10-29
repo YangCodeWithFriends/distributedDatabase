@@ -5,13 +5,15 @@ import com.datastax.oss.driver.api.core.cql.Row;
 import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 import common.Transaction;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Iterator;
 import java.util.Objects;
-import java.util.logging.Logger;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class DeliveryTransaction extends Transaction {
     int W_ID;
@@ -110,7 +112,9 @@ public class DeliveryTransaction extends Transaction {
 //                stmt.execute(String.format("UPDATE Customer SET C_DELIVERY_CNT=C_DELIVERY_CNT+%d WHERE C_W_ID=%d and C_D_ID=%d and C_ID=%d", 1, tmpList[i][0], tmpList[i][1], tmpList[i][2]));
 //            }
             conn.commit();
+            logger.log(Level.INFO, "D transaction ends");
         } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error! in D transaction");
             e.printStackTrace();
             if (conn != null) {
                 logger.log(Level.WARNING, "Transaction is being rolled back");
@@ -205,14 +209,14 @@ public class DeliveryTransaction extends Transaction {
                     Row row1 = rs2Iterator.next();
                     Instant since = row1.getInstant("C_since");
                     if (since == null) {
-                        stmt = SimpleStatement.newInstance(String.format("insert into dbycql.customer (C_W_id,C_D_id,C_id,C_first,C_middle,C_last,C_street_1,C_street_2,C_city,C_state,C_zip,C_phone,C_since,C_credit,C_credit_lim,C_discount,C_balance,C_ytd_payment,C_payment_cnt,C_delivery_cnt,C_data) " +
+                        stmt = SimpleStatement.newInstance(String.format("insert into dbycql.customer (C_W_id,C_D_id,C_id,C_first,C_middle,C_last,C_street_1,C_street_2,C_city,C_state,C_zip,C_phone,C_since,C_credit,C_credit_lim,C_discount,C_balance,C_ytd_payment,C_payment_cnt,C_delivery_cnt) " +
                                         "values (%d,%d,%d,\'%s\',\'%s\',\'%s\',\'%s\',\'%s\',\'%s\',\'%s\',\'%s\',\'%s\',NULL,\'%s\',%f,%f,%f,%f,%d,%d)", W_ID, d_ID, c_ID, row1.getString("C_first"), row1.getString("C_middle"), row1.getString("C_last"), row1.getString("C_street_1"), row1.getString("C_street_2"),
                                 row1.getString("C_city"), row1.getString("C_state"), row1.getString("C_zip"), row1.getString("C_phone"),  row1.getString("C_credit"), Objects.requireNonNull(row1.getBigDecimal("C_credit_lim")).floatValue(),
                                 Objects.requireNonNull(row1.getBigDecimal("C_discount")).floatValue(), tmp_balance,
                                 Objects.requireNonNull(row1.getBigDecimal("C_ytd_payment")).floatValue(), row1.getInt("C_payment_cnt"), row1.getInt("C_delivery_cnt")+1));
                         session.execute(stmt);
                     }else {
-                        stmt = SimpleStatement.newInstance(String.format("insert into dbycql.customer (C_W_id,C_D_id,C_id,C_first,C_middle,C_last,C_street_1,C_street_2,C_city,C_state,C_zip,C_phone,C_since,C_credit,C_credit_lim,C_discount,C_balance,C_ytd_payment,C_payment_cnt,C_delivery_cnt,C_data) " +
+                        stmt = SimpleStatement.newInstance(String.format("insert into dbycql.customer (C_W_id,C_D_id,C_id,C_first,C_middle,C_last,C_street_1,C_street_2,C_city,C_state,C_zip,C_phone,C_since,C_credit,C_credit_lim,C_discount,C_balance,C_ytd_payment,C_payment_cnt,C_delivery_cnt) " +
                                         "values (%d,%d,%d,\'%s\',\'%s\',\'%s\',\'%s\',\'%s\',\'%s\',\'%s\',\'%s\',\'%s\',\'%s\',\'%s\',%f,%f,%f,%f,%d,%d)", W_ID, d_ID, c_ID, row1.getString("C_first"), row1.getString("C_middle"), row1.getString("C_last"), row1.getString("C_street_1"), row1.getString("C_street_2"),
                                 row1.getString("C_city"), row1.getString("C_state"), row1.getString("C_zip"), row1.getString("C_phone"), since, row1.getString("C_credit"), Objects.requireNonNull(row1.getBigDecimal("C_credit_lim")).floatValue(),
                                 Objects.requireNonNull(row1.getBigDecimal("C_discount")).floatValue(), tmp_balance,

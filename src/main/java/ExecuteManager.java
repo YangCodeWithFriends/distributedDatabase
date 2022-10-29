@@ -56,17 +56,20 @@ public class ExecuteManager {
 //        skipSet.add(TransactionType.RELATED_CUSTOMER);
 
         // 反选逻辑
-        skipSet.addAll(Arrays.asList(TransactionType.values()));
-        skipSet.remove(TransactionType.DELIVERY);
+//        skipSet.addAll(Arrays.asList(TransactionType.values()));
+//        skipSet.remove(TransactionType.DELIVERY);
+//        skipSet.remove(TransactionType.PAYMENT);
     }
 
     public void executeYSQL(Connection conn, List<Transaction> list, Logger logger) throws SQLException {
         logger.log(Level.INFO, "Execute YSQL transactions\n");
         for (Transaction transaction : list) {
             if (skipSet.contains(transaction.getTransactionType())) continue;
-            int cnt = skipMap.get(transaction.getTransactionType());
-            if (cnt >= 3) continue;
-            skipMap.put(transaction.getTransactionType(), cnt+1);
+            if (skipMap.containsKey(transaction.getTransactionType())) {
+                int cnt = skipMap.getOrDefault(transaction.getTransactionType(), 0);
+                if (cnt >= 1) continue;
+                skipMap.put(transaction.getTransactionType(), cnt+1);
+            }
 
             long executionTime = transaction.executeYSQL(conn, logger);
             transactionTypeList.get(transaction.getTransactionType().index).addNewData(executionTime);
@@ -78,9 +81,11 @@ public class ExecuteManager {
         logger.log(Level.INFO, "Execute YCQL transactions\n");
         for (Transaction transaction : list) {
             if (skipSet.contains(transaction.getTransactionType())) continue;
-            int cnt = skipMap.get(transaction.getTransactionType());
-            if (cnt >= 1) continue;
-            skipMap.put(transaction.getTransactionType(), cnt+1);
+            if (skipMap.containsKey(transaction.getTransactionType())) {
+                int cnt = skipMap.getOrDefault(transaction.getTransactionType(), 0);
+                if (cnt >= 1) continue;
+                skipMap.put(transaction.getTransactionType(), cnt+1);
+            }
 
             long executionTime = transaction.executeYCQL(session, logger);
             transactionTypeList.get(transaction.getTransactionType().index).addNewData(executionTime);
@@ -90,14 +95,14 @@ public class ExecuteManager {
 
     public void report(Logger logger) {
         counter++; // print statistics every 5 transactions.
-        if (counter % 5 == 0) {
-            logger.log(Level.INFO, "---Statistics start---");
+//        if (counter % 100 == 0) {
+            logger.log(Level.SEVERE, "---Statistics start---");
             for (Statistics statistics : transactionTypeList) {
                 // 这是所有transaction.txt执行完之后对应的特定transaction的执行时间。所以list中应该包含8个数字对应所有transaction的执行时间
                 time_lst.add(statistics.getTimeSum());
                 // 获得执行的所有transaction的个数
                 cnt += statistics.getCnt();
-                logger.log(Level.INFO, statistics.toString());
+                logger.log(Level.SEVERE, statistics.toString());
             }
             // 将ArrayList排序方便计算中位数
             Collections.sort(time_lst);
@@ -115,8 +120,8 @@ public class ExecuteManager {
             // 计算Transaction throughput
             throughput = sum / cnt;
 
-            logger.log(Level.INFO, "---Statistics end---");
-        }
+            logger.log(Level.SEVERE, "---Statistics end---");
+//        }
     }
 
     public long getThroughput() {
