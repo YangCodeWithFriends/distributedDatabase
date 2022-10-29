@@ -7,6 +7,7 @@ import java.io.*;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.CountDownLatch;
@@ -28,11 +29,24 @@ public class SampleApp {
     private static long sum = 0;
 
     public static void main(String[] args) {
+        // Config logger for the main thread
+        Logger mainLogger = Logger.getLogger(Thread.currentThread().getName());
+        try {
+            FileHandler handler = new FileHandler("log-main-thread.txt");
+            handler.setFormatter(new SimpleFormatter());
+            mainLogger.addHandler(handler);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        mainLogger.setLevel(Level.WARNING);
+
         // Set mode
         String MODE = DataSource.YSQL;// by default, run YSQL
         if (args != null && args.length != 0 && args[0].equals(DataSource.YCQL)) MODE = DataSource.YCQL;
 
-        System.out.printf("Number of Threads = %d\n", numberOfThreads);
+        mainLogger.log(Level.SEVERE, "Number of Threads = " + numberOfThreads);
+        mainLogger.log(Level.SEVERE, "Your mode = " + MODE);
+
         // config input and output file.
         String[] inputFileList = new String[numberOfThreads];
         String[] outputFileList = new String[numberOfThreads];
@@ -67,7 +81,7 @@ public class SampleApp {
                     new SampleApp().doWork(finalMODE, inputFileList[finalI], logger);
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, Thread.currentThread().getName() + " exception ");
-                    e.printStackTrace();
+                    logger.log(Level.SEVERE, "exception = " + Arrays.toString(e.getStackTrace()));
                 } finally {
                     logger.log(Level.SEVERE, Thread.currentThread().getName() + " ends ");
                     countDownLatch.countDown();
@@ -75,17 +89,17 @@ public class SampleApp {
             });
         }
 
-        System.out.println("Main thread waits");
+        mainLogger.log(Level.SEVERE,"Main thread waits");
         try {
-            System.out.println("CountDownLatchTimeout = " + countDownLatchTimeout);
+            mainLogger.log(Level.INFO,"CountDownLatchTimeout = " + countDownLatchTimeout);
             countDownLatch.await(countDownLatchTimeout, TimeUnit.HOURS);
         } catch (InterruptedException e) {
-            System.out.println("Exception: await interrupted exception");
+            mainLogger.log(Level.SEVERE,"Exception: await interrupted exception");
         } finally {
-            System.out.println("countDownLatch: " + countDownLatch.toString());
+            mainLogger.log(Level.SEVERE,"countDownLatch: " + countDownLatch.toString());
         }
 
-        System.out.println("Main thread ends");
+        mainLogger.log(Level.SEVERE,"Main thread ends");
         cachedThreadPool.shutdown();
 
         // 在线程池结束之后开始统计arraylist中的值,min, max, avg
@@ -99,20 +113,7 @@ public class SampleApp {
         }
 
         // Write throughput into file
-        String throughput_file = "throughput-statistics-" + MODE + ".txt";
-        try {
-            BufferedWriter writer = new BufferedWriter(new FileWriter(throughput_file));
-            writer.append("min = ").append(String.valueOf(min));
-            writer.newLine();
-            writer.append("avg = ").append(String.valueOf(avg));
-            writer.newLine();
-            writer.append("max = ").append(String.valueOf(max));
-            writer.newLine();
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        System.out.printf("min=%d,avg=%d,max=%d\n",min,avg,max);
+        mainLogger.log(Level.SEVERE, String.format("min=%d,avg=%d,max=%d\n",min,avg,max));
     }
 
     public void doWork(String MODE, String inputFileName, Logger logger) {
