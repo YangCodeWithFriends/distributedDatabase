@@ -88,6 +88,7 @@ public class StockLevelTransaction extends Transaction {
             conn.commit();
         } catch (SQLException e) {
             e.printStackTrace();
+            logger.log(Level.WARNING, "Error in STOCK Level transaction = ", e);
             if (conn != null) {
 //                System.err.print("Transaction is being rolled back\n");
                 logger.log(Level.WARNING, "Transaction is being rolled back");

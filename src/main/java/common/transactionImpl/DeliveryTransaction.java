@@ -24,7 +24,7 @@ public class DeliveryTransaction extends Transaction {
         conn.setAutoCommit(false);
         Statement stmt = conn.createStatement();
         try {
-            System.out.println("Delivery Transaction Begins..");
+//            System.out.println("Delivery Transaction Begins..");
             stmt.execute(String.format("with min_order as(\n" +
                     "    select O_W_ID as MO_W_ID, O_D_ID as MO_D_ID, O_ID as MO_O_ID \n" +
                     "    from (select *, row_number()over(partition by O_W_ID, O_D_ID order by O_ID) as rank from Orders \n" +
@@ -114,7 +114,7 @@ public class DeliveryTransaction extends Transaction {
             conn.commit();
             logger.log(Level.INFO, "D transaction ends");
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Error! in D transaction");
+            logger.log(Level.SEVERE, String.format("Error in %s transaction, exception= ",getTransactionType().type),e);
             e.printStackTrace();
             if (conn != null) {
                 logger.log(Level.WARNING, "Transaction is being rolled back");

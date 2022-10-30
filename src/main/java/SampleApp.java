@@ -36,7 +36,7 @@ public class SampleApp {
         // Config logger for the main thread
         Logger mainLogger = Logger.getLogger(Thread.currentThread().getName());
         try {
-            FileHandler handler = new FileHandler("log-main-thread-" + MODE + " .txt");
+            FileHandler handler = new FileHandler("log-main-thread-" + MODE + ".txt");
             handler.setFormatter(new SimpleFormatter());
             mainLogger.addHandler(handler);
         } catch (IOException e) {
@@ -72,16 +72,17 @@ public class SampleApp {
 
         for (int i = 0; i < numberOfThreads; i++) {
             String finalMODE = MODE;
-            int finalI = i;
+            int threadID = i;
             cachedThreadPool.execute(() -> {
-                Logger logger = Logger.getLogger(outputFileList[finalI]);
+                Logger logger = Logger.getLogger(outputFileList[threadID]);
                 try {
                     logger.log(Level.SEVERE, Thread.currentThread().getName() + " starts ");
                     // 每一个client执行都会在执行完成之后存一个throughput进arraylist
-                    new SampleApp().doWork(finalMODE, inputFileList[finalI], logger);
+                    new SampleApp().doWork(finalMODE, inputFileList[threadID], logger, threadID);
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, Thread.currentThread().getName() + " exception ");
-                    logger.log(Level.SEVERE, "exception = " + Arrays.toString(e.getStackTrace()));
+                    logger.log(Level.SEVERE, "exception = ", e);
+                    e.printStackTrace();
                 } finally {
                     logger.log(Level.SEVERE, Thread.currentThread().getName() + " ends ");
                     countDownLatch.countDown();
@@ -94,7 +95,7 @@ public class SampleApp {
             mainLogger.log(Level.INFO,"CountDownLatchTimeout = " + countDownLatchTimeout);
             countDownLatch.await(countDownLatchTimeout, TimeUnit.HOURS);
         } catch (InterruptedException e) {
-            mainLogger.log(Level.SEVERE,"Exception: await interrupted exception");
+            mainLogger.log(Level.SEVERE,"Exception: await interrupted exception",e);
         } finally {
             mainLogger.log(Level.SEVERE,"countDownLatch: " + countDownLatch.toString());
         }
@@ -116,7 +117,7 @@ public class SampleApp {
         mainLogger.log(Level.SEVERE, String.format("min=%d,avg=%d,max=%d\n",min,avg,max));
     }
 
-    public void doWork(String MODE, String inputFileName, Logger logger) {
+    public void doWork(String MODE, String inputFileName, Logger logger, int threadID) {
         logger.log(Level.SEVERE, Thread.currentThread().getName() + "do work");
 
         // 1. Construct requests from files.
@@ -133,18 +134,19 @@ public class SampleApp {
         try {
             if (MODE.equals(DataSource.YSQL)) {
                 logger.log(Level.WARNING, "Connecting to DB. Your mode is YSQL.");
-                conn = new DataSource(MODE).getSQLConnection();
+                conn = new DataSource(MODE, threadID, logger).getSQLConnection();
                 conn.setTransactionIsolation(1);
                 logger.log(Level.INFO, "Conn = "+ conn.getClientInfo());
 //                logger.log(Level.INFO, "Isolation level=" + conn.getTransactionIsolation());
             } else {
                 logger.log(Level.WARNING, "Connecting to DB. Your mode is YCQL.");
-                cqlSession = new DataSource(MODE).getCQLSession();
+                cqlSession = new DataSource(MODE, threadID, logger).getCQLSession();
                 logger.log(Level.INFO, "CQLSession = "+ cqlSession.getName());
             }
             logger.log(Level.WARNING, ">>>> Successfully connected to YugabyteDB.");
         } catch (SQLException e) {
             e.printStackTrace();
+            logger.log(Level.SEVERE, "DB Connection exception= ",e);
         }
 
         // 3. execute and report
@@ -154,6 +156,7 @@ public class SampleApp {
                 executeManager.executeYSQL(conn, list, logger);
             } catch (SQLException e) {
                 e.printStackTrace();
+                logger.log(Level.SEVERE, "YSQL Execute exception= ",e);
             } finally {
                 try {
                     conn.close();

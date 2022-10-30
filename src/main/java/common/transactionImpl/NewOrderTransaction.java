@@ -173,6 +173,7 @@ public class NewOrderTransaction extends Transaction {
            logger.log(Level.FINE, String.format("Transaction ends"));
         } catch (SQLException e) {
             e.printStackTrace();
+            logger.log(Level.SEVERE, String.format("Error in %s transaction, exception= ",getTransactionType().type),e);
             if (conn != null) {
 //                System.err.print("Transaction is being rolled back\n");
                 logger.log(Level.WARNING, "Transaction is being rolled back");

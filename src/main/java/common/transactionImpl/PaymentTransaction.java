@@ -69,6 +69,7 @@ public class PaymentTransaction extends Transaction {
             conn.commit();
         } catch (SQLException e) {
             e.printStackTrace();
+            logger.log(Level.SEVERE, String.format("Error in %s transaction, exception= ",getTransactionType().type),e);
             if (conn != null) {
 //                System.err.print("Transaction is being rolled back\n");
                 logger.log(Level.WARNING, "Transaction is being rolled back");
