@@ -197,18 +197,27 @@ public class PopularItemTransaction extends Transaction {
              */
 
             // SQL3
-            String SQL3 = "with last_l_orders as ( select * from Orders where O_W_ID = ? and O_D_ID = ? and O_ID >= ? - ? and O_ID < ? ), " +
-                    "last_l_orders_items as ( select *, rank()over(partition by O_W_ID, O_D_ID, O_ID order by OL_QUANTITY desc) as rank from last_l_orders t1 " +
-                    "left join OrderLine t2 on t1.O_W_ID = t2.OL_W_ID and t1.O_D_ID = t2.OL_D_ID and t1.O_ID = t2.OL_O_ID ) " +
-                    "select t1.O_ID, t2.I_NAME, t1.OL_QUANTITY from last_l_orders_items t1 " +
-                    "left join Item t2 on t1.OL_I_ID = t2.I_ID where t1.rank = 1 order by t1.O_ID";
-            // with last_l_orders as ( select * from Orders where O_W_ID = 'W_ID' and O_D_ID = 'D_ID' and O_ID >= 'N'-'L' and O_ID < 'N' ), last_l_orders_items as ( select *, rank()over(partition by O_W_ID, O_D_ID, O_ID order by OL_QUANTITY desc) as rank from last_l_orders t1 left join OrderLine t2 on t1.O_W_ID = t2.OL_W_ID and t1.O_D_ID = t2.OL_D_ID and t1.O_ID = t2.OL_O_ID ) select t1.O_ID, t2.I_NAME, t1.OL_QUANTITY from last_l_orders_items t1 left join Item t2 on t1.OL_I_ID = t2.I_ID where t1.rank = 1 order by t1.O_ID ;
+            String SQL3 = "with last_l_orders as (select * from Orders where O_W_ID = ? and O_D_ID = ? and O_ID >= ?-? and O_ID < ?),\n" +
+                    "last_l_orders_items_top1 as (\n" +
+                    "    select * from (select * from (select *, rank()over(partition by O_W_ID, O_D_ID, O_ID order by OL_QUANTITY desc) as rank\n" +
+                    "    from last_l_orders) t where rank = 1) t1 \n" +
+                    "    left join OrderLine t2 on t1.O_W_ID = t2.OL_W_ID and t1.O_D_ID = t2.OL_D_ID and t1.O_ID = t2.OL_O_ID)\n" +
+                    "select t1.O_ID, t2.I_NAME, t1.OL_QUANTITY from last_l_orders_items_top1 t1 \n" +
+                    "left join Item t2 on t1.OL_I_ID = t2.I_ID order by t1.O_ID;\n";
             statement = conn.prepareStatement(SQL3);
             statement.setInt(1, W_ID);
             statement.setInt(2, D_ID);
             statement.setInt(3, N);
             statement.setInt(4, L);
             statement.setInt(5, N);
+            String SQL3TMP = String.format("with last_l_orders as (select * from Orders where O_W_ID = %d and O_D_ID = %d and O_ID >= %d-%d and O_ID < %d),\n" +
+                    "last_l_orders_items_top1 as (\n" +
+                    "    select * from (select * from (select *, rank()over(partition by O_W_ID, O_D_ID, O_ID order by OL_QUANTITY desc) as rank\n" +
+                    "    from last_l_orders) t where rank = 1) t1 \n" +
+                    "    left join OrderLine t2 on t1.O_W_ID = t2.OL_W_ID and t1.O_D_ID = t2.OL_D_ID and t1.O_ID = t2.OL_O_ID)\n" +
+                    "select t1.O_ID, t2.I_NAME, t1.OL_QUANTITY from last_l_orders_items_top1 t1 \n" +
+                    "left join Item t2 on t1.OL_I_ID = t2.I_ID order by t1.O_ID;\n", W_ID,D_ID,N,L,N);
+//            System.out.println(SQL3TMP);
             rs = statement.executeQuery();
             while (rs.next()) {
                 int O_ID = rs.getInt(1);
@@ -238,6 +247,7 @@ public class PopularItemTransaction extends Transaction {
              */
 
             conn.commit();
+            logger.log(Level.WARNING, "Popularitem ends");
         } catch (SQLException e) {
             e.printStackTrace();
             if (conn != null) {
