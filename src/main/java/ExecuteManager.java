@@ -24,7 +24,7 @@ public class ExecuteManager {
     private List<Statistics> transactionTypeList;
     private Map<TransactionType, Integer> skipMap;
     private int counter;
-    private int LIMIT;
+    private int LIMIT = 100;// Print statistics every LIMIT transactions
     // 定义变量
     private ArrayList<Long> time_lst = new ArrayList<Long>();
     private long avg;
@@ -53,7 +53,6 @@ public class ExecuteManager {
             skipMap.put(transactionType, 0);
         }
 
-        LIMIT = 1;
 
         // 正选逻辑
 //        skipSet.add(TransactionType.NEW_ORDER);
@@ -101,11 +100,12 @@ public class ExecuteManager {
 
     public void report(Logger logger) {
         counter++; // print statistics every 5 transactions.
-        if (counter % 5 == 0) {
+        if (counter % LIMIT == 0) {
             logger.log(Level.INFO, "---Statistics start---");
             for (Statistics statistics : transactionTypeList) {
                 logger.log(Level.INFO, statistics.toString());
             }
+            logger.log(Level.INFO, "---Statistics end---");
         }
     }
 
@@ -114,7 +114,6 @@ public class ExecuteManager {
         sum = 0;
         cnt = 0;
         time_lst = new ArrayList<Long>();
-        logger.log(Level.SEVERE, "---Statistics start---");
         for (Statistics statistics : transactionTypeList) {
             // 这是所有transaction的累计执行时间
 //                time_lst.add(statistics.getTimeSum());
