@@ -26,13 +26,10 @@ public class ExecuteManager {
     private int counter;
     private int LIMIT;
     // 定义变量
-    private ArrayList<Long> time_lst = new ArrayList<Long>();
-    private long avg;
+    private ArrayList<Long> time_lst = new ArrayList<>();
+    private ArrayList<Long> percentage_time_lst = new ArrayList<Long>();
     private long sum = 0;
     private long cnt = 0;
-    private long medium;
-    private long per_95;
-    private long per_99;
 
     public ExecuteManager() {
         transactionTypeList = new ArrayList<>(8);
@@ -101,6 +98,10 @@ public class ExecuteManager {
 
     public void report(Logger logger) {
         counter++; // print statistics every 5 transactions.
+        // get all the transaction execution time and add them into list.
+        for (Statistics statistics : transactionTypeList) {
+            percentage_time_lst.add(statistics.getExeTime());
+        }
         if (counter % 5 == 0) {
             logger.log(Level.INFO, "---Statistics start---");
             for (Statistics statistics : transactionTypeList) {
@@ -116,8 +117,6 @@ public class ExecuteManager {
         time_lst = new ArrayList<Long>();
         logger.log(Level.SEVERE, "---Statistics start---");
         for (Statistics statistics : transactionTypeList) {
-            // 这是所有transaction的累计执行时间
-//                time_lst.add(statistics.getTimeSum());
             sum += statistics.getTimeSum();
             // 获取到最后一次每个transaction执行的总时间
             time_lst.add(statistics.getTimeSum());
@@ -137,6 +136,10 @@ public class ExecuteManager {
 
     public ArrayList<Long> getTime_lst() {
         return time_lst;
+    }
+
+    public ArrayList<Long> getPercentage_time_lst() {
+        return percentage_time_lst;
     }
 
     public void reportCSV(Connection conn, CqlSession session) {

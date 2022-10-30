@@ -6,10 +6,7 @@ import common.transactionImpl.*;
 import java.io.*;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -188,23 +185,22 @@ public class SampleApp {
         // 获取该client的执行平均时间并输出
         logger.log(Level.WARNING,String.format("Time average(ms): %.2f\n", sum * 1.0 / cnt));
         // 获取8个transaction执行总时间组成的arraylist,然后输出中位数
-        ArrayList<Long> time_lst = executeManager.getTime_lst();
+//        ArrayList<Long> time_lst = executeManager.getTime_lst();
+        ArrayList<Long> N1 = executeManager.getPercentage_time_lst();
+        Collections.sort(N1);
         long medium;
-        if (time_lst.size() % 2 == 0) {
-            medium = (time_lst.get(time_lst.size()/2-1) + time_lst.get(time_lst.size()/2)) / 2;
+        if (N1.size() % 2 == 0) {
+            medium = (N1.get(N1.size()/2-1) + N1.get(N1.size()/2)) / 2;
         }else {
-            medium = time_lst.get(time_lst.size()/2);
+            medium = N1.get(N1.size()/2);
         }
         logger.log(Level.WARNING,String.format("Medium latency(ms): %d\n", medium));
         // 输出95%
-        long N1 = (long) (cnt * 0.95);
-        double per_95 = sum * 1.0 / N1;
-        logger.log(Level.WARNING,String.format("95 latency(ms): %.2f\n", per_95));
+        int index1 = (int) (N1.size() * 0.95);
+        logger.log(Level.WARNING,String.format("95 latency(ms): %.2f\n", (double) N1.get(index1)));
         // 输出99%
-        long N2 = (long) (cnt * 0.99);
-        double per_99 = sum * 1.0 / N2;
-        logger.log(Level.WARNING,String.format("99 latency(ms): %.2f\n", per_99));
-        // 将该client的throughput存到throughput_list方便main中所有的client执行完毕后计算后续结果
+        int index2 = (int) (N1.size() * 0.99);
+        logger.log(Level.WARNING,String.format("95 latency(ms): %.2f\n", (double) N1.get(index2)));
     }
 
 
