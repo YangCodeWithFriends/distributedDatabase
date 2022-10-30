@@ -259,7 +259,7 @@ WITH NULL='null' AND INGESTRATE=10000;
 
 -- 瑶姐要的临时表
 CREATE TABLE dbycql.customer_balance_top10 (
-    cb_time_group timestamp,
+    cb_time_group text,
     cb_w_id int,
     cb_d_id int,
     cb_id int,
