@@ -3,12 +3,14 @@ package common.transactionImpl;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
 import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 import common.SQLEnum;
 import common.Transaction;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -60,7 +62,11 @@ public class StockLevelTransaction extends Transaction {
         int num = 0;
         for (int OL_I_ID : OL_I_IDs) {
             String CQL3 = String.format("select S_QUANTITY from dbycql.Stock where S_W_ID = %d and S_I_ID = %d allow filtering", W_ID, OL_I_ID);
-            rs = cqlSession.execute(CQL3);
+//            rs = cqlSession.execute(CQL3);
+            SimpleStatement simpleStatement = SimpleStatement.builder(CQL3)
+                    .setExecutionProfileName("oltp")
+                    .build();
+            rs = cqlSession.execute(simpleStatement);
             BigDecimal S_QUANTITY = rs.one().getBigDecimal(0);
             double d = S_QUANTITY.doubleValue();
             if (d < T) num++;

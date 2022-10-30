@@ -150,7 +150,7 @@ public class DeliveryTransaction extends Transaction {
             String first_cql = String.format("UPDATE dbycql.Orders SET O_CARRIER_ID=%d " +
                     "WHERE O_W_ID=%d and O_D_ID=%d and O_ID=%d", CARRIER_ID, W_ID, d_ID, o_ID);
             SimpleStatement simpleStatement_0 = SimpleStatement.builder(first_cql)
-                    .setExecutionProfileName("oltp").setTimeout(Duration.ofSeconds(20))
+                    .setExecutionProfileName("oltp")
                     .build();
             session.execute(simpleStatement_0);
             // 第二个cql
@@ -158,7 +158,7 @@ public class DeliveryTransaction extends Transaction {
                     "from dbycql.OrderLine " +
                     "where OL_W_ID=%d and OL_D_ID=%d and OL_O_ID=%d", W_ID, d_ID, o_ID);
             SimpleStatement simpleStatement0 = SimpleStatement.builder(second_cql)
-                    .setExecutionProfileName("oltp").setTimeout(Duration.ofSeconds(20))
+                    .setExecutionProfileName("oltp")
                     .build();
             session.execute(simpleStatement0);
             rsIterator = rs.iterator();
@@ -177,7 +177,7 @@ public class DeliveryTransaction extends Transaction {
                     String third_cql = String.format("UPDATE dbycql.OrderLine SET OL_DELIVERY_D=toTimestamp(now()) " +
                             "WHERE OL_W_ID=%d and OL_D_ID=%d and OL_O_ID=%d and OL_NUMBER=%d and OL_QUANTITY=%f", W_ID, d_ID, o_ID, ol_num, OL_QUANTITY);
                     SimpleStatement simpleStatement = SimpleStatement.builder(third_cql)
-                            .setExecutionProfileName("oltp").setTimeout(Duration.ofSeconds(30))
+                            .setExecutionProfileName("oltp")
                             .build();
                     session.execute(simpleStatement);
                 }

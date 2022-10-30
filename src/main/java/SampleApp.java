@@ -22,11 +22,11 @@ public class SampleApp {
     private static final int numberOfThreads = 20;
     private static int countDownLatchTimeout = 8;
     // 用来存20个client各自的transaction throughput
-    private static ArrayList<Long> throughput_list = new ArrayList<Long>(numberOfThreads);
-    private static long min = 0;
-    private static long max = 0;
-    private static long avg = 0;
-    private static long sum = 0;
+    private static ArrayList<Double> throughput_list = new ArrayList<>(numberOfThreads);
+    private static double min = Double.MAX_VALUE;
+    private static double max = -1;
+    private static double avg = 0;
+    private static double sum = 0;
 
     public static void main(String[] args) {
         // Set mode
@@ -59,6 +59,7 @@ public class SampleApp {
                 handler.setFormatter(new SimpleFormatter());
                 logger.addHandler(handler);
                 // SETLEVEL. Set the logger filtering level.
+
                 logger.setLevel(Level.WARNING);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -104,7 +105,7 @@ public class SampleApp {
         cachedThreadPool.shutdown();
 
         // 在线程池结束之后开始统计arraylist中的值,min, max, avg
-        for (long i : throughput_list) {
+        for (double i : throughput_list) {
             min = Math.min(min, i);
             max = Math.max(max, i);
             sum += i;
@@ -114,7 +115,7 @@ public class SampleApp {
         }
 
         // Write throughput into file
-        mainLogger.log(Level.SEVERE, String.format("min=%d,avg=%d,max=%d\n",min,avg,max));
+        mainLogger.log(Level.SEVERE, String.format("min=%.2f,avg=%.2f,max=%.2f\n",min,avg,max));
     }
 
     public void doWork(String MODE, String inputFileName, Logger logger, int threadID) {
@@ -172,8 +173,38 @@ public class SampleApp {
             }
         }
         // 这是一个client执行完所有的transaction之后最后做的report操作，所以1和2的操作都是在这里
-        executeManager.report(logger);
-        throughput_list.add(executeManager.getThroughput());
+        executeManager.summary(logger);
+        // 输出总共执行的transaction数量
+        long cnt = executeManager.getCnt();
+        logger.log(Level.WARNING,String.format("Total num: %d\n", cnt));
+        // 获取该client的总执行时间
+        long sum = executeManager.getTimeSum();
+        logger.log(Level.WARNING,String.format("Time sum(s): %.2f\n", sum / 1000.0));
+        // 输出throughput
+        double throughput = cnt * 1.0 / (sum / 1000.0);
+        throughput_list.add(throughput);
+
+        logger.log(Level.WARNING,String.format("Transaction throughput: %.2f\n", throughput));
+        // 获取该client的执行平均时间并输出
+        logger.log(Level.WARNING,String.format("Time average(ms): %.2f\n", sum * 1.0 / cnt));
+        // 获取8个transaction执行总时间组成的arraylist,然后输出中位数
+        ArrayList<Long> time_lst = executeManager.getTime_lst();
+        long medium;
+        if (time_lst.size() % 2 == 0) {
+            medium = (time_lst.get(time_lst.size()/2-1) + time_lst.get(time_lst.size()/2)) / 2;
+        }else {
+            medium = time_lst.get(time_lst.size()/2);
+        }
+        logger.log(Level.WARNING,String.format("Medium latency(ms): %d\n", medium));
+        // 输出95%
+        long N1 = (long) (cnt * 0.95);
+        double per_95 = sum * 1.0 / N1;
+        logger.log(Level.WARNING,String.format("95 latency(ms): %.2f\n", per_95));
+        // 输出99%
+        long N2 = (long) (cnt * 0.99);
+        double per_99 = sum * 1.0 / N2;
+        logger.log(Level.WARNING,String.format("99 latency(ms): %.2f\n", per_99));
+        // 将该client的throughput存到throughput_list方便main中所有的client执行完毕后计算后续结果
     }
 
 

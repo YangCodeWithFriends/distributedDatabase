@@ -54,7 +54,7 @@ public class TopBalanceTransaction extends Transaction {
                     String CQL3 = String.format("insert into dbycql.customer_balance_top10 (CB_TIME_GROUP, CB_W_ID, CB_D_ID, CB_ID, CB_FIRST, CB_MIDDLE, CB_LAST, CB_BALANCE, CB_TIME_ADD) " +
                             "values ('%s', %d, %d, %d, '%s', '%s', '%s', %f,now());", current_time, C_W_ID, C_D_ID, C_ID, C_FIRST, C_MIDDLE, C_LAST, C_BALANCE);
                     simpleStatement = SimpleStatement.builder(CQL3)
-                            .setExecutionProfileName("oltp").setTimeout(Duration.ofSeconds(30))
+                            .setExecutionProfileName("oltp")
                             .build();
                     cqlSession.execute(simpleStatement);
                 }
