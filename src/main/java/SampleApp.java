@@ -29,7 +29,7 @@ public class SampleApp {
     private static long sum = 0;
 
     public static void main(String[] args) {
-        String MODE = DataSource.YSQL;// by default, run YSQL
+        String MODE = DataSource.YCQL;// by default, run YSQL
         if (args != null && args.length != 0 && args[0].equals(DataSource.YCQL)) MODE = DataSource.YCQL;
         String[] inputFileList = new String[N];
         String[] outputFileList = new String[N];
@@ -89,7 +89,9 @@ public class SampleApp {
             sum += i;
         }
         avg = sum / throughput_list.size();
-        System.out.println(avg);
+        System.out.printf("Avg transaction throughput: %d%n", avg);
+        System.out.printf("Max transaction throughput: %d%n", max);
+        System.out.printf("Min transaction throughput: %d%n", min);
     }
 
     public void doWork(String MODE, String inputFileName, Logger logger) {
@@ -143,8 +145,35 @@ public class SampleApp {
                 cqlSession.close();
             }
         }
-        // 这是一个client执行完所有的transaction之后最后做的report操作，所以1和2的操作都是在这里
+        // 这是一个client执行完指定次数的transaction之后最后做的report操作，是最后一次调用report结果
         executeManager.report(logger);
+        // 输出总共执行的transaction数量
+        long cnt = executeManager.getCnt();
+        System.out.printf("Total num: %d%n", cnt);
+        // 输出throughput
+        long throughput = executeManager.getThroughput();
+        System.out.printf("Transaction throughput: %d%n", throughput);
+        // 获取该client的执行平均时间并输出
+        float sum = (float) executeManager.getTimeSum();
+        System.out.printf("Time sum: %.2f%n", sum/cnt);
+        // 获取8个transaction执行总时间组成的arraylist,然后输出中位数
+        ArrayList<Long> time_lst = executeManager.getTime_lst();
+        long medium;
+        if (time_lst.size() % 2 == 0) {
+            medium = (time_lst.get(time_lst.size()/2-1) + time_lst.get(time_lst.size()/2)) / 2;
+        }else {
+            medium = time_lst.get(time_lst.size()/2);
+        }
+        System.out.printf("Medium latency: %d%n", medium);
+        // 输出95%
+        long N1 = (long) (cnt * 0.95);
+        float per_95 = sum / N1;
+        System.out.printf("95 latency: %.2f%n", per_95);
+        // 输出99%
+        long N2 = (long) (cnt * 0.95);
+        float per_99 = sum / N2;
+        System.out.printf("99 latency: %.2f%n", per_99);
+        // 将该client的throughput存到throughput_list方便main中所有的client执行完毕后计算后续结果
         throughput_list.add(executeManager.getThroughput());
     }
 

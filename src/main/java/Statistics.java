@@ -16,8 +16,6 @@ public class Statistics {
     private long min; // minimum execution time of executed transactions of this type
     private long avg; // avg execution time of executed transactions of this type
     private long med;
-    private long per_95;
-    private long per_99;
     private ArrayList<Long> time_lst = new ArrayList<Long>();
 
     public Statistics(TransactionType transactionType) {

@@ -30,6 +30,8 @@ public class ExecuteManager {
     private long cnt = 0;
     private long throughput;
     private long medium;
+    private long per_95;
+    private long per_99;
 
     public ExecuteManager() {
         transactionTypeList = new ArrayList<>(8);
@@ -64,12 +66,13 @@ public class ExecuteManager {
         logger.log(Level.INFO, "Execute YSQL transactions\n");
         for (Transaction transaction : list) {
             if (skipSet.contains(transaction.getTransactionType())) continue;
-//            int cnt = skipMap.get(transaction.getTransactionType());
-//            if (cnt >= 1) continue;
-//            skipMap.put(transaction.getTransactionType(), cnt+1);
+            int cnt = skipMap.get(transaction.getTransactionType());
+            if (cnt >= 1) continue;
+            skipMap.put(transaction.getTransactionType(), cnt+1);
 
             long executionTime = transaction.executeYSQL(conn, logger);
             transactionTypeList.get(transaction.getTransactionType().index).addNewData(executionTime);
+            // 平常执行输出的是这个导致的
             report(logger);
         }
     }
@@ -77,13 +80,14 @@ public class ExecuteManager {
     public void executeYCQL(CqlSession session, List<Transaction> list, Logger logger) {
         logger.log(Level.INFO, "Execute YCQL transactions\n");
         for (Transaction transaction : list) {
-//            if (skipSet.contains(transaction.getTransactionType())) continue;
+            if (skipSet.contains(transaction.getTransactionType())) continue;
 //            int cnt = skipMap.get(transaction.getTransactionType());
 //            if (cnt >= 1) continue;
 //            skipMap.put(transaction.getTransactionType(), cnt+1);
 
             long executionTime = transaction.executeYCQL(session, logger);
             transactionTypeList.get(transaction.getTransactionType().index).addNewData(executionTime);
+            // 平常执行输出的是这个导致的
             report(logger);
         }
     }
@@ -92,35 +96,62 @@ public class ExecuteManager {
         counter++; // print statistics every 5 transactions.
         if (counter % 5 == 0) {
             logger.log(Level.INFO, "---Statistics start---");
+            // 在最后一次输出的时候先格式化sum为0
+            sum = 0;
+            cnt = 0;
+            time_lst = new ArrayList<Long>();
             for (Statistics statistics : transactionTypeList) {
-                // 这是所有transaction.txt执行完之后对应的特定transaction的执行时间。所以list中应该包含8个数字对应所有transaction的执行时间
+                // 这是所有transaction的累计执行时间
+//                time_lst.add(statistics.getTimeSum());
+                sum += statistics.getTimeSum();
+                // 获取到最后一次每个transaction执行的总时间
                 time_lst.add(statistics.getTimeSum());
                 // 获得执行的所有transaction的个数
                 cnt += statistics.getCnt();
                 logger.log(Level.INFO, statistics.toString());
             }
             // 将ArrayList排序方便计算中位数
-            Collections.sort(time_lst);
+//            Collections.sort(time_lst);
             // 计算所有transaction的执行时间
-            for (long i : time_lst) {
-                sum += i;
-            }
+//            for (long i : time_lst) {
+//                sum += i;
+//            }
             // 计算平均数
-            avg = sum / time_lst.size();
-            if (time_lst.size() % 2 == 0) {
-                medium = (time_lst.get(time_lst.size()/2-1) + time_lst.get(time_lst.size()/2)) / 2;
-            }else {
-                medium = time_lst.get(time_lst.size()/2);
-            }
+//            avg = sum / time_lst.size();
+//            System.out.printf("Avg latency: %d%n", avg);
+            // 计算中位数(不是在这计算的)
+//            if (time_lst.size() % 2 == 0) {
+//                medium = (time_lst.get(time_lst.size()/2-1) + time_lst.get(time_lst.size()/2)) / 2;
+//            }else {
+//                medium = time_lst.get(time_lst.size()/2);
+//            }
+//            System.out.printf("Medium latency: %d%n", medium);
             // 计算Transaction throughput
-            throughput = sum / cnt;
-
-            logger.log(Level.INFO, "---Statistics end---");
+//            throughput = sum / cnt;
+//            System.out.printf("Transaction throughput: %d%n", throughput);
+//            // 计算95%
+//            long N1 = (long) (cnt * 0.95);
+//            per_95 = sum / N1;
+//            System.out.printf("95 latency: %d%n", per_95);
+//            // 计算99%
+//            long N2 = (long) (cnt * 0.95);
+//            per_99 = sum / N2;
+//            System.out.printf("99 latency: %d%n", per_99);
+//            logger.log(Level.INFO, "---Statistics end---");
         }
     }
 
     public long getThroughput() {
         return throughput;
+    }
+    public long getCnt() {
+        return cnt;
+    }
+    public long getTimeSum() {
+        return sum;
+    }
+    public ArrayList<Long> getTime_lst() {
+        return time_lst;
     }
 
     public void reportCSV(Connection conn, CqlSession session) {

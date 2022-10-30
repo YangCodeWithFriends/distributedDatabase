@@ -66,7 +66,7 @@ public class PaymentTransaction extends Transaction {
 //               logger.log(Level.FINE, "D_STREET_1: " + rs.getString(23) + "D_STREET_2: " + rs.getString(24) + "D_CITY: " + rs.getString(25) + "D_STATE: " + rs.getString(26) + "D_ZIP: " + rs.getString(27));
 //            }
            logger.log(Level.FINE, "Payment Transaction执行完毕！");
-            conn.commit();
+           conn.commit();
         } catch (SQLException e) {
             e.printStackTrace();
             if (conn != null) {
@@ -122,7 +122,7 @@ public class PaymentTransaction extends Transaction {
             Iterator<Row> rs4Iterator = rs4.iterator();
             while (rs4Iterator.hasNext()) {
                 Row row1 = rs4Iterator.next();
-                SimpleStatement stmt4 = SimpleStatement.newInstance(String.format("insert into dbycql.customer (C_W_id,C_D_id,C_id,C_first,C_middle,C_last,C_street_1,C_street_2,C_city,C_state,C_zip,C_phone,C_since,C_credit,C_credit_lim,C_discount,C_balance,C_ytd_payment,C_payment_cnt,C_delivery_cnt,C_data) " +
+                SimpleStatement stmt4 = SimpleStatement.newInstance(String.format("insert into dbycql.customer (C_W_id,C_D_id,C_id,C_first,C_middle,C_last,C_street_1,C_street_2,C_city,C_state,C_zip,C_phone,C_since,C_credit,C_credit_lim,C_discount,C_balance,C_ytd_payment,C_payment_cnt,C_delivery_cnt) " +
                                 "values (%d,%d,%d,\'%s\',\'%s\',\'%s\',\'%s\',\'%s\',\'%s\',\'%s\',\'%s\',\'%s\',NULL,\'%s\',%f,%f,%f,%f,%d,%d)", C_W_ID, C_D_ID, C_ID, row1.getString("C_first"), row1.getString("C_middle"), row1.getString("C_last"), row1.getString("C_street_1"), row1.getString("C_street_2"),
                         row1.getString("C_city"), row1.getString("C_state"), row1.getString("C_zip"), row1.getString("C_phone"), row1.getString("C_credit"), Objects.requireNonNull(row1.getBigDecimal("C_credit_lim")).floatValue(),
                         Objects.requireNonNull(row1.getBigDecimal("C_discount")).floatValue(), tmp_payment,
