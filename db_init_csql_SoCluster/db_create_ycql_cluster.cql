@@ -257,6 +257,20 @@ copy customer_item from '/home/stuproj/cs4224j/project_data/data_files/customer_
 WITH NULL='null' AND INGESTRATE=10000;
 -- select count(*) as no_imported_customer_item from dbycql.orderline;
 
+-- 瑶姐要的临时表
+CREATE TABLE dbycql.customer_balance_top10 (
+    cb_time_group text,
+    cb_w_id int,
+    cb_d_id int,
+    cb_id int,
+    cb_first text,
+    cb_middle text,
+    cb_last text,
+    cb_balance decimal,
+    cb_time_add timeuuid,
+    PRIMARY KEY ((cb_time_group), cb_balance, cb_time_add)
+) WITH CLUSTERING ORDER BY (cb_balance DESC, cb_time_add);
+
 
 
 -- 输出看导入结果
@@ -267,6 +281,7 @@ select count(*) as no_imported_Item from item;
 select count(*) as no_imported_stock from stock;
 -- select count(*) as no_imported_OLine from orderline;
 -- select count(*) as no_imported_customer_item from customer_item; 
+select count(*) as no_imported_cust_balantop10 from customer_balance_top10;
 
 -- show all tables
 DESCRIBE tables;

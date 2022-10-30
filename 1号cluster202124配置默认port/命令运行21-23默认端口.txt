@@ -1,0 +1,77 @@
+# 20
+./yb-tserver \
+  --tserver_master_addrs 192.168.48.240:7100,192.168.48.241:7100,192.168.48.242:7100 \
+  --rpc_bind_addresses 192.168.48.239:9100 \
+  --enable_ysql \
+  --pgsql_proxy_bind_address 192.168.48.239:5433 \
+  --cql_proxy_bind_address 192.168.48.239:9042 \
+  --fs_data_dirs "/mnt/ramdisk/gj" \
+  >& /mnt/ramdisk/gj/yb-tserver.out &
+
+# 21
+./yb-master \
+  --master_addresses 192.168.48.240:7100,192.168.48.241:7100,192.168.48.242:7100 \
+  --rpc_bind_addresses 192.168.48.240:7100 \
+  --fs_data_dirs "/mnt/ramdisk/gj" \
+  >& /mnt/ramdisk/gj/yb-master.out &
+
+./yb-tserver \
+  --tserver_master_addrs 192.168.48.240:7100,192.168.48.241:7100,192.168.48.242:7100 \
+  --rpc_bind_addresses 192.168.48.240:9100 \
+  --enable_ysql \
+  --pgsql_proxy_bind_address 192.168.48.240:5433 \
+  --cql_proxy_bind_address 192.168.48.240:9042 \
+  --fs_data_dirs "/mnt/ramdisk/gj" \
+  >& /mnt/ramdisk/gj/yb-tserver.out &
+
+
+./yb-tserver \
+  --tserver_master_addrs 192.168.48.240:7100,192.168.48.241:7100,192.168.48.242:7100 \
+  --rpc_bind_addresses 192.168.48.240:9100 \
+  --enable_ysql \
+  --pgsql_proxy_bind_address 192.168.48.240:5433 \
+  --cql_proxy_bind_address 192.168.48.240:9042 \
+  --fs_data_dirs "/mnt/ramdisk/gj" \
+  >& /mnt/ramdisk/gj/yb-tserver.out &
+
+
+22 
+./yb-master \
+  --master_addresses 192.168.48.240:7100,192.168.48.241:7100,192.168.48.242:7100 \
+  --rpc_bind_addresses 192.168.48.241:7100 \
+  --fs_data_dirs "/mnt/ramdisk/gj" \
+  >& /mnt/ramdisk/gj/yb-master.out &
+
+./yb-tserver \
+  --tserver_master_addrs 192.168.48.240:7100,192.168.48.241:7100,192.168.48.242:7100 \
+  --rpc_bind_addresses 192.168.48.241:9100 \
+  --enable_ysql \
+  --pgsql_proxy_bind_address 192.168.48.241:5433 \
+  --cql_proxy_bind_address 192.168.48.241:9042 \
+  --fs_data_dirs "/mnt/ramdisk/gj" \
+  >& /mnt/ramdisk/gj/yb-tserver.out &
+
+./yb-master \
+  --master_addresses 192.168.48.240:7100,192.168.48.241:7100,192.168.48.242:7100 \
+  --rpc_bind_addresses 192.168.48.242:7100 \
+  --fs_data_dirs "/mnt/ramdisk/gj" \
+  >& /mnt/ramdisk/gj/yb-master.out &
+
+./yb-tserver \
+  --tserver_master_addrs 192.168.48.240:7100,192.168.48.241:7100,192.168.48.242:7100 \
+  --rpc_bind_addresses 192.168.48.242:9100 \
+  --enable_ysql \
+  --pgsql_proxy_bind_address 192.168.48.242:5433 \
+  --cql_proxy_bind_address 192.168.48.242:9042 \
+  --fs_data_dirs "/mnt/ramdisk/gj" \
+  >& /mnt/ramdisk/gj/yb-tserver.out &
+
+
+./yb-tserver \
+  --tserver_master_addrs 192.168.48.240:7100,192.168.48.241:7100,192.168.48.242:7100 \
+  --rpc_bind_addresses 192.168.48.243:9100 \
+  --enable_ysql \
+  --pgsql_proxy_bind_address 192.168.48.243:5433 \
+  --cql_proxy_bind_address 192.168.48.243:9042 \
+  --fs_data_dirs "/mnt/ramdisk/gj" \
+  >& /mnt/ramdisk/gj/yb-tserver.out &

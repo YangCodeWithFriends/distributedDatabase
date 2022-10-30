@@ -1,0 +1,98 @@
+
+# 20 
+./yb-master \
+  --master_addresses 192.168.48.239:7200,192.168.48.242:7200,192.168.48.240:7200 \
+  --rpc_bind_addresses 192.168.48.239:7200 \
+  --webserver_port 7300\
+  --fs_data_dirs "/mnt/ramdisk/gj2" \
+  >& /mnt/ramdisk/gj2/yb-master.out &
+
+
+./yb-tserver \
+  --tserver_master_addrs 192.168.48.239:7200,192.168.48.242:7200,192.168.48.240:7200 \
+  --rpc_bind_addresses 192.168.48.239:9150 \
+  --enable_ysql \
+  --webserver_port 9050\
+  --pgsql_proxy_bind_address 192.168.48.239:5450 \
+  --pgsql_proxy_webserver_port 13050 \
+  --cql_proxy_bind_address 192.168.48.239:9040 \
+  --cql_proxy_webserver_port 12050 \
+  --fs_data_dirs "/mnt/ramdisk/gj2" \
+  --redis_proxy_bind_address 192.168.48.239:6380 \
+  --redis_proxy_webserver_port 11050 \
+  >& /mnt/ramdisk/gj2/yb-tserver.out &
+
+# 21
+./yb-master \
+  --master_addresses 192.168.48.239:7200,192.168.48.242:7200,192.168.48.240:7200 \
+  --rpc_bind_addresses 192.168.48.240:7200 \
+  --webserver_port 7300\
+  --fs_data_dirs "/mnt/ramdisk/gj2" \
+  >& /mnt/ramdisk/gj2/yb-master.out &
+
+./yb-tserver \
+  --tserver_master_addrs 192.168.48.239:7200,192.168.48.242:7200,192.168.48.240:7200 \
+  --rpc_bind_addresses 192.168.48.240:9100 \
+  --enable_ysql \
+  --webserver_port 9050 \
+  --pgsql_proxy_bind_address 192.168.48.240:5450 \
+  --pgsql_proxy_webserver_port 13050 \
+  --cql_proxy_bind_address 192.168.48.240:9040 \
+  --cql_proxy_webserver_port 12050 \
+  --fs_data_dirs "/mnt/ramdisk/gj2" \
+  --redis_proxy_bind_address 192.168.48.240:6380 \
+  --redis_proxy_webserver_port 11050 \
+  >& /mnt/ramdisk/gj2/yb-tserver.out &
+
+# 22
+./yb-tserver \
+  --tserver_master_addrs 192.168.48.239:7200,192.168.48.242:7200,192.168.48.240:7200 \
+  --rpc_bind_addresses 192.168.48.241:9100 \
+  --enable_ysql \
+  --webserver_port 9050\
+  --pgsql_proxy_bind_address 192.168.48.241:5450 \
+  --pgsql_proxy_webserver_port 13050 \
+  --cql_proxy_bind_address 192.168.48.241:9040 \
+  --cql_proxy_webserver_port 12050 \
+  --fs_data_dirs "/mnt/ramdisk/gj2" \
+  --redis_proxy_bind_address 192.168.48.241:6380 \
+  --redis_proxy_webserver_port 11050 \
+  >& /mnt/ramdisk/gj2/yb-tserver.out &
+
+
+23
+./yb-master \
+  --master_addresses 192.168.48.239:7200,192.168.48.242:7200,192.168.48.240:7200 \
+  --rpc_bind_addresses 192.168.48.242:7200 \
+  --webserver_port 7300 \
+  --fs_data_dirs "/mnt/ramdisk/gj2" \
+  >& /mnt/ramdisk/gj2/yb-master.out &
+
+./yb-tserver \
+  --tserver_master_addrs 192.168.48.239:7200,192.168.48.242:7200,192.168.48.240:7200 \
+  --rpc_bind_addresses 192.168.48.242:9100 \
+  --enable_ysql \
+  --webserver_port 9050\
+  --pgsql_proxy_bind_address 192.168.48.242:5450 \
+  --pgsql_proxy_webserver_port 13050 \
+  --cql_proxy_bind_address 192.168.48.242:9040 \
+  --cql_proxy_webserver_port 12050 \
+  --fs_data_dirs "/mnt/ramdisk/gj2" \
+  --redis_proxy_bind_address 192.168.48.242:6380 \
+  --redis_proxy_webserver_port 11050 \
+  >& /mnt/ramdisk/gj2/yb-tserver.out &
+
+# 24
+./yb-tserver \
+  --tserver_master_addrs 192.168.48.239:7200,192.168.48.242:7200,192.168.48.240:7200 \
+  --rpc_bind_addresses 192.168.48.243:9150 \
+  --enable_ysql \
+  --webserver_port 9050\
+  --pgsql_proxy_bind_address 192.168.48.243:5450 \
+  --pgsql_proxy_webserver_port 13050 \
+  --cql_proxy_bind_address 192.168.48.243:9040 \
+  --cql_proxy_webserver_port 12050 \
+  --fs_data_dirs "/mnt/ramdisk/gj2" \
+  --redis_proxy_bind_address 192.168.48.243:6380 \
+  --redis_proxy_webserver_port 11050 \
+  >& /mnt/ramdisk/gj2/yb-tserver.out &
