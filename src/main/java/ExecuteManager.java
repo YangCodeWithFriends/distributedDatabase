@@ -23,7 +23,7 @@ public class ExecuteManager {
     private List<Statistics> transactionTypeList;
     private Map<TransactionType, Integer> skipMap;
     private int counter;
-    private int LIMIT;// Print statistics every LIMIT transactions
+    private int LIMIT = 100;// Print statistics every LIMIT transactions
     // 定义变量
     private ArrayList<Long> time_lst = new ArrayList<Long>();
     private long avg;
@@ -48,10 +48,10 @@ public class ExecuteManager {
         transactionTypeList.add(new Statistics(TransactionType.TOP_BALANCE));
         transactionTypeList.add(new Statistics(TransactionType.RELATED_CUSTOMER));
 
-        for (TransactionType transactionType : TransactionType.values()) {
-            skipMap.put(transactionType, 0);
-        }
-        LIMIT = 1;
+//        for (TransactionType transactionType : TransactionType.values()) {
+//            skipMap.put(transactionType, 0);
+//        }
+//        LIMIT = 1;
 
 
         // 正选逻辑
@@ -100,13 +100,13 @@ public class ExecuteManager {
 
     public void report(Logger logger) {
         counter++; // print statistics every 5 transactions.
-//        if (counter % LIMIT == 0) {
+        if (counter % LIMIT == 0) {
             logger.log(Level.INFO, "---Statistics start---");
             for (Statistics statistics : transactionTypeList) {
                 logger.log(Level.INFO, statistics.toString());
             }
             logger.log(Level.INFO, "---Statistics end---");
-//        }
+        }
     }
 
     public void summary(Logger logger) {
