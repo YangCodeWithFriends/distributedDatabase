@@ -43,7 +43,7 @@ public class DataSource {
         if (MODE.equals(YSQL)) {
             Properties poolProperties = new Properties();
 //            poolProperties.setProperty("dataSourceClassName", "com.yugabyte.ysql.YBClusterAwareDataSource");
-            poolProperties.setProperty("dataSourceClassName", "org.postgresql.Driver");
+            poolProperties.setProperty("dataSourceClassName", "org.postgresql.ds.PGSimpleDataSource");
             poolProperties.setProperty("maximumPoolSize", "20");
             poolProperties.setProperty("dataSource.serverName", settings.getProperty(hostKey));
             poolProperties.setProperty("dataSource.portNumber", settings.getProperty("port_sql"));

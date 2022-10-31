@@ -48,10 +48,10 @@ public class ExecuteManager {
         transactionTypeList.add(new Statistics(TransactionType.TOP_BALANCE));
         transactionTypeList.add(new Statistics(TransactionType.RELATED_CUSTOMER));
 
-//        for (TransactionType transactionType : TransactionType.values()) {
-//            skipMap.put(transactionType, 0);
-//        }
-        LIMIT = 100;
+        for (TransactionType transactionType : TransactionType.values()) {
+            skipMap.put(transactionType, 0);
+        }
+        LIMIT = 1;
 
 
         // 正选逻辑
@@ -61,7 +61,7 @@ public class ExecuteManager {
 
         // 反选逻辑
 //        skipSet.addAll(Arrays.asList(TransactionType.values()));
-//        skipSet.remove(TransactionType.DELIVERY);
+//        skipSet.remove(TransactionType.POPULAR_ITEM);
     }
 
     public void executeYSQL(Connection conn, List<Transaction> list, Logger logger) throws SQLException {
@@ -100,13 +100,13 @@ public class ExecuteManager {
 
     public void report(Logger logger) {
         counter++; // print statistics every 5 transactions.
-        if (counter % LIMIT == 0) {
+//        if (counter % LIMIT == 0) {
             logger.log(Level.INFO, "---Statistics start---");
             for (Statistics statistics : transactionTypeList) {
                 logger.log(Level.INFO, statistics.toString());
             }
             logger.log(Level.INFO, "---Statistics end---");
-        }
+//        }
     }
 
     public void summary(Logger logger) {
