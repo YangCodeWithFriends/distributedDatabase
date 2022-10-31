@@ -87,7 +87,11 @@ public class OrderStatusTransaction extends Transaction {
     @Override
     protected void YSQLExecute(Connection conn, Logger logger) throws SQLException {
         conn.setAutoCommit(false);
+        PreparedStatement statement = null;
+        java.sql.ResultSet rs = null;
+
         try {
+            /*
             String SQL1 = "select C_FIRST, C_MIDDLE, C_LAST, C_BALANCE from Customer where C_W_ID = ? and C_D_ID = ? and C_ID = ?";
             PreparedStatement statement = conn.prepareStatement(SQL1);
             statement.setInt(1, C_W_ID);
@@ -101,6 +105,8 @@ public class OrderStatusTransaction extends Transaction {
                 double C_BALANCE = rs.getDouble(4);
                logger.log(Level.FINE, String.format("C_FIRST=%s,C_MIDDLE=%s,C_LAST=%s,C_BALANCE=%f\n", C_FIRST, C_MIDDLE, C_LAST, C_BALANCE));
             }
+
+             */
 
             // get O_ID
             String SQL2 = "select O_ID, O_ENTRY_D, O_CARRIER_ID from Orders where O_W_ID = ? and O_D_ID = ? and O_C_ID = ? order by O_ID desc limit 1";
@@ -121,6 +127,7 @@ public class OrderStatusTransaction extends Transaction {
                 O_IDs.add(O_ID);
             }
 
+            /*
             for (int i = 0; i < O_IDs.size(); i++) {
                 int O_ID = O_IDs.get(i);
                 Timestamp O_ENTRY_D = O_ENTRY_Ds.get(i);
@@ -141,6 +148,8 @@ public class OrderStatusTransaction extends Transaction {
                    logger.log(Level.FINE, String.format("OL_I_ID=%d,OL_SUPPLY_W_ID=%d,OL_QUANTITY=%d,OL_AMOUNT=%f,OL_DELIVERY_D=%s\n", OL_I_ID, OL_SUPPLY_W_ID, OL_QUANTITY, OL_AMOUNT, OL_DELIVERY_D));
                 }
             }
+
+             */
             conn.commit();
         } catch (SQLException e) {
             e.printStackTrace();

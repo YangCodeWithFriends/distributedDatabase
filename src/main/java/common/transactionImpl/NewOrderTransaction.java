@@ -113,6 +113,7 @@ public class NewOrderTransaction extends Transaction {
             statement.setInt(4, C_ID);
             statement.executeUpdate();
 
+            /*
             // step 6
             double TOTAL_AMOUNT = 0;
             String SQL7 = "select sum(OL_AMOUNT) as TOTAL_AMOUNT from OrderLine where OL_O_ID = ? and OL_D_ID = ? and OL_W_ID = ?;";
@@ -159,6 +160,8 @@ public class NewOrderTransaction extends Transaction {
                 double S_QUANTITY = rs.getDouble(6);
                 logger.log(Level.FINE, String.format("NO_I_ID=%d,I_NAME=%s,NO_SUPPLY_W_ID=%d,NO_QUANTITY=%d,OL_AMOUNT=%f,S_QUANTITY=%f\n", NO_I_ID, I_NAME, NO_SUPPLY_W_ID, NO_QUANTITY, OL_AMOUNT, S_QUANTITY));
             }
+
+             */
 
             String SQL10 = "insert into customer_item select NO_W_ID, NO_D_ID, NO_C_ID, NO_O_ID, NO_I_ID from " +
                     "(select * from new_order_info where NO_W_ID = ? and NO_D_ID = ? and NO_O_ID = ? and NO_C_ID = ?) t;";
