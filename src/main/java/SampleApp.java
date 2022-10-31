@@ -133,7 +133,7 @@ public class SampleApp {
             Path path = Paths.get("/tmp/dataCSV");
             try {
                 Files.createDirectory(path);
-                File writeSQLFile = new File("/tmp/client_cql.csv");
+                File writeSQLFile = new File("/tmp/dataCSV/client_cql.csv");
                 try {
                     BufferedWriter writeText = new BufferedWriter(new FileWriter(writeSQLFile));
                     writeText.newLine();
@@ -231,7 +231,7 @@ public class SampleApp {
                 try {
                     Files.createDirectory(path);
                     // 如果存在同名则覆盖文件
-                    File writeSQLFile = new File("/tmp/clients_sql.csv");
+                    File writeSQLFile = new File("/tmp/dataCSV/clients_sql.csv");
                     try {
                         BufferedWriter writeText = new BufferedWriter(new FileWriter(writeSQLFile));
                         writeText.newLine();
@@ -298,7 +298,7 @@ public class SampleApp {
                 Path path = Paths.get("/tmp/dataCSV");
                 try {
                     Files.createDirectory(path);
-                    File writeSQLFile = new File("/tmp/client_cql.csv");
+                    File writeSQLFile = new File("/tmp/dataCSV/client_cql.csv");
                     try {
                         BufferedWriter writeText = new BufferedWriter(new FileWriter(writeSQLFile));
                         writeText.newLine();

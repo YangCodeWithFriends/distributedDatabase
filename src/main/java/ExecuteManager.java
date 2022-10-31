@@ -206,7 +206,7 @@ public class ExecuteManager {
             Path path = Paths.get("/tmp/dataCSV");
             try {
                 Files.createDirectory(path);
-                File writeSQLFile = new File("/tmp/dbstateSQL.csv");
+                File writeSQLFile = new File("/tmp/dataCSV/dbstateSQL.csv");
                 try {
                     BufferedWriter writeText = new BufferedWriter(new FileWriter(writeSQLFile));
                     writeText.newLine();
@@ -287,7 +287,7 @@ public class ExecuteManager {
         Path path = Paths.get("/tmp/dataCSV");
         try {
             Files.createDirectory(path);
-            File writeSQLFile = new File("/tmp/dbstateCQL.csv");
+            File writeSQLFile = new File("/tmp/dataCSV/dbstateCQL.csv");
             try {
                 BufferedWriter writeText = new BufferedWriter(new FileWriter(writeSQLFile));
                 writeText.newLine();
