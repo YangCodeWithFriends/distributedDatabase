@@ -68,12 +68,12 @@ public class ExecuteManager {
         transactionTypeList.add(new Statistics(TransactionType.TOP_BALANCE));
         transactionTypeList.add(new Statistics(TransactionType.RELATED_CUSTOMER));
 
-//        for (TransactionType transactionType : TransactionType.values()) {
-//            skipMap.put(transactionType, 0);
-//        }
-//        LIMIT = 1;
-
+        for (TransactionType transactionType : TransactionType.values()) {
+            skipMap.put(transactionType, 0);
+        }
         LIMIT = 1;
+
+//        LIMIT = 1;
 
         // 正选逻辑
 //        skipSet.add(TransactionType.NEW_ORDER);
@@ -206,7 +206,7 @@ public class ExecuteManager {
 //            Path path = Paths.get("/tmp/dataCSV");
             try {
 //                Files.createDirectory(path);
-                File writeSQLFile = new File("/tmp/dataCSV/dbstateSQL.csv");
+                File writeSQLFile = new File("/tmp/dbstateSQL.csv");
                 try {
                     BufferedWriter writeText = new BufferedWriter(new FileWriter(writeSQLFile));
                     writeText.newLine();
@@ -227,74 +227,76 @@ public class ExecuteManager {
     public void reportCQL(CqlSession session) {
         // get all the cql information into the result set
         // cql1
-        SimpleStatement sim_stmt = SimpleStatement.newInstance(String.format("select W_YTD from dbycql.Warehouse"));
+        SimpleStatement sim_stmt = SimpleStatement.newInstance(String.format("select sum(W_YTD) from dbycql.Warehouse"));
         com.datastax.oss.driver.api.core.cql.ResultSet cs1 = session.execute(sim_stmt);
         Iterator<Row> rsIterator1 = cs1.iterator();
-        while (rsIterator1.hasNext()) {
+        if (rsIterator1.hasNext()) {
             Row row = rsIterator1.next();
-            sum_w_ytd += row.getFloat(0);
+            sum_w_ytd = row.getFloat(0);
         }
         // cql2
-        sim_stmt = SimpleStatement.newInstance(String.format("select D_YTD, D_NEXT_O_ID from dbycql.District"));
+        sim_stmt = SimpleStatement.newInstance(String.format("select sum(D_YTD), sum(D_NEXT_O_ID) from dbycql.District"));
         com.datastax.oss.driver.api.core.cql.ResultSet cs2 = session.execute(sim_stmt);
         Iterator<Row> rsIterator2 = cs2.iterator();
-        while (rsIterator2.hasNext()) {
+        if (rsIterator2.hasNext()) {
             Row row = rsIterator2.next();
-            sum_d_ytd += row.getFloat(0);
-            sum_d_next_o_id += row.getInt(1);
+            sum_d_ytd = row.getFloat(0);
+            sum_d_next_o_id = row.getInt(1);
         }
         // cql3
-        sim_stmt = SimpleStatement.newInstance(String.format("select C_BALANCE, C_YTD_PAYMENT, C_PAYMENT_CNT, C_DELIVERY_CNT from dbycql.Customer"));
+        sim_stmt = SimpleStatement.newInstance(String.format("select sum(C_BALANCE), sum(C_YTD_PAYMENT), sum(C_PAYMENT_CNT), sum(C_DELIVERY_CNT) from dbycql.Customer"));
         com.datastax.oss.driver.api.core.cql.ResultSet cs3 = session.execute(sim_stmt);
         Iterator<Row> rsIterator3 = cs3.iterator();
-        while (rsIterator3.hasNext()) {
+        if (rsIterator3.hasNext()) {
             Row row = rsIterator3.next();
-            sum_c_balance += Objects.requireNonNull(row.getBigDecimal(0)).floatValue();
-            sum_c_ytd_payment += row.getFloat(1);
-            sum_c_payment_cnt += row.getInt(2);
-            sum_c_delivery_cnt += row.getInt(3);
+            sum_c_balance = Objects.requireNonNull(row.getBigDecimal(0)).floatValue();
+            sum_c_ytd_payment = row.getFloat(1);
+            sum_c_payment_cnt = row.getInt(2);
+            sum_c_delivery_cnt = row.getInt(3);
         }
         // cql4
-        sim_stmt = SimpleStatement.newInstance(String.format("select O_ID, O_OL_CNT from dbycql.Orders"));
+        sim_stmt = SimpleStatement.newInstance(String.format("select max(O_ID), sum(O_OL_CNT) from dbycql.Orders"));
         com.datastax.oss.driver.api.core.cql.ResultSet cs4 = session.execute(sim_stmt);
         Iterator<Row> rsIterator4 = cs4.iterator();
-        while (rsIterator4.hasNext()) {
+        if (rsIterator4.hasNext()) {
             Row row = rsIterator4.next();
-            max_o_id = Math.max(max_o_id, row.getInt(0));
-            sum_o_ol_cnt += row.getInt(1);
+            max_o_id = row.getInt(0);
+//            max_o_id = Math.max(max_o_id, row.getInt(0));
+            sum_o_ol_cnt = row.getInt(1);
         }
         // cql5
-        sim_stmt = SimpleStatement.newInstance(String.format("select OL_AMOUNT, OL_QUANTITY from dbycql.OrderLine"));
+        sim_stmt = SimpleStatement.newInstance(String.format("select sum(OL_AMOUNT), sum(OL_QUANTITY) from dbycql.OrderLine"));
         com.datastax.oss.driver.api.core.cql.ResultSet cs5 = session.execute(sim_stmt);
         Iterator<Row> rsIterator5 = cs5.iterator();
-        while (rsIterator5.hasNext()) {
+        if (rsIterator5.hasNext()) {
             Row row = rsIterator5.next();
-            sum_ol_amount += Objects.requireNonNull(row.getBigDecimal(0)).floatValue();
-            sum_ol_quantity += Objects.requireNonNull(row.getBigDecimal(1)).floatValue();
+            sum_ol_amount = Objects.requireNonNull(row.getBigDecimal(0)).floatValue();
+            sum_ol_quantity = Objects.requireNonNull(row.getBigDecimal(1)).floatValue();
         }
         // cql6
-        sim_stmt = SimpleStatement.newInstance(String.format("select S_QUANTITY, S_YTD, S_ORDER_CNT, S_REMOTE_CNT from dbycql.Stock"));
+        sim_stmt = SimpleStatement.newInstance(String.format("select sum(S_QUANTITY), sum(S_YTD), sum(S_ORDER_CNT), sum(S_REMOTE_CNT) from dbycql.Stock"));
         com.datastax.oss.driver.api.core.cql.ResultSet cs6 = session.execute(sim_stmt);
         Iterator<Row> rsIterator6 = cs6.iterator();
-        while (rsIterator6.hasNext()) {
+        if (rsIterator6.hasNext()) {
             Row row = rsIterator6.next();
-            sum_s_quantity += Objects.requireNonNull(row.getBigDecimal(0)).floatValue();
-            sum_s_ytd += Objects.requireNonNull(row.getBigDecimal(1)).floatValue();
-            sum_s_order_cnt += row.getInt(2);
-            sum_s_remote_cnt += row.getInt(3);
+            sum_s_quantity = Objects.requireNonNull(row.getBigDecimal(0)).floatValue();
+            sum_s_ytd = Objects.requireNonNull(row.getBigDecimal(1)).floatValue();
+            sum_s_order_cnt = row.getInt(2);
+            sum_s_remote_cnt = row.getInt(3);
         }
 
         // 拿完了所有的数据，开始进行输出到文件
 //        Path path = Paths.get("/tmp/dataCSV");
         try {
 //            Files.createDirectory(path);
-            File writeSQLFile = new File("/tmp/dataCSV/dbstateCQL.csv");
+            File writeSQLFile = new File("/tmp/dbstateCQL.csv");
             try {
                 BufferedWriter writeText = new BufferedWriter(new FileWriter(writeSQLFile));
                 writeText.newLine();
                 writeText.write(sum_w_ytd + "," + sum_d_ytd + "," +  sum_d_next_o_id+ "," + sum_c_balance + "," + sum_c_ytd_payment+ "," + sum_c_payment_cnt+ "," + sum_c_delivery_cnt + "," + max_o_id + ","
                         + sum_o_ol_cnt + "," + sum_ol_amount + "," + sum_ol_quantity + "," + sum_s_quantity + "," + sum_s_ytd + "," + sum_s_order_cnt + "," + sum_s_remote_cnt);
                 writeText.flush();
+                writeText.close();
             }catch (Exception e) {
                 e.printStackTrace();
             }

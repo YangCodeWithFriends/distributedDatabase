@@ -118,11 +118,12 @@ public class SampleApp {
 //            Path path = Paths.get("/tmp/dataCSV");
             try {
 //                Files.createDirectory(path);
-                File writeSQLFile = new File("/tmp/client_sql.csv");
+                File writeSQLFile = new File("/tmp/throughput_sql.csv");
                 try {
                     BufferedWriter writeText = new BufferedWriter(new FileWriter(writeSQLFile));
+                    writeText.write("min throughput," + "max throughput," + "avg throughput");
                     writeText.newLine();
-                    writeText.write(min + "," + avg + "," +  max);
+                    writeText.write(String.format("%.2f", min) + "," + String.format("%.2f", max) + "," +  String.format("%.2f", avg));
                     writeText.flush();
                 }catch (Exception e) {
                     e.printStackTrace();
@@ -134,11 +135,12 @@ public class SampleApp {
 //            Path path = Paths.get("/tmp/dataCSV");
             try {
 //                Files.createDirectory(path);
-                File writeSQLFile = new File("/tmp/dataCSV/client_cql.csv");
+                File writeSQLFile = new File("/tmp/throughput_cql.csv");
                 try {
                     BufferedWriter writeText = new BufferedWriter(new FileWriter(writeSQLFile));
+                    writeText.write("min throughput," + "max throughput," + "avg throughput");
                     writeText.newLine();
-                    writeText.write(min + "," + avg + "," +  max);
+                    writeText.write(String.format("%.2f", min) + "," + String.format("%.2f", max) + "," +  String.format("%.2f", avg));
                     writeText.flush();
                 }catch (Exception e) {
                     e.printStackTrace();
@@ -234,12 +236,19 @@ public class SampleApp {
                 try {
 //                    Files.createDirectory(path);
                     // 如果存在同名则覆盖文件
-                    File writeSQLFile = new File("/tmp/dataCSV/clients_sql.csv");
+                    File writeSQLFile = new File("/tmp/client_sql.csv");
+                    boolean flag;
+                    flag = writeSQLFile.exists();
+//                    File writeSQLFile = new File("/tmp/client_" + threadID + "_sql.csv");
                     try {
-                        BufferedWriter writeText = new BufferedWriter(new FileWriter(writeSQLFile));
+                        BufferedWriter writeText = new BufferedWriter(new FileWriter(writeSQLFile, true));
+                        if (!flag) {
+                            writeText.write("client number," + "sum_time," + "throughput," + "avg_time," + "medium," + "95%," + "99%");
+                        }
                         writeText.newLine();
-                        writeText.write(cnt + "," + sum_time + "," +  throughput+ "," + avg_time + "," + medium+ "," + num1+ "," + num2);
+                        writeText.write(cnt + "," + String.format("%.2f", sum_time) + "," +  String.format("%.2f", throughput) + "," + String.format("%.2f", avg_time) + "," + medium+ "," + (int) num1+ "," + (int) num2);
                         writeText.flush();
+                        writeText.close();
                     }catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -303,12 +312,19 @@ public class SampleApp {
 //                Path path = Paths.get("/tmp/dataCSV");
                 try {
 //                    Files.createDirectory(path);
-                    File writeSQLFile = new File("/tmp/dataCSV/client_cql.csv");
+                    File writeSQLFile = new File("/tmp/client_cql.csv");
+                    boolean flag;
+                    flag = writeSQLFile.exists();
+//                    File writeSQLFile = new File("/tmp/client_" + threadID + "_cql.csv");
                     try {
-                        BufferedWriter writeText = new BufferedWriter(new FileWriter(writeSQLFile));
+                        BufferedWriter writeText = new BufferedWriter(new FileWriter(writeSQLFile, true));
+                        if (!flag) {
+                            writeText.write("client number," + "sum_time," + "throughput," + "avg_time," + "medium," + "95%," + "99%");
+                        }
                         writeText.newLine();
-                        writeText.write(cnt + "," + sum_time + "," +  throughput+ "," + avg_time + "," + medium+ "," + num1+ "," + num2);
+                        writeText.write(cnt + "," + String.format("%.2f", sum_time) + "," +  String.format("%.2f", throughput) + "," + String.format("%.2f", avg_time) + "," + medium+ "," + (int) num1+ "," + (int) num2);
                         writeText.flush();
+                        writeText.close();
                     }catch (Exception e) {
                         e.printStackTrace();
                     }
