@@ -23,7 +23,7 @@ public class ExecuteManager {
     private List<Statistics> transactionTypeList;
     private Map<TransactionType, Integer> skipMap;
     private int counter;
-    private int LIMIT = 100;// Print statistics every LIMIT transactions
+    private int LIMIT = 1000;// Print statistics every LIMIT transactions
     // 定义变量
     private ArrayList<Long> time_lst = new ArrayList<Long>();
     private long avg;

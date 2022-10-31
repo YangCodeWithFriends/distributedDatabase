@@ -27,7 +27,7 @@ public class DataSource {
     public static final String YCQL = "YCQL";
 
 
-    public DataSource(String MODE, int threadID, Logger logger) {
+    public DataSource(String MODE, int serverIndex, Logger logger) {
         Properties settings = new Properties();
         try {
             settings.load(SampleApp.class.getResourceAsStream("app.properties"));
@@ -36,9 +36,9 @@ public class DataSource {
             logger.log(Level.SEVERE,"Load app.properties exception= ", e);
         }
 
-        int hostID = threadID % 5;
+        int hostID = serverIndex % 5;
         String hostKey = "host" + hostID;
-        logger.log(Level.SEVERE, String.format("TheadID=%d,hostID=%d,hostKey=%s,host=%s\n",threadID,hostID,hostKey,settings.getProperty(hostKey)));
+        logger.log(Level.SEVERE, String.format("serverIndex=%d,hostID=%d,hostKey=%s,host=%s\n",serverIndex,hostID,hostKey,settings.getProperty(hostKey)));
 
         if (MODE.equals(YSQL)) {
             Properties poolProperties = new Properties();

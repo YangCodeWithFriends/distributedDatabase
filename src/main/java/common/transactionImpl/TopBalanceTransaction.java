@@ -96,7 +96,7 @@ public class TopBalanceTransaction extends Transaction {
                 .setExecutionProfileName("oltp")
                 .build();
         cqlSession.execute(simpleStatement);
-        logger.log(Level.WARNING, "Top Balance ends");
+        logger.log(Level.INFO, "Top Balance ends");
     }
 
     @Override

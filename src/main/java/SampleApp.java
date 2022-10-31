@@ -7,7 +7,6 @@ import java.io.*;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.CountDownLatch;
@@ -19,8 +18,11 @@ import java.util.logging.*;
 public class SampleApp {
     private Connection conn;
     private CqlSession cqlSession;
-    private static final int numberOfThreads = 5;
+    private static final int numberOfThreads = 4;
     private static int countDownLatchTimeout = 8;
+    private static int serverShardingIndex = 0;
+    private static String MODE;
+
     // 用来存20个client各自的transaction throughput
     private static ArrayList<Double> throughput_list = new ArrayList<>(numberOfThreads);
     private static double min = Double.MAX_VALUE;
@@ -29,14 +31,24 @@ public class SampleApp {
     private static double sum = 0;
 
     public static void main(String[] args) {
-        // Set mode
-        String MODE = DataSource.YSQL;// by default, run YSQL
-        if (args != null && args.length != 0 && args[0].equals(DataSource.YCQL)) MODE = DataSource.YCQL;
+        // argument check
+        if (args == null || args.length != 2) throw new RuntimeException("Invalid argument. First should be YSQL/YCQL. Second should be sharding index 0/1/2/3/4");
+
+        // set mode
+        if (args[0].equals(DataSource.YSQL)) {
+            MODE = DataSource.YSQL;
+        } else if (args[0].equals(DataSource.YCQL)) MODE = DataSource.YCQL;
+        else throw new RuntimeException("First argument should be YSQL/YCQL");
+
+        // set server sharding index
+        serverShardingIndex = Integer.parseInt(args[1]);
+//        System.out.println(serverShardingIndex);
+        if (serverShardingIndex < 0 || serverShardingIndex >= 5) throw new RuntimeException("Second argument should be 0/1/2/3/4");
 
         // Config logger for the main thread
         Logger mainLogger = Logger.getLogger(Thread.currentThread().getName());
         try {
-            FileHandler handler = new FileHandler("log-main-thread-" + MODE + ".txt");
+            FileHandler handler = new FileHandler(MODE + "-log-main-thread-" + serverShardingIndex + ".txt");
             handler.setFormatter(new SimpleFormatter());
             mainLogger.addHandler(handler);
         } catch (IOException e) {
@@ -46,13 +58,15 @@ public class SampleApp {
 
         mainLogger.log(Level.SEVERE, "Number of Threads = " + numberOfThreads);
         mainLogger.log(Level.SEVERE, "Your mode = " + MODE);
+        mainLogger.log(Level.SEVERE, "Your server sharding index = " + serverShardingIndex);
 
         // config input and output file.
         String[] inputFileList = new String[numberOfThreads];
         String[] outputFileList = new String[numberOfThreads];
         for (int i = 0; i < numberOfThreads; i++) {
-            inputFileList[i] = "src/main/resources/xact_files/" + i + ".txt";
-            outputFileList[i] = MODE + "-log-" + i + ".txt";
+            int fileIndex  = i + serverShardingIndex * 4;
+            inputFileList[i] = "src/main/resources/xact_files/" + fileIndex + ".txt";
+            outputFileList[i] = MODE + "-log-" + fileIndex + ".txt";
             Logger logger = Logger.getLogger(outputFileList[i]);
             try {
                 Handler handler = new FileHandler(outputFileList[i]);
@@ -73,13 +87,14 @@ public class SampleApp {
 
         for (int i = 0; i < numberOfThreads; i++) {
             String finalMODE = MODE;
-            int threadID = i;
+            int threadID = i; // 0,1,2,3
+            int serverIndex = threadID + serverShardingIndex * 4;
             cachedThreadPool.execute(() -> {
                 Logger logger = Logger.getLogger(outputFileList[threadID]);
                 try {
                     logger.log(Level.SEVERE, Thread.currentThread().getName() + " starts ");
                     // 每一个client执行都会在执行完成之后存一个throughput进arraylist
-                    new SampleApp().doWork(finalMODE, inputFileList[threadID], logger, threadID);
+                    new SampleApp().doWork(finalMODE, inputFileList[threadID], logger, serverIndex);
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, Thread.currentThread().getName() + " exception ");
                     logger.log(Level.SEVERE, "exception = ", e);
@@ -118,8 +133,8 @@ public class SampleApp {
         mainLogger.log(Level.SEVERE, String.format("min=%.2f,avg=%.2f,max=%.2f\n",min,avg,max));
     }
 
-    public void doWork(String MODE, String inputFileName, Logger logger, int threadID) {
-        logger.log(Level.SEVERE, Thread.currentThread().getName() + "do work");
+    public void doWork(String MODE, String inputFileName, Logger logger, int serverIndex) {
+        logger.log(Level.SEVERE, Thread.currentThread().getName() + " do work");
 
         // 1. Construct requests from files.
         List<Transaction> list = new ArrayList<>();
@@ -135,14 +150,14 @@ public class SampleApp {
         try {
             if (MODE.equals(DataSource.YSQL)) {
                 logger.log(Level.WARNING, "Connecting to DB. Your mode is YSQL.");
-                conn = new DataSource(MODE, threadID, logger).getSQLConnection();
+                conn = new DataSource(MODE, serverIndex, logger).getSQLConnection();
                 conn.setTransactionIsolation(1); // isolation
                 // TODO: 1 / 2(default)
                 logger.log(Level.INFO, "Conn = "+ conn.getClientInfo());
 //                logger.log(Level.INFO, "Isolation level=" + conn.getTransactionIsolation());
             } else {
                 logger.log(Level.WARNING, "Connecting to DB. Your mode is YCQL.");
-                cqlSession = new DataSource(MODE, threadID, logger).getCQLSession();
+                cqlSession = new DataSource(MODE, serverIndex, logger).getCQLSession();
                 logger.log(Level.INFO, "CQLSession = "+ cqlSession.getName());
             }
             logger.log(Level.WARNING, ">>>> Successfully connected to YugabyteDB.");
