@@ -22,7 +22,6 @@ import java.util.logging.Logger;
  * @Version V1.0
  * @Date 2/10/22 11:06 AM
  */
-// YSQL:72008ms , YCQL: 200ms
 public class OrderStatusTransaction extends Transaction {
     int C_W_ID;
     int C_D_ID;
@@ -33,6 +32,7 @@ public class OrderStatusTransaction extends Transaction {
         ResultSet rs = null;
         List<Row> rows = null;
 
+        /*
         // CQL1
         String CQL1 = String.format("select C_FIRST, C_MIDDLE, C_LAST, C_BALANCE from dbycql.Customer where C_W_ID = %d and C_D_ID = %d and C_ID = %d", C_W_ID, C_D_ID, C_ID);
         //select C_FIRST, C_MIDDLE, C_LAST, C_BALANCE from Customer where C_W_ID = 'C_W_ID' and C_D_ID = 'C_D_ID' and C_ID = 'C_ID' ;
@@ -45,6 +45,8 @@ public class OrderStatusTransaction extends Transaction {
             BigDecimal C_BALANCE = row.getBigDecimal(3);
            logger.log(Level.FINE, String.format("C_FIRST=%s,C_MIDDLE=%s,C_LAST=%s,C_BALANCE=%f\n", C_FIRST, C_MIDDLE, C_LAST, C_BALANCE));
         }
+
+         */
 
         // CQL2
         String CQL2 = String.format("select O_ID, O_ENTRY_D, O_CARRIER_ID from dbycql.Orders where O_W_ID = %d and O_D_ID = %d and O_C_ID = %d order by O_ID desc limit 1", C_W_ID, C_D_ID, C_ID);
@@ -62,6 +64,8 @@ public class OrderStatusTransaction extends Transaction {
             O_CARRIER_IDs.add(O_CARRIER_ID);
             O_IDs.add(O_ID);
         }
+
+           /*
         for (int i = 0; i < O_IDs.size(); i++) {
             int O_ID = O_IDs.get(i);
             Instant O_ENTRY_D = O_ENTRY_Ds.get(i);
@@ -81,7 +85,9 @@ public class OrderStatusTransaction extends Transaction {
                 Instant OL_DELIVERY_D = row.getInstant(4);
                logger.log(Level.FINE, String.format("OL_I_ID=%d,OL_SUPPLY_W_ID=%d,OL_QUANTITY=%s,OL_AMOUNT=%s,OL_DELIVERY_D=%s\n", OL_I_ID, OL_SUPPLY_W_ID, OL_QUANTITY, OL_AMOUNT, OL_DELIVERY_D));
             }
+
         }
+            */
     }
 
     @Override

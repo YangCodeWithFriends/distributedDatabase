@@ -302,6 +302,7 @@ public class NewOrderTransaction extends Transaction {
                 .build();
         cqlSession.execute(simpleStatement);
 
+        /*
         // CQL10
         String CQL10 = String.format("select W_TAX from dbycql.Warehouse where W_ID = %d;", W_ID);
         simpleStatement = SimpleStatement.builder(CQL10)
@@ -335,6 +336,8 @@ public class NewOrderTransaction extends Transaction {
         TOTAL_AMOUNT = TOTAL_AMOUNT * (1 + D_TAX + W_TAX) * (1 - C_DISCOUNT);
        logger.log(Level.FINE, String.format("W_ID=%d, D_ID=%d, C_ID=%d, C_LAST=%s, C_CREDIT=%s, C_DISCOUNT=%f, W_TAX=%f, D_TAX=%f, N=%d, current_time=%s, M=%d, TOTAL_AMOUNT=%f\n",
                 W_ID,D_ID,C_ID,C_LAST,C_CREDIT,C_DISCOUNT,W_TAX,D_TAX,N,current_time,M,TOTAL_AMOUNT));
+
+         */
     }
 
     public int getW_ID() {
