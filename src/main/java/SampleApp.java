@@ -19,7 +19,7 @@ import java.util.logging.*;
 public class SampleApp {
     private Connection conn;
     private CqlSession cqlSession;
-    private static final int numberOfThreads = 20;
+    private static final int numberOfThreads = 5;
     private static int countDownLatchTimeout = 8;
     // 用来存20个client各自的transaction throughput
     private static ArrayList<Double> throughput_list = new ArrayList<>(numberOfThreads);

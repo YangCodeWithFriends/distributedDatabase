@@ -225,8 +225,15 @@ public class DeliveryTransaction extends Transaction {
                 float tmp_balance = Objects.requireNonNull(row.getBigDecimal("C_BALANCE")).floatValue();
                 // 传所有clustering key，删除符合条件的行
                 tmp_balance += sum_Amt;
-                SimpleStatement stmt2 = SimpleStatement.newInstance(String.format("SELECT * from dbycql.Customer WHERE C_W_ID=%d and C_D_ID=%d and C_ID=%d", W_ID, d_ID, c_ID));
-                com.datastax.oss.driver.api.core.cql.ResultSet rs2 = session.execute(stmt2);
+
+//                SimpleStatement stmt2 = SimpleStatement.newInstance(String.format("SELECT * from dbycql.Customer WHERE C_W_ID=%d and C_D_ID=%d and C_ID=%d", W_ID, d_ID, c_ID));
+                String CQL2 = String.format("SELECT * from dbycql.Customer WHERE C_W_ID=%d and C_D_ID=%d and C_ID=%d", W_ID, d_ID, c_ID);
+                simpleStatement_0 = SimpleStatement.builder(CQL2)
+                        .setExecutionProfileName("oltp")
+                        .build();
+//                rs = session.execute(simpleStatement_0);
+                com.datastax.oss.driver.api.core.cql.ResultSet rs2 = session.execute(simpleStatement_0);
+
                 // 删除改行
                 String CQL6 = String.format("DELETE from dbycql.Customer WHERE C_W_ID=%d and C_D_ID=%d and C_ID=%d", W_ID, d_ID, c_ID);
                 simpleStatement_0 = SimpleStatement.builder(CQL6)
