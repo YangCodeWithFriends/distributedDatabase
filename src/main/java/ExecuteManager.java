@@ -203,15 +203,16 @@ public class ExecuteManager {
                 sum_s_remote_cnt = rs6.getInt(4);
             }
             // 拿完了所有的数据，开始进行输出到文件
-            Path path = Paths.get("/tmp/dataCSV");
+//            Path path = Paths.get("/tmp/dataCSV");
             try {
-                Files.createDirectory(path);
+//                Files.createDirectory(path);
                 File writeSQLFile = new File("/tmp/dataCSV/dbstateSQL.csv");
                 try {
                     BufferedWriter writeText = new BufferedWriter(new FileWriter(writeSQLFile));
                     writeText.newLine();
                     writeText.write(sum_w_ytd + "," + sum_d_ytd + "," +  sum_d_next_o_id+ "," + sum_c_balance + "," + sum_c_ytd_payment+ "," + sum_c_payment_cnt+ "," + sum_c_delivery_cnt + "," + max_o_id + ","
                     + sum_o_ol_cnt + "," + sum_ol_amount + "," + sum_ol_quantity + "," + sum_s_quantity + "," + sum_s_ytd + "," + sum_s_order_cnt + "," + sum_s_remote_cnt);
+                    writeText.flush();
                 }catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -284,15 +285,16 @@ public class ExecuteManager {
         }
 
         // 拿完了所有的数据，开始进行输出到文件
-        Path path = Paths.get("/tmp/dataCSV");
+//        Path path = Paths.get("/tmp/dataCSV");
         try {
-            Files.createDirectory(path);
+//            Files.createDirectory(path);
             File writeSQLFile = new File("/tmp/dataCSV/dbstateCQL.csv");
             try {
                 BufferedWriter writeText = new BufferedWriter(new FileWriter(writeSQLFile));
                 writeText.newLine();
                 writeText.write(sum_w_ytd + "," + sum_d_ytd + "," +  sum_d_next_o_id+ "," + sum_c_balance + "," + sum_c_ytd_payment+ "," + sum_c_payment_cnt+ "," + sum_c_delivery_cnt + "," + max_o_id + ","
                         + sum_o_ol_cnt + "," + sum_ol_amount + "," + sum_ol_quantity + "," + sum_s_quantity + "," + sum_s_ytd + "," + sum_s_order_cnt + "," + sum_s_remote_cnt);
+                writeText.flush();
             }catch (Exception e) {
                 e.printStackTrace();
             }

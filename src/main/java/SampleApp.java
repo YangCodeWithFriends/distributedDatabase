@@ -115,14 +115,15 @@ public class SampleApp {
         }
         // 根据模式输出切换文件夹和输出文件名
         if (MODE.equals(DataSource.YSQL)) {
-            Path path = Paths.get("/tmp/dataCSV");
+//            Path path = Paths.get("/tmp/dataCSV");
             try {
-                Files.createDirectory(path);
+//                Files.createDirectory(path);
                 File writeSQLFile = new File("/tmp/client_sql.csv");
                 try {
                     BufferedWriter writeText = new BufferedWriter(new FileWriter(writeSQLFile));
                     writeText.newLine();
                     writeText.write(min + "," + avg + "," +  max);
+                    writeText.flush();
                 }catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -130,14 +131,15 @@ public class SampleApp {
                 e.printStackTrace();
             }
         }else {
-            Path path = Paths.get("/tmp/dataCSV");
+//            Path path = Paths.get("/tmp/dataCSV");
             try {
-                Files.createDirectory(path);
+//                Files.createDirectory(path);
                 File writeSQLFile = new File("/tmp/dataCSV/client_cql.csv");
                 try {
                     BufferedWriter writeText = new BufferedWriter(new FileWriter(writeSQLFile));
                     writeText.newLine();
                     writeText.write(min + "," + avg + "," +  max);
+                    writeText.flush();
                 }catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -185,10 +187,10 @@ public class SampleApp {
         // 3. execute and report
         ExecuteManager executeManager = new ExecuteManager();
         if (MODE.equals(DataSource.YSQL)) {
+//            executeManager.reportSQL(conn);
             try {
                 // 执行SQL的语句
                 executeManager.executeYSQL(conn, list, logger);
-
                 // 这是一个client执行完所有的transaction之后最后做的report操作，所以1和2的操作都是在这里
                 executeManager.summary(logger);
                 // 输出总共执行的transaction数量
@@ -227,15 +229,16 @@ public class SampleApp {
                 logger.log(Level.WARNING,String.format("95 latency(ms): %.2f\n", num2));
 
                 // 创建文件夹和写文件
-                Path path = Paths.get("/tmp/dataCSV");
+//                Path path = Paths.get("/tmp/dataCSV");
                 try {
-                    Files.createDirectory(path);
+//                    Files.createDirectory(path);
                     // 如果存在同名则覆盖文件
                     File writeSQLFile = new File("/tmp/dataCSV/clients_sql.csv");
                     try {
                         BufferedWriter writeText = new BufferedWriter(new FileWriter(writeSQLFile));
                         writeText.newLine();
                         writeText.write(cnt + "," + sum_time + "," +  throughput+ "," + avg_time + "," + medium+ "," + num1+ "," + num2);
+                        writeText.flush();
                     }catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -254,6 +257,7 @@ public class SampleApp {
                 }
             }
         } else {
+//            executeManager.reportCQL(cqlSession);
             try {
                 // 开始执行CQL的代码
                 executeManager.executeYCQL(cqlSession, list, logger);
@@ -295,14 +299,15 @@ public class SampleApp {
                 logger.log(Level.WARNING,String.format("95 latency(ms): %.2f\n", num2));
 
                 // 创建文件夹和写文件
-                Path path = Paths.get("/tmp/dataCSV");
+//                Path path = Paths.get("/tmp/dataCSV");
                 try {
-                    Files.createDirectory(path);
+//                    Files.createDirectory(path);
                     File writeSQLFile = new File("/tmp/dataCSV/client_cql.csv");
                     try {
                         BufferedWriter writeText = new BufferedWriter(new FileWriter(writeSQLFile));
                         writeText.newLine();
                         writeText.write(cnt + "," + sum_time + "," +  throughput+ "," + avg_time + "," + medium+ "," + num1+ "," + num2);
+                        writeText.flush();
                     }catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -316,8 +321,8 @@ public class SampleApp {
         }
 
         // 输出performance measurement
-        executeManager.reportSQL(conn);
-        executeManager.reportCQL(cqlSession);
+
+
     }
 
 
