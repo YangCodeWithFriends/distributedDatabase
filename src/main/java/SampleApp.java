@@ -30,7 +30,7 @@ public class SampleApp {
 
     public static void main(String[] args) {
         // Set mode
-        String MODE = DataSource.YSQL;// by default, run YSQL
+        String MODE = DataSource.YCQL;// by default, run YSQL
         if (args != null && args.length != 0 && args[0].equals(DataSource.YCQL)) MODE = DataSource.YCQL;
 
         // Config logger for the main thread
@@ -149,9 +149,28 @@ public class SampleApp {
                 e.printStackTrace();
             }
         }
-
         // Write throughput into file
         mainLogger.log(Level.SEVERE, String.format("min=%.2f,avg=%.2f,max=%.2f\n",min,avg,max));
+        // 根据模式判断重新创建connection，然后执行reportSQL或者reportCQL
+//        Logger logger = Logger.getLogger(outputFileList[0]);
+//        new SampleApp().dbState(MODE, logger);
+    }
+
+    public void dbState(String MODE, Logger logger) {
+        if (MODE.equals(DataSource.YSQL)) {
+            try {
+                conn = new DataSource(MODE, 0, logger).getSQLConnection();
+                conn.setTransactionIsolation(1); // isolation
+                ExecuteManager executeManager = new ExecuteManager();
+                executeManager.reportSQL(conn);
+            }catch (Exception e) {
+                e.printStackTrace();
+            }
+        }else {
+            cqlSession = new DataSource(MODE, 0, logger).getCQLSession();
+            ExecuteManager executeManager = new ExecuteManager();
+            executeManager.reportCQL(cqlSession);
+        }
     }
 
     public void doWork(String MODE, String inputFileName, Logger logger, int threadID) {
