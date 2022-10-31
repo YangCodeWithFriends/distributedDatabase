@@ -18,9 +18,9 @@ import java.util.logging.Logger;
  * @Date 1/10/22 3:21 PM
  */
 public class DataSource {
-//    private HikariConfig config;
-//    private HikariDataSource ds;
-    private YBClusterAwareDataSource ds;
+    private HikariConfig config;
+    private HikariDataSource ds;
+//    private YBClusterAwareDataSource ds;
 
     private CqlSession session;
     public static final String YSQL = "YSQL";
@@ -41,35 +41,38 @@ public class DataSource {
         logger.log(Level.SEVERE, String.format("TheadID=%d,hostID=%d,hostKey=%s,host=%s\n",threadID,hostID,hostKey,settings.getProperty(hostKey)));
 
         if (MODE.equals(YSQL)) {
-            /*
-//            Properties poolProperties = new Properties();
+            Properties poolProperties = new Properties();
 //            poolProperties.setProperty("dataSourceClassName", "com.yugabyte.ysql.YBClusterAwareDataSource");
-//            poolProperties.setProperty("maximumPoolSize", "20");
-//            poolProperties.setProperty("dataSource.serverName", settings.getProperty(hostKey));
-//            poolProperties.setProperty("dataSource.portNumber", settings.getProperty("port_sql"));
-//            poolProperties.setProperty("dataSource.databaseName", "dbysql");
-//            poolProperties.setProperty("dataSource.user", settings.getProperty("dbUser"));
-//            poolProperties.setProperty("dataSource.password", settings.getProperty("dbPassword"));
-//            poolProperties.setProperty("poolName", "HikariCP");
+            poolProperties.setProperty("dataSourceClassName", "org.postgresql.ds.PGSimpleDataSource");
+            poolProperties.setProperty("maximumPoolSize", "20");
+            poolProperties.setProperty("dataSource.serverName", settings.getProperty(hostKey));
+            poolProperties.setProperty("dataSource.portNumber", settings.getProperty("port_sql"));
+            poolProperties.setProperty("dataSource.databaseName", "dbysql");
+            poolProperties.setProperty("dataSource.user", settings.getProperty("dbUser"));
+            poolProperties.setProperty("dataSource.password", settings.getProperty("dbPassword"));
+            poolProperties.setProperty("poolName", "HikariCP");
 
-//            config = new HikariConfig(poolProperties);
-            config = new HikariConfig();
+            config = new HikariConfig(poolProperties);
+
+            /*
+//            config = new HikariConfig();
 //            config.setDataSourceClassName("com.nuodb.jdbc.Driver");
             config.setUsername(settings.getProperty("dbUser"));
             config.setPassword(settings.getProperty("dbPassword"));
             config.addDataSourceProperty( "cachePrepStmts" , "true" );
             config.addDataSourceProperty( "prepStmtCacheSize" , "250" );
             config.addDataSourceProperty( "prepStmtCacheSqlLimit" , "2048" );
+            */
+
             String jdbcUrl = "jdbc:yugabytedb://" + settings.getProperty(hostKey) + ":"
-                    + settings.getProperty("port_sql") + "/dbysql?load_balance=true";
+                    + settings.getProperty("port_sql") + "/dbysql";
             config.setJdbcUrl(jdbcUrl);
             config.validate();
 
             ds = new HikariDataSource(config);
             System.out.println("Connect to DB successfully");
 
-             */
-
+            /*
             ds = new YBClusterAwareDataSource();
             ds.setUrl("jdbc:yugabytedb://" + settings.getProperty(hostKey) + ":"
                     + settings.getProperty("port_sql") + "/yugabyte");
@@ -81,6 +84,7 @@ public class DataSource {
             int portNumber = Integer.parseInt(settings.getProperty("port_sql"));
             System.out.println("port= " + portNumber);
 //            ds.setPortNumbers(new int[portNumber]);
+             */
         } else if (MODE.equals(YCQL)) {
             session = CqlSession
                     .builder()
