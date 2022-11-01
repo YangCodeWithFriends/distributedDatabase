@@ -7,6 +7,7 @@ DROP TABLE IF EXISTS dbycql.item;
 DROP TABLE IF EXISTS dbycql.orderline;
 DROP TABLE IF EXISTS dbycql.stock;
 DROP TABLE IF EXISTS dbycql.customer_item;
+DROP TABLE IF EXISTS dbycql.customer_balance_top10;
 DROP KEYSPACE IF EXISTS dbycql;
 
 -- data path: /home/stuproj/cs4224j/project_data/data_files/
@@ -219,7 +220,7 @@ WITH NULL='null' AND INGESTRATE=10000;
 
 -- 瑶姐要的临时表
 CREATE TABLE dbycql.customer_balance_top10 (
-    cb_time_group timestamp,
+    cb_time_group text,
     cb_w_id int,
     cb_d_id int,
     cb_id int,

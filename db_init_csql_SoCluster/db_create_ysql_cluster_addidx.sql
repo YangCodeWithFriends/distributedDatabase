@@ -214,6 +214,7 @@ select count(*) as no_imported_customer_item from customer_item;
 
 
 -- 瑶姐要的临时表
+DROP TABLE if EXISTS new_order_info;
 create table new_order_info (
     NO_O_ID int NOT NULL, 
     NO_N int NOT NULL, 
