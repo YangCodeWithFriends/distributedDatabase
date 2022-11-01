@@ -15,7 +15,7 @@ public class Statistics {
     private long max; // maximum execution time of executed transactions of this type
     private long min; // minimum execution time of executed transactions of this type
     private long avg; // avg execution time of executed transactions of this type
-    private long med;
+    private long time;
     private ArrayList<Long> time_lst = new ArrayList<Long>();
 
     public Statistics(TransactionType transactionType) {
@@ -26,6 +26,7 @@ public class Statistics {
 
     public void addNewData(long executionTime) {
         cnt++;
+        time = executionTime;
         timeSum += executionTime;
         max = Math.max(max, executionTime);
         min = Math.min(min, executionTime);
@@ -48,6 +49,8 @@ public class Statistics {
     public long getCnt() {
         return cnt;
     }
+
+    public long getExeTime() {return time;}
 
     public long getMax() {
         return max;
