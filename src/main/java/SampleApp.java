@@ -56,12 +56,11 @@ public class SampleApp {
             e.printStackTrace();
         }
         mainLogger.setLevel(Level.WARNING);
-
         mainLogger.log(Level.SEVERE, "Number of Threads = " + numberOfThreads);
         mainLogger.log(Level.SEVERE, "Your mode = " + MODE);
         mainLogger.log(Level.SEVERE, "Your server sharding index = " + serverShardingIndex);
 
-        // config input and output file.
+        // config input and output file for several threads
         String[] inputFileList = new String[numberOfThreads];
         String[] outputFileList = new String[numberOfThreads];
         for (int i = 0; i < numberOfThreads; i++) {
@@ -81,11 +80,11 @@ public class SampleApp {
             }
         }
 
+        // Thread pool service
         CountDownLatch countDownLatch = new CountDownLatch(numberOfThreads);
         ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
 
-        // 创建一个全局Array，然后存每一个线程池执行完的时间，后续在report中计算avg，max以及min时间
-
+        // Execute several threads
         for (int i = 0; i < numberOfThreads; i++) {
             String finalMODE = MODE;
             int threadID = i; // 0,1,2,3
@@ -107,6 +106,7 @@ public class SampleApp {
             });
         }
 
+        // Main thread waits here until all threads end or 8h.
         mainLogger.log(Level.SEVERE,"Main thread waits");
         try {
             mainLogger.log(Level.INFO,"CountDownLatchTimeout = " + countDownLatchTimeout);
@@ -120,6 +120,7 @@ public class SampleApp {
         mainLogger.log(Level.SEVERE,"Main thread ends");
         cachedThreadPool.shutdown();
 
+        // log statistics data
         // 在线程池结束之后开始统计arraylist中的值,min, max, avg
         for (double i : throughput_list) {
             min = Math.min(min, i);
@@ -168,19 +169,19 @@ public class SampleApp {
         // Write throughput into file
         mainLogger.log(Level.SEVERE, String.format("min=%.2f,avg=%.2f,max=%.2f\n",min,avg,max));
         // 根据模式判断重新创建connection，然后执行reportSQL或者reportCQL
-        Logger logger = Logger.getLogger(outputFileList[0]);
-        new SampleApp().dbState(MODE, logger);
+        new SampleApp().dbState(MODE, mainLogger);
     }
 
-    public void dbState(String MODE, Logger logger) {
+    public void dbState(String MODE, Logger mainLogger) {
         if (MODE.equals(DataSource.YSQL)) {
             try {
-                conn = new DataSource(MODE, 21, logger).getSQLConnection();
+                conn = new DataSource(MODE, 1, mainLogger).getSQLConnection();
                 conn.setTransactionIsolation(1); // isolation
                 ExecuteManager executeManager = new ExecuteManager();
-                executeManager.reportSQL(conn);
+                executeManager.reportSQL(conn, mainLogger);
             }catch (Exception e) {
                 e.printStackTrace();
+                mainLogger.log(Level.SEVERE, "dbState exception = ", e);
             }finally {
                 try {
                     conn.close();
@@ -190,11 +191,12 @@ public class SampleApp {
             }
         }else {
             try {
-                cqlSession = new DataSource(MODE, 21, logger).getCQLSession();
+                cqlSession = new DataSource(MODE, 1, mainLogger).getCQLSession();
                 ExecuteManager executeManager = new ExecuteManager();
-                executeManager.reportCQL(cqlSession);
+                executeManager.reportCQL(cqlSession, mainLogger);
             }catch (Exception e) {
                 e.printStackTrace();
+                mainLogger.log(Level.SEVERE, "dbState exception = ", e);
             }finally {
                 cqlSession.close();
             }

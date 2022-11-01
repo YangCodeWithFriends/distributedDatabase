@@ -7,9 +7,6 @@ import common.TransactionType;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -167,7 +164,7 @@ public class ExecuteManager {
         return percentage_time_lst;
     }
 
-    public void reportSQL(Connection conn) {
+    public void reportSQL(Connection conn, Logger mainLogger) {
         try {
             // get all the sql information into the result set
             Statement stmt = conn.createStatement();
@@ -248,16 +245,19 @@ public class ExecuteManager {
                     writeText.close();
                 }catch (Exception e) {
                     e.printStackTrace();
+                    mainLogger.log(Level.SEVERE, "reportSQL write file exception = ", e);
                 }
             }catch (Exception e) {
                 e.printStackTrace();
+                mainLogger.log(Level.SEVERE, "reportSQL middle exception = ", e);
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            mainLogger.log(Level.SEVERE, "reportSQL exception = ", e);
         }
     }
 
-    public void reportCQL(CqlSession session) {
+    public void reportCQL(CqlSession session, Logger mainLogger) {
         // get all the cql information into the result set
         SimpleStatement simpleStatement_0 = null;
         // cql1
@@ -392,9 +392,11 @@ public class ExecuteManager {
                 writeText.close();
             }catch (Exception e) {
                 e.printStackTrace();
+                mainLogger.log(Level.SEVERE, "report write file exception = ", e);
             }
         }catch (Exception e) {
             e.printStackTrace();
+            mainLogger.log(Level.SEVERE, "reportCQL exception = ", e);
         }
     }
 }
