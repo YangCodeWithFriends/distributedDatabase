@@ -7,6 +7,7 @@ import java.io.*;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.CountDownLatch;
@@ -167,12 +168,12 @@ public class SampleApp {
         // Write throughput into file
         mainLogger.log(Level.SEVERE, String.format("min=%.2f,avg=%.2f,max=%.2f\n",min,avg,max));
         // 根据模式判断重新创建connection，然后执行reportSQL或者reportCQL
-//        Logger logger = Logger.getLogger(outputFileList[0]);
-//        new SampleApp().dbState(MODE, logger);
+        Logger logger = Logger.getLogger(outputFileList[0]);
+        new SampleApp().dbState(MODE, logger);
     }
 
     public void dbState(String MODE, Logger logger) {
-        if (MODE.equals(DataSource.YCQL)) {
+        if (MODE.equals(DataSource.YSQL)) {
             try {
                 conn = new DataSource(MODE, 21, logger).getSQLConnection();
                 conn.setTransactionIsolation(1); // isolation
@@ -180,11 +181,23 @@ public class SampleApp {
                 executeManager.reportSQL(conn);
             }catch (Exception e) {
                 e.printStackTrace();
+            }finally {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
             }
         }else {
-            cqlSession = new DataSource(MODE, 21, logger).getCQLSession();
-            ExecuteManager executeManager = new ExecuteManager();
-            executeManager.reportCQL(cqlSession);
+            try {
+                cqlSession = new DataSource(MODE, 21, logger).getCQLSession();
+                ExecuteManager executeManager = new ExecuteManager();
+                executeManager.reportCQL(cqlSession);
+            }catch (Exception e) {
+                e.printStackTrace();
+            }finally {
+                cqlSession.close();
+            }
         }
     }
 
@@ -270,7 +283,7 @@ public class SampleApp {
                 try {
 //                    Files.createDirectory(path);
                     // 如果存在同名则覆盖文件
-                    File writeSQLFile = new File("/tmp/client_sql.csv");
+                    File writeSQLFile = new File("/tmp/clients_sql.csv");
                     boolean flag;
                     flag = writeSQLFile.exists();
 //                    File writeSQLFile = new File("/tmp/client_" + threadID + "_sql.csv");
@@ -346,7 +359,7 @@ public class SampleApp {
 //                Path path = Paths.get("/tmp/dataCSV");
                 try {
 //                    Files.createDirectory(path);
-                    File writeSQLFile = new File("/tmp/client_cql.csv");
+                    File writeSQLFile = new File("/tmp/clients_cql.csv");
                     boolean flag;
                     flag = writeSQLFile.exists();
 //                    File writeSQLFile = new File("/tmp/client_" + threadID + "_cql.csv");
