@@ -4,9 +4,6 @@ import common.TransactionType;
 import common.transactionImpl.*;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
@@ -30,7 +27,7 @@ public class SampleApp {
 
     public static void main(String[] args) {
         // Set mode
-        String MODE = DataSource.YCQL;// by default, run YSQL
+        String MODE = DataSource.YSQL;// by default, run YSQL
         if (args != null && args.length != 0 && args[0].equals(DataSource.YCQL)) MODE = DataSource.YCQL;
 
         // Config logger for the main thread
@@ -157,9 +154,9 @@ public class SampleApp {
     }
 
     public void dbState(String MODE, Logger logger) {
-        if (MODE.equals(DataSource.YSQL)) {
+        if (MODE.equals(DataSource.YCQL)) {
             try {
-                conn = new DataSource(MODE, 0, logger).getSQLConnection();
+                conn = new DataSource(MODE, 21, logger).getSQLConnection();
                 conn.setTransactionIsolation(1); // isolation
                 ExecuteManager executeManager = new ExecuteManager();
                 executeManager.reportSQL(conn);
@@ -167,7 +164,7 @@ public class SampleApp {
                 e.printStackTrace();
             }
         }else {
-            cqlSession = new DataSource(MODE, 0, logger).getCQLSession();
+            cqlSession = new DataSource(MODE, 21, logger).getCQLSession();
             ExecuteManager executeManager = new ExecuteManager();
             executeManager.reportCQL(cqlSession);
         }
