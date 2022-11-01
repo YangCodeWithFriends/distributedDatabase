@@ -213,12 +213,37 @@ select count(*) as no_imported_customer_item from customer_item;
 
 
 
--- drop index if exists _idx;
+-- 瑶姐要的临时表
+DROP TABLE if EXISTS new_order_info;
+create table new_order_info (
+    NO_O_ID int NOT NULL, 
+    NO_N int NOT NULL, 
+    NO_W_ID int NOT NULL,  
+    NO_D_ID int NOT NULL, 
+    NO_C_ID int NOT NULL, 
+    NO_I_CNT int NOT NULL, 
+    NO_I_ID int NOT NULL, 
+    NO_SUPPLY_W_ID int NOT NULL, 
+    NO_QUANTITY decimal(2,0) NOT NULL, 
+    primary key (NO_O_ID, NO_N, NO_W_ID, NO_D_ID, NO_C_ID)
+);
+
+
+-- 输出看导入结果
+select count(*) as no_imported_district from district;
+select count(*) as no_imported_orders from orders;
+select count(*) as no_imported_customers from customer;
+select count(*) as no_imported_Item from item;
+select count(*) as no_imported_stock from stock;
+select count(*) as no_imported_OLine from orderline;
+select count(*) as no_imported_customer_item from customer_item; 
+select count(*) as no_new_order_info from new_order_info;
 
 
 
 -- show all tables
 \dt;
+
 
 -- 加索引
 -- create index if not exists w_id_idx on warehouse (W_id);

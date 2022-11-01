@@ -66,9 +66,10 @@ public class PaymentTransaction extends Transaction {
 //               logger.log(Level.FINE, "D_STREET_1: " + rs.getString(23) + "D_STREET_2: " + rs.getString(24) + "D_CITY: " + rs.getString(25) + "D_STATE: " + rs.getString(26) + "D_ZIP: " + rs.getString(27));
 //            }
            logger.log(Level.FINE, "Payment Transaction执行完毕！");
-            conn.commit();
+           conn.commit();
         } catch (SQLException e) {
             e.printStackTrace();
+            logger.log(Level.SEVERE, String.format("Error in %s transaction, exception= ",getTransactionType().type),e);
             if (conn != null) {
 //                System.err.print("Transaction is being rolled back\n");
                 logger.log(Level.WARNING, "Transaction is being rolled back");

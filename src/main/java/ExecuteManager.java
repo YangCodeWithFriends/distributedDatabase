@@ -9,8 +9,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
-import java.util.logging.Logger;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @Package PACKAGE_NAME
@@ -23,13 +23,15 @@ public class ExecuteManager {
     private List<Statistics> transactionTypeList;
     private Map<TransactionType, Integer> skipMap;
     private int counter;
+    private int LIMIT = 1000;// Print statistics every LIMIT transactions
     // 定义变量
     private ArrayList<Long> time_lst = new ArrayList<Long>();
     private long avg;
     private long sum = 0;
     private long cnt = 0;
-    private long throughput;
     private long medium;
+    private long per_95;
+    private long per_99;
 
     public ExecuteManager() {
         transactionTypeList = new ArrayList<>(8);
@@ -46,9 +48,11 @@ public class ExecuteManager {
         transactionTypeList.add(new Statistics(TransactionType.TOP_BALANCE));
         transactionTypeList.add(new Statistics(TransactionType.RELATED_CUSTOMER));
 
-        for (TransactionType transactionType : TransactionType.values()) {
-            skipMap.put(transactionType, 0);
-        }
+//        for (TransactionType transactionType : TransactionType.values()) {
+//            skipMap.put(transactionType, 0);
+//        }
+//        LIMIT = 1;
+
 
         // 正选逻辑
 //        skipSet.add(TransactionType.NEW_ORDER);
@@ -57,8 +61,7 @@ public class ExecuteManager {
 
         // 反选逻辑
 //        skipSet.addAll(Arrays.asList(TransactionType.values()));
-//        skipSet.remove(TransactionType.DELIVERY);
-//        skipSet.remove(TransactionType.PAYMENT);
+//        skipSet.remove(TransactionType.POPULAR_ITEM);
     }
 
     public void executeYSQL(Connection conn, List<Transaction> list, Logger logger) throws SQLException {
@@ -67,12 +70,13 @@ public class ExecuteManager {
             if (skipSet.contains(transaction.getTransactionType())) continue;
             if (skipMap.containsKey(transaction.getTransactionType())) {
                 int cnt = skipMap.getOrDefault(transaction.getTransactionType(), 0);
-                if (cnt >= 1) continue;
-                skipMap.put(transaction.getTransactionType(), cnt+1);
+                if (cnt >= LIMIT) continue;
+                skipMap.put(transaction.getTransactionType(), cnt + 1);
             }
 
             long executionTime = transaction.executeYSQL(conn, logger);
             transactionTypeList.get(transaction.getTransactionType().index).addNewData(executionTime);
+            // 平常执行输出的是这个导致的
             report(logger);
         }
     }
@@ -83,49 +87,55 @@ public class ExecuteManager {
             if (skipSet.contains(transaction.getTransactionType())) continue;
             if (skipMap.containsKey(transaction.getTransactionType())) {
                 int cnt = skipMap.getOrDefault(transaction.getTransactionType(), 0);
-                if (cnt >= 1) continue;
-                skipMap.put(transaction.getTransactionType(), cnt+1);
+                if (cnt >= LIMIT) continue;
+                skipMap.put(transaction.getTransactionType(), cnt + 1);
             }
 
             long executionTime = transaction.executeYCQL(session, logger);
             transactionTypeList.get(transaction.getTransactionType().index).addNewData(executionTime);
+            // 平常执行输出的是这个导致的
             report(logger);
         }
     }
 
     public void report(Logger logger) {
         counter++; // print statistics every 5 transactions.
-//        if (counter % 100 == 0) {
-            logger.log(Level.SEVERE, "---Statistics start---");
+        if (counter % LIMIT == 0) {
+            logger.log(Level.INFO, "---Statistics start---");
             for (Statistics statistics : transactionTypeList) {
-                // 这是所有transaction.txt执行完之后对应的特定transaction的执行时间。所以list中应该包含8个数字对应所有transaction的执行时间
-                time_lst.add(statistics.getTimeSum());
-                // 获得执行的所有transaction的个数
-                cnt += statistics.getCnt();
-                logger.log(Level.SEVERE, statistics.toString());
+                logger.log(Level.INFO, statistics.toString());
             }
-            // 将ArrayList排序方便计算中位数
-            Collections.sort(time_lst);
-            // 计算所有transaction的执行时间
-            for (long i : time_lst) {
-                sum += i;
-            }
-            // 计算平均数
-            avg = sum / time_lst.size();
-            if (time_lst.size() % 2 == 0) {
-                medium = (time_lst.get(time_lst.size()/2-1) + time_lst.get(time_lst.size()/2)) / 2;
-            }else {
-                medium = time_lst.get(time_lst.size()/2);
-            }
-            // 计算Transaction throughput
-            throughput = sum / cnt;
-
-            logger.log(Level.SEVERE, "---Statistics end---");
-//        }
+            logger.log(Level.INFO, "---Statistics end---");
+        }
     }
 
-    public long getThroughput() {
-        return throughput;
+    public void summary(Logger logger) {
+        // 在最后一次输出的时候先格式化sum为0
+        sum = 0;
+        cnt = 0;
+        time_lst = new ArrayList<Long>();
+        for (Statistics statistics : transactionTypeList) {
+            // 这是所有transaction的累计执行时间
+//                time_lst.add(statistics.getTimeSum());
+            sum += statistics.getTimeSum();
+            // 获取到最后一次每个transaction执行的总时间
+            time_lst.add(statistics.getTimeSum());
+            // 获得执行的所有transaction的个数
+            cnt += statistics.getCnt();
+            logger.log(Level.SEVERE, statistics.toString());
+        }
+    }
+
+    public long getCnt() {
+        return cnt;
+    }
+
+    public long getTimeSum() {
+        return sum;
+    }
+
+    public ArrayList<Long> getTime_lst() {
+        return time_lst;
     }
 
     public void reportCSV(Connection conn, CqlSession session) {
@@ -211,7 +221,7 @@ public class ExecuteManager {
                 s_order_cnt += row.getInt(2);
                 s_remote_cnt += row.getInt(3);
             }
-        }catch (SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
 

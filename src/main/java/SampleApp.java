@@ -2,7 +2,6 @@ import com.datastax.oss.driver.api.core.CqlSession;
 import common.Transaction;
 import common.TransactionType;
 import common.transactionImpl.*;
-import groovy.util.logging.Log;
 
 import java.io.*;
 import java.sql.Connection;
@@ -19,33 +18,62 @@ import java.util.logging.*;
 public class SampleApp {
     private Connection conn;
     private CqlSession cqlSession;
-    private static final int numberOfThreads = 1;
+    private static final int numberOfThreads = 4;
     private static int countDownLatchTimeout = 8;
+    private static int serverShardingIndex = 0;
+    private static String MODE;
+
     // 用来存20个client各自的transaction throughput
-    private static ArrayList<Long> throughput_list = new ArrayList<Long>(numberOfThreads);
-    private static long min = 0;
-    private static long max = 0;
-    private static long avg = 0;
-    private static long sum = 0;
+    private static ArrayList<Double> throughput_list = new ArrayList<>(numberOfThreads);
+    private static double min = Double.MAX_VALUE;
+    private static double max = -1;
+    private static double avg = 0;
+    private static double sum = 0;
 
     public static void main(String[] args) {
-        // Set mode
-        String MODE = DataSource.YSQL;// by default, run YSQL
-        MODE = DataSource.YCQL;
-        if (args != null && args.length != 0 && args[0].equals(DataSource.YCQL)) MODE = DataSource.YCQL;
+        // argument check
+        if (args == null || args.length != 2) throw new RuntimeException("Invalid argument. First should be YSQL/YCQL. Second should be sharding index 0/1/2/3/4");
+
+        // set mode
+        if (args[0].equals(DataSource.YSQL)) {
+            MODE = DataSource.YSQL;
+        } else if (args[0].equals(DataSource.YCQL)) MODE = DataSource.YCQL;
+        else throw new RuntimeException("First argument should be YSQL/YCQL");
+
+        // set server sharding index
+        serverShardingIndex = Integer.parseInt(args[1]);
+//        System.out.println(serverShardingIndex);
+        if (serverShardingIndex < 0 || serverShardingIndex >= 5) throw new RuntimeException("Second argument should be 0/1/2/3/4");
+
+        // Config logger for the main thread
+        Logger mainLogger = Logger.getLogger(Thread.currentThread().getName());
+        try {
+            FileHandler handler = new FileHandler(MODE + "-log-main-thread-" + serverShardingIndex + ".txt");
+            handler.setFormatter(new SimpleFormatter());
+            mainLogger.addHandler(handler);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        mainLogger.setLevel(Level.WARNING);
+
+        mainLogger.log(Level.SEVERE, "Number of Threads = " + numberOfThreads);
+        mainLogger.log(Level.SEVERE, "Your mode = " + MODE);
+        mainLogger.log(Level.SEVERE, "Your server sharding index = " + serverShardingIndex);
 
         // config input and output file.
         String[] inputFileList = new String[numberOfThreads];
         String[] outputFileList = new String[numberOfThreads];
         for (int i = 0; i < numberOfThreads; i++) {
-            inputFileList[i] = "src/main/resources/xact_files/" + i + ".txt";
-            outputFileList[i] = MODE + "-log-" + i + ".txt";
+            int fileIndex  = i + serverShardingIndex * 4;
+            inputFileList[i] = "src/main/resources/xact_files/" + fileIndex + ".txt";
+            outputFileList[i] = MODE + "-log-" + fileIndex + ".txt";
             Logger logger = Logger.getLogger(outputFileList[i]);
             try {
                 Handler handler = new FileHandler(outputFileList[i]);
                 handler.setFormatter(new SimpleFormatter());
                 logger.addHandler(handler);
                 // SETLEVEL. Set the logger filtering level.
+
                 logger.setLevel(Level.WARNING);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -59,15 +87,17 @@ public class SampleApp {
 
         for (int i = 0; i < numberOfThreads; i++) {
             String finalMODE = MODE;
-            int finalI = i;
+            int threadID = i; // 0,1,2,3
+            int serverIndex = threadID + serverShardingIndex * 4;
             cachedThreadPool.execute(() -> {
-                Logger logger = Logger.getLogger(outputFileList[finalI]);
+                Logger logger = Logger.getLogger(outputFileList[threadID]);
                 try {
                     logger.log(Level.SEVERE, Thread.currentThread().getName() + " starts ");
                     // 每一个client执行都会在执行完成之后存一个throughput进arraylist
-                    new SampleApp().doWork(finalMODE, inputFileList[finalI], logger);
+                    new SampleApp().doWork(finalMODE, inputFileList[threadID], logger, serverIndex);
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, Thread.currentThread().getName() + " exception ");
+                    logger.log(Level.SEVERE, "exception = ", e);
                     e.printStackTrace();
                 } finally {
                     logger.log(Level.SEVERE, Thread.currentThread().getName() + " ends ");
@@ -76,21 +106,21 @@ public class SampleApp {
             });
         }
 
-        System.out.println("Main thread waits");
+        mainLogger.log(Level.SEVERE,"Main thread waits");
         try {
-            System.out.println("CountDownLatchTimeout = " + countDownLatchTimeout);
+            mainLogger.log(Level.INFO,"CountDownLatchTimeout = " + countDownLatchTimeout);
             countDownLatch.await(countDownLatchTimeout, TimeUnit.HOURS);
         } catch (InterruptedException e) {
-            System.out.println("Exception: await interrupted exception");
+            mainLogger.log(Level.SEVERE,"Exception: await interrupted exception",e);
         } finally {
-            System.out.println("countDownLatch: " + countDownLatch.toString());
+            mainLogger.log(Level.SEVERE,"countDownLatch: " + countDownLatch.toString());
         }
 
-        System.out.println("Main thread ends");
+        mainLogger.log(Level.SEVERE,"Main thread ends");
         cachedThreadPool.shutdown();
 
         // 在线程池结束之后开始统计arraylist中的值,min, max, avg
-        for (long i : throughput_list) {
+        for (double i : throughput_list) {
             min = Math.min(min, i);
             max = Math.max(max, i);
             sum += i;
@@ -100,24 +130,11 @@ public class SampleApp {
         }
 
         // Write throughput into file
-        String throughput_file = "throughput-statistics-" + MODE + ".txt";
-        try {
-            BufferedWriter writer = new BufferedWriter(new FileWriter(throughput_file));
-            writer.append("min = ").append(String.valueOf(min));
-            writer.newLine();
-            writer.append("avg = ").append(String.valueOf(avg));
-            writer.newLine();
-            writer.append("max = ").append(String.valueOf(max));
-            writer.newLine();
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        System.out.printf("min=%d,avg=%d,max=%d\n",min,avg,max);
+        mainLogger.log(Level.SEVERE, String.format("min=%.2f,avg=%.2f,max=%.2f\n",min,avg,max));
     }
 
-    public void doWork(String MODE, String inputFileName, Logger logger) {
-        logger.log(Level.SEVERE, Thread.currentThread().getName() + "do work");
+    public void doWork(String MODE, String inputFileName, Logger logger, int serverIndex) {
+        logger.log(Level.SEVERE, Thread.currentThread().getName() + " do work");
 
         // 1. Construct requests from files.
         List<Transaction> list = new ArrayList<>();
@@ -133,18 +150,20 @@ public class SampleApp {
         try {
             if (MODE.equals(DataSource.YSQL)) {
                 logger.log(Level.WARNING, "Connecting to DB. Your mode is YSQL.");
-                conn = new DataSource(MODE).getSQLConnection();
-                conn.setTransactionIsolation(1);
+                conn = new DataSource(MODE, serverIndex, logger).getSQLConnection();
+                conn.setTransactionIsolation(1); // isolation
+                // TODO: 1 / 2(default)
                 logger.log(Level.INFO, "Conn = "+ conn.getClientInfo());
 //                logger.log(Level.INFO, "Isolation level=" + conn.getTransactionIsolation());
             } else {
                 logger.log(Level.WARNING, "Connecting to DB. Your mode is YCQL.");
-                cqlSession = new DataSource(MODE).getCQLSession();
+                cqlSession = new DataSource(MODE, serverIndex, logger).getCQLSession();
                 logger.log(Level.INFO, "CQLSession = "+ cqlSession.getName());
             }
             logger.log(Level.WARNING, ">>>> Successfully connected to YugabyteDB.");
         } catch (SQLException e) {
             e.printStackTrace();
+            logger.log(Level.SEVERE, "DB Connection exception= ",e);
         }
 
         // 3. execute and report
@@ -154,6 +173,7 @@ public class SampleApp {
                 executeManager.executeYSQL(conn, list, logger);
             } catch (SQLException e) {
                 e.printStackTrace();
+                logger.log(Level.SEVERE, "YSQL Execute exception= ",e);
             } finally {
                 try {
                     conn.close();
@@ -169,8 +189,38 @@ public class SampleApp {
             }
         }
         // 这是一个client执行完所有的transaction之后最后做的report操作，所以1和2的操作都是在这里
-        executeManager.report(logger);
-        throughput_list.add(executeManager.getThroughput());
+        executeManager.summary(logger);
+        // 输出总共执行的transaction数量
+        long cnt = executeManager.getCnt();
+        logger.log(Level.WARNING,String.format("Total num: %d\n", cnt));
+        // 获取该client的总执行时间
+        long sum = executeManager.getTimeSum();
+        logger.log(Level.WARNING,String.format("Time sum(s): %.2f\n", sum / 1000.0));
+        // 输出throughput
+        double throughput = cnt * 1.0 / (sum / 1000.0);
+        throughput_list.add(throughput);
+
+        logger.log(Level.WARNING,String.format("Transaction throughput: %.2f\n", throughput));
+        // 获取该client的执行平均时间并输出
+        logger.log(Level.WARNING,String.format("Time average(ms): %.2f\n", sum * 1.0 / cnt));
+        // 获取8个transaction执行总时间组成的arraylist,然后输出中位数
+        ArrayList<Long> time_lst = executeManager.getTime_lst();
+        long medium;
+        if (time_lst.size() % 2 == 0) {
+            medium = (time_lst.get(time_lst.size()/2-1) + time_lst.get(time_lst.size()/2)) / 2;
+        }else {
+            medium = time_lst.get(time_lst.size()/2);
+        }
+        logger.log(Level.WARNING,String.format("Medium latency(ms): %d\n", medium));
+        // 输出95%
+        long N1 = (long) (cnt * 0.95);
+        double per_95 = sum * 1.0 / N1;
+        logger.log(Level.WARNING,String.format("95 latency(ms): %.2f\n", per_95));
+        // 输出99%
+        long N2 = (long) (cnt * 0.99);
+        double per_99 = sum * 1.0 / N2;
+        logger.log(Level.WARNING,String.format("99 latency(ms): %.2f\n", per_99));
+        // 将该client的throughput存到throughput_list方便main中所有的client执行完毕后计算后续结果
     }
 
 

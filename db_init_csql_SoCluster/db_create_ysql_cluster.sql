@@ -185,14 +185,30 @@ select count(*) as no_imported_OLine from "orderline";
 -- 朱姐的 customer_item, 3749590
 DROP TABLE if EXISTS customer_item CASCADE;
 create table customer_item(
-CI_W_ID int, 
-CI_D_ID int, 
-CI_C_ID int, 
-CI_O_ID int, 
-CI_I_ID int,
-primary key(CI_W_ID,CI_D_ID,CI_C_ID,CI_O_ID,CI_I_ID));
+  CI_W_ID int, 
+  CI_D_ID int, 
+  CI_C_ID int, 
+  CI_O_ID int, 
+  CI_I_ID int,
+  primary key(CI_W_ID,CI_D_ID,CI_C_ID,CI_O_ID,CI_I_ID)
+);
 \copy customer_item from '/home/stuproj/cs4224j/project_data/data_files/customer_item.csv' WITH (FORMAT CSV, NULL 'null');
 select count(*) as no_imported_customer_item from customer_item; 
+
+
+-- 瑶姐要的临时表
+create table new_order_info (
+    NO_O_ID int NOT NULL, 
+    NO_N int NOT NULL, 
+    NO_W_ID int NOT NULL,  
+    NO_D_ID int NOT NULL, 
+    NO_C_ID int NOT NULL, 
+    NO_I_CNT int NOT NULL, 
+    NO_I_ID int NOT NULL, 
+    NO_SUPPLY_W_ID int NOT NULL, 
+    NO_QUANTITY decimal(2,0) NOT NULL, 
+    primary key (NO_O_ID, NO_N, NO_W_ID, NO_D_ID, NO_C_ID)
+);
 
 
 -- 输出看导入结果
@@ -203,11 +219,7 @@ select count(*) as no_imported_Item from item;
 select count(*) as no_imported_stock from stock;
 select count(*) as no_imported_OLine from orderline;
 select count(*) as no_imported_customer_item from customer_item; 
-
--- idx
--- drop index if exists _idx;
--- create index if not exists _idx on dbycql. ();
-
+select count(*) as no_new_order_info from new_order_info;
 
 
 -- show all tables

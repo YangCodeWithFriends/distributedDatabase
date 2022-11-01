@@ -90,7 +90,7 @@ public class RelatedCustomerTransaction extends Transaction {
                     "and CI_W_ID != %d ", itemList, C_W_ID);
             // 存前三个ID作为key和对应出现item次数作为value
             SimpleStatement simpleStatement = SimpleStatement.builder(last_cql)
-                    .setExecutionProfileName("oltp").setTimeout(Duration.ofSeconds(30))
+                    .setExecutionProfileName("oltp")
                     .build();
             com.datastax.oss.driver.api.core.cql.ResultSet outRs = session.execute(simpleStatement);
             for (Row finalRs : outRs) {

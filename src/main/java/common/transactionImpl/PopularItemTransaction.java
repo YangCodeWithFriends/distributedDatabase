@@ -32,6 +32,7 @@ public class PopularItemTransaction extends Transaction {
         ResultSet rs = null;
         List<Row> rows = null;
         SimpleStatement simpleStatement = null;
+        Row onerow = null;
 
        logger.log(Level.FINE, String.format("W_ID=%d,D_ID=%d,L=%d\n", W_ID, D_ID, L));
 
@@ -72,6 +73,7 @@ public class PopularItemTransaction extends Transaction {
             int O_C_ID = O_C_IDs.get(i);
             Instant O_ENTRY_D = O_ENTRY_Ds.get(i);
 
+            /*
             // CQL3
             String CQL3 = String.format("select C_FIRST, C_MIDDLE, C_LAST from dbycql.Customer where C_W_ID = %d and C_D_ID = %d and C_ID = %d", W_ID, D_ID, O_C_ID);
 //            rs = cqlSession.execute(CQL3);
@@ -85,6 +87,8 @@ public class PopularItemTransaction extends Transaction {
             String C_MIDDLE = onerow.getString(1);
             String C_LAST = onerow.getString(2);
            logger.log(Level.FINE, String.format("O_ID=%d,O_ENTRY_D=%s,C_FIRST=%s,C_MIDDLE=%s,C_LAST=%s\n", O_ID, O_ENTRY_D, C_FIRST, C_MIDDLE, C_LAST));
+
+             */
 
             // CQL4
             String CQL4 = String.format("select OL_W_ID, OL_D_ID, OL_O_ID, OL_QUANTITY from dbycql.OrderLine where OL_W_ID = %d and OL_D_ID = %d and OL_O_ID = %d limit 1;", W_ID, D_ID, O_ID);
@@ -114,6 +118,7 @@ public class PopularItemTransaction extends Transaction {
                 all_item_set.add(OL_I_ID);
             }
 
+            /*
             for (int OL_I_ID : OL_I_IDs) {
                 // CQL6
                 String CQL6 = String.format("select I_NAME from dbycql.Item where I_ID = %d;", OL_I_ID);
@@ -125,6 +130,7 @@ public class PopularItemTransaction extends Transaction {
                 String I_NAME = rs.one().getString(0);
                logger.log(Level.FINE, String.format("O_ID=%d,I_NAME=%s,MAX_OL_QUANTITY=%f\n", O_ID, I_NAME, MAX_OL_QUANTITY));
             }
+
         }
 
         for (int OL_I_ID : all_item_set) {
@@ -146,6 +152,7 @@ public class PopularItemTransaction extends Transaction {
             long I_NUM = rs.one().getLong(0);
             double I_Percentage = I_NUM * 100.0 / L;
            logger.log(Level.FINE, String.format("I_NAME=%s, I_Percentage= %f%% \n", I_NAME, I_Percentage));
+             */
         }
     }
 
@@ -168,6 +175,7 @@ public class PopularItemTransaction extends Transaction {
                 N = rs.getInt(1);
             }
 
+            /*
             // SQL2
             String SQL2 = "with last_l_orders as ( select * from Orders where O_W_ID = ? and O_D_ID = ? and O_ID >= ? - ? and O_ID < ? ) select t1.O_ID, t1.O_ENTRY_D, t2.C_FIRST, t2.C_MIDDLE, t2.C_LAST from last_l_orders t1 left join Customer t2 on t1.O_W_ID = t2.C_W_ID and t1.O_D_ID = t2.C_D_ID and t1.O_ID = t2.C_ID";
             // with last_l_orders as ( select * from Orders where O_W_ID = 'W_ID' and O_D_ID = 'D_ID' and O_ID >= 'N'-'L' and O_ID < 'N' ) select t1.O_ID, t1.O_ENTRY_D, t2.C_FIRST, t2.C_MIDDLE, t2.C_LAST from last_l_orders t1 left join Customer t2 on t1.O_W_ID = t2.C_W_ID and t1.O_D_ID = t2.C_D_ID and t1.O_ID = t2.C_ID ;
@@ -186,16 +194,38 @@ public class PopularItemTransaction extends Transaction {
                 String C_LAST = rs.getString(5);
                logger.log(Level.FINE, String.format("O_ID=%d,O_ENTRY_D=%s,C_FIRST=%s,C_MIDDLE=%s,C_LAST=%s\n", O_ID, O_ENTRY_D, C_FIRST, C_MIDDLE, C_LAST));
             }
+             */
 
             // SQL3
-            String SQL3 = "with last_l_orders as ( select * from Orders where O_W_ID = ? and O_D_ID = ? and O_ID >= ? - ? and O_ID < ? ), last_l_orders_items as ( select *, rank()over(partition by O_W_ID, O_D_ID, O_ID order by OL_QUANTITY desc) as rank from last_l_orders t1 left join OrderLine t2 on t1.O_W_ID = t2.OL_W_ID and t1.O_D_ID = t2.OL_D_ID and t1.O_ID = t2.OL_O_ID ) select t1.O_ID, t2.I_NAME, t1.OL_QUANTITY from last_l_orders_items t1 left join Item t2 on t1.OL_I_ID = t2.I_ID where t1.rank = 1 order by t1.O_ID";
-            // with last_l_orders as ( select * from Orders where O_W_ID = 'W_ID' and O_D_ID = 'D_ID' and O_ID >= 'N'-'L' and O_ID < 'N' ), last_l_orders_items as ( select *, rank()over(partition by O_W_ID, O_D_ID, O_ID order by OL_QUANTITY desc) as rank from last_l_orders t1 left join OrderLine t2 on t1.O_W_ID = t2.OL_W_ID and t1.O_D_ID = t2.OL_D_ID and t1.O_ID = t2.OL_O_ID ) select t1.O_ID, t2.I_NAME, t1.OL_QUANTITY from last_l_orders_items t1 left join Item t2 on t1.OL_I_ID = t2.I_ID where t1.rank = 1 order by t1.O_ID ;
-            statement = conn.prepareStatement(SQL3);
+            String SQL3 = "with last_l_orders as (select * from Orders where O_W_ID = ? and O_D_ID = ? and O_ID >= ?-? and O_ID < ?),\n" +
+                    "last_l_orders_items_top1 as (\n" +
+                    "    select * from (select * from \n" +
+                    "    (select *, rank()over(partition by O_W_ID, O_D_ID, O_ID order by OL_QUANTITY desc) as rank\n" +
+                    "    from last_l_orders) t where rank = 1) t1\n" +
+                    "left join OrderLine t2 on t1.O_W_ID = t2.OL_W_ID and t1.O_D_ID = t2.OL_D_ID and t1.O_ID = t2.OL_O_ID)\n" +
+                    "select t1.O_ID, t2.I_NAME, t1.OL_QUANTITY from last_l_orders_items_top1 t1\n" +
+                    "left join Item t2 on t1.OL_I_ID = t2.I_ID order by t1.O_ID;";
+            String SQL3_new = "with last_l_orders_top1 as(\n" +
+                    "    select * from (select *, rank()over(partition by OL_W_ID, OL_D_ID, OL_O_ID order by OL_QUANTITY desc) as rank\n" +
+                    "    from OrderLine where OL_W_ID = ? and OL_D_ID = ? and OL_O_ID >= ?-? and OL_O_ID < ?) t where rank = 1)\n" +
+                    "select t1.OL_O_ID, t2.I_NAME, t1.OL_QUANTITY from last_l_orders_top1 t1 \n" +
+                    "left join Item t2 on t1.OL_I_ID = t2.I_ID order by t1.OL_O_ID;";
+            statement = conn.prepareStatement(SQL3_new);
             statement.setInt(1, W_ID);
             statement.setInt(2, D_ID);
             statement.setInt(3, N);
             statement.setInt(4, L);
             statement.setInt(5, N);
+//            String printSQL3 = String.format("with last_l_orders as (select * from Orders where O_W_ID = %d and O_D_ID = %d and O_ID >= %d-%d and O_ID < %d),\n" +
+//                    "last_l_orders_items_top1 as (\n" +
+//                    "    select * from (select * from \n" +
+//                    "    (select *, rank()over(partition by O_W_ID, O_D_ID, O_ID order by OL_QUANTITY desc) as rank\n" +
+//                    "    from last_l_orders) t where rank = 1) t1\n" +
+//                    "left join OrderLine t2 on t1.O_W_ID = t2.OL_W_ID and t1.O_D_ID = t2.OL_D_ID and t1.O_ID = t2.OL_O_ID)\n" +
+//                    "select t1.O_ID, t2.I_NAME, t1.OL_QUANTITY from last_l_orders_items_top1 t1\n" +
+//                    "left join Item t2 on t1.OL_I_ID = t2.I_ID order by t1.O_ID;",W_ID,D_ID,N,L,N);
+//            System.out.println("SQL3 = " + printSQL3);
+
             rs = statement.executeQuery();
             while (rs.next()) {
                 int O_ID = rs.getInt(1);
@@ -204,7 +234,7 @@ public class PopularItemTransaction extends Transaction {
                logger.log(Level.FINE, String.format("O_ID=%d,I_NAME=%s,OL_QUANTITY=%d\n", O_ID, I_NAME, OL_QUANTITY));
             }
 
-
+            /*
             // SQL4
             String SQL4 = "with last_l_orders as ( select * from Orders where O_W_ID = ? and O_D_ID = ? and O_ID >= ? - ? and O_ID < ? ), last_l_orders_items as ( select *, rank()over(partition by O_W_ID, O_D_ID, O_ID order by OL_QUANTITY desc) as rank from last_l_orders t1 left join OrderLine t2 on t1.O_W_ID = t2.OL_W_ID and t1.O_D_ID = t2.OL_D_ID and t1.O_ID = t2.OL_O_ID ) select t3.I_NAME, count(t2.OL_I_ID) * 100 / ? as I_Percentage from (select distinct OL_I_ID from last_l_orders_items where rank = 1) t1 left join last_l_orders_items t2 on t1.OL_I_ID = t2.OL_I_ID left join Item t3 on t1.OL_I_ID = t3.I_ID group by t3.I_NAME";
             // with last_l_orders as ( select * from Orders where O_W_ID = 'W_ID' and O_D_ID = 'D_ID' and O_ID >= 'N'-'L' and O_ID < 'N' ), last_l_orders_items as ( select *, rank()over(partition by O_W_ID, O_D_ID, O_ID order by OL_QUANTITY desc) as rank from last_l_orders t1 left join OrderLine t2 on t1.O_W_ID = t2.OL_W_ID and t1.O_D_ID = t2.OL_D_ID and t1.O_ID = t2.OL_O_ID ) select t3.I_NAME, count(t2.OL_I_ID) * 100 / 'L' as I_Percentage from (select distinct OL_I_ID from last_l_orders_items where rank = 1) t1 left join last_l_orders_items t2 on t1.OL_I_ID = t2.OL_I_ID left join Item t3 on t1.OL_I_ID = t3.I_ID group by t3.I_NAME ;
@@ -222,9 +252,13 @@ public class PopularItemTransaction extends Transaction {
                logger.log(Level.FINE, String.format("I_NAME=%s,Percentage=%f%%\n", I_NAME, percentage));
             }
 
+             */
+
             conn.commit();
+            logger.log(Level.INFO, "Popularitem ends");
         } catch (SQLException e) {
             e.printStackTrace();
+            logger.log(Level.SEVERE, String.format("Error in %s transaction, exception= ",getTransactionType().type),e);
             if (conn != null) {
 //                System.err.print("Transaction is being rolled back\n");
                 logger.log(Level.WARNING, "Transaction is being rolled back");
