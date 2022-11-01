@@ -255,7 +255,7 @@ public class PopularItemTransaction extends Transaction {
              */
 
             conn.commit();
-            logger.log(Level.WARNING, "Popularitem ends");
+            logger.log(Level.INFO, "Popularitem ends");
         } catch (SQLException e) {
             e.printStackTrace();
             logger.log(Level.SEVERE, String.format("Error in %s transaction, exception= ",getTransactionType().type),e);
