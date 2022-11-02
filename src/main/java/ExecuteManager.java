@@ -26,7 +26,7 @@ public class ExecuteManager {
     private List<Statistics> transactionTypeList;
     private Map<TransactionType, Integer> skipMap;
     private int counter;
-    private int LIMIT = 1000;
+    private int LIMIT = 500;
     // 定义变量
     private ArrayList<Long> time_lst = new ArrayList<>();
     private ArrayList<Long> percentage_time_lst = new ArrayList<Long>();
@@ -68,7 +68,7 @@ public class ExecuteManager {
 //        for (TransactionType transactionType : TransactionType.values()) {
 //            skipMap.put(transactionType, 0);
 //        }
-//        LIMIT = 1;
+        LIMIT = 100;
 
         // 正选逻辑
 //        skipSet.add(TransactionType.NEW_ORDER);
@@ -121,11 +121,12 @@ public class ExecuteManager {
             percentage_time_lst.add(statistics.getExeTime());
         }
         if (counter % LIMIT == 0) {
-            logger.log(Level.INFO, "---Statistics start---");
+            logger.log(Level.WARNING, "---Statistics start---");
+            logger.log(Level.WARNING, "Number of transactions executed = " + counter);
             for (Statistics statistics : transactionTypeList) {
-                logger.log(Level.INFO, statistics.toString());
+                logger.log(Level.WARNING, statistics.toString());
             }
-            logger.log(Level.INFO, "---Statistics end---");
+            logger.log(Level.WARNING, "---Statistics end---");
         }
     }
 

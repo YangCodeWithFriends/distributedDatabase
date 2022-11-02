@@ -100,6 +100,7 @@ public class NewOrderTransaction extends Transaction {
             statement.setInt(2, D_ID);
             statement.setInt(3, N);
             statement.setInt(4, C_ID);
+//            System.out.printf("W_ID=%d,D_ID=%d,C_ID=%d,N=%d\n",W_ID,D_ID,C_ID,N);
             statement.executeUpdate();
 
             // step 5 - OrderLine
