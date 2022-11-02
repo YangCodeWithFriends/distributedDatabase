@@ -3,17 +3,17 @@
  # @Author: YuhaoWU
  # @Date: 2022-11-01 12:00:53
  # @LastEditors: YuhaoWU
- # @LastEditTime: 2022-11-03 00:26:39
+ # @LastEditTime: 2022-11-03 05:34:21
  # @Description: 
 ### 
 
 
 # yb_bin=/home/stuproj/cs4224j/yugabyte-2.14.1.0/bin
-cluster_file_path=/temp/gj3/
+cluster_file_path=/temp/gj4
 
 
 # 先stop 集群
-${bashCurPath}/end_cluster_gj3.sh
+${bashCurPath}/end_cluster_gj4.sh
 
 ssh cs4224j@xcnd20.comp.nus.edu.sg \
 "sh -c 'rm -rf ${cluster_file_path}/*'"

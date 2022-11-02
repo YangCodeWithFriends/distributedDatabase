@@ -3,7 +3,7 @@
  # @Author: YuhaoWU
  # @Date: 2022-10-31 15:14:00
  # @LastEditors: YuhaoWU
- # @LastEditTime: 2022-11-03 01:18:52
+ # @LastEditTime: 2022-11-03 01:07:36
  # @Description: 
 ### 
 
@@ -15,7 +15,7 @@ username=cs4224j@
 # serverhost=xcnd24.comp.nus.edu.sg
 loadIP=192.168.48.$1
 # serverip="192.168.48.242"
-cqlport=5450
+cqlport=5433
 
 echo "loading into ${username}${loadIP}"
 
