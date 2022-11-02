@@ -200,10 +200,10 @@ public class ExecuteManager {
                 sum_s_remote_cnt = rs6.getInt(4);
             }
             // 拿完了所有的数据，开始进行输出到文件
-//            Path path = Paths.get("/tmp/dataCSV");
+//            Path path = Paths.get("dataCSV");
             try {
 //                Files.createDirectory(path);
-                File writeSQLFile = new File("/tmp/dbstate_sql.csv");
+                File writeSQLFile = new File("dbstate_sql.csv");
                 try {
                     BufferedWriter writeText = new BufferedWriter(new FileWriter(writeSQLFile));
                     writeText.newLine();
@@ -347,10 +347,10 @@ public class ExecuteManager {
         }
 //        System.out.println("结束执行cql6");
         // 拿完了所有的数据，开始进行输出到文件
-//        Path path = Paths.get("/tmp/dataCSV");
+//        Path path = Paths.get("dataCSV");
         try {
 //            Files.createDirectory(path);
-            File writeSQLFile = new File("/tmp/dbstate_cql.csv");
+            File writeSQLFile = new File("dbstate_cql.csv");
             try {
                 BufferedWriter writeText = new BufferedWriter(new FileWriter(writeSQLFile));
                 writeText.newLine();
