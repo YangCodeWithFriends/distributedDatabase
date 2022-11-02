@@ -26,7 +26,7 @@ public class ExecuteManager {
     private List<Statistics> transactionTypeList;
     private Map<TransactionType, Integer> skipMap;
     private int counter;
-    private int LIMIT;
+    private int LIMIT = 1000;
     // 定义变量
     private ArrayList<Long> time_lst = new ArrayList<>();
     private ArrayList<Long> percentage_time_lst = new ArrayList<Long>();
@@ -65,11 +65,9 @@ public class ExecuteManager {
         transactionTypeList.add(new Statistics(TransactionType.TOP_BALANCE));
         transactionTypeList.add(new Statistics(TransactionType.RELATED_CUSTOMER));
 
-        for (TransactionType transactionType : TransactionType.values()) {
-            skipMap.put(transactionType, 0);
-        }
-        LIMIT = 1;
-
+//        for (TransactionType transactionType : TransactionType.values()) {
+//            skipMap.put(transactionType, 0);
+//        }
 //        LIMIT = 1;
 
         // 正选逻辑
@@ -122,7 +120,7 @@ public class ExecuteManager {
         for (Statistics statistics : transactionTypeList) {
             percentage_time_lst.add(statistics.getExeTime());
         }
-        if (counter % 5 == 0) {
+        if (counter % LIMIT == 0) {
             logger.log(Level.INFO, "---Statistics start---");
             for (Statistics statistics : transactionTypeList) {
                 logger.log(Level.INFO, statistics.toString());

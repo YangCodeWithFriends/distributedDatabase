@@ -117,10 +117,9 @@ public class SampleApp {
             mainLogger.log(Level.SEVERE,"countDownLatch: " + countDownLatch.toString());
         }
 
-        mainLogger.log(Level.SEVERE,"Main thread ends");
         cachedThreadPool.shutdown();
 
-        // log statistics data
+        // log statistics data start
         // 在线程池结束之后开始统计arraylist中的值,min, max, avg
         for (double i : throughput_list) {
             min = Math.min(min, i);
@@ -132,10 +131,10 @@ public class SampleApp {
         }
         // 根据模式输出切换文件夹和输出文件名
         if (MODE.equals(DataSource.YSQL)) {
-//            Path path = Paths.get("/tmp/dataCSV");
+//            Path path = Paths.get("dataCSV");
             try {
 //                Files.createDirectory(path);
-                File writeSQLFile = new File("/tmp/throughput_sql.csv");
+                File writeSQLFile = new File("throughput_sql.csv");
                 try {
                     BufferedWriter writeText = new BufferedWriter(new FileWriter(writeSQLFile));
                     writeText.write("min throughput," + "max throughput," + "avg throughput");
@@ -149,10 +148,10 @@ public class SampleApp {
                 e.printStackTrace();
             }
         }else {
-//            Path path = Paths.get("/tmp/dataCSV");
+//            Path path = Paths.get("dataCSV");
             try {
 //                Files.createDirectory(path);
-                File writeSQLFile = new File("/tmp/throughput_cql.csv");
+                File writeSQLFile = new File("throughput_cql.csv");
                 try {
                     BufferedWriter writeText = new BufferedWriter(new FileWriter(writeSQLFile));
                     writeText.write("min throughput," + "max throughput," + "avg throughput");
@@ -168,14 +167,26 @@ public class SampleApp {
         }
         // Write throughput into file
         mainLogger.log(Level.SEVERE, String.format("min=%.2f,avg=%.2f,max=%.2f\n",min,avg,max));
+        // log statistics data ends
+
+        // use only one thread to query db status
         // 根据模式判断重新创建connection，然后执行reportSQL或者reportCQL
-        new SampleApp().dbState(MODE, mainLogger);
+        if (serverShardingIndex == 1) {
+            mainLogger.log(Level.SEVERE, "Thread " + serverShardingIndex +  " query DB status begin");
+            new SampleApp().queryDBState(MODE, serverShardingIndex, mainLogger);
+            mainLogger.log(Level.SEVERE, "Query DB status ends");
+        }
+        mainLogger.log(Level.SEVERE, "Main Thread ends");
     }
 
-    public void dbState(String MODE, Logger mainLogger) {
+    public void recordThroughput() {
+
+    }
+
+    public void queryDBState(String MODE, int serverShardingIndex, Logger mainLogger) {
         if (MODE.equals(DataSource.YSQL)) {
             try {
-                conn = new DataSource(MODE, 1, mainLogger).getSQLConnection();
+                conn = new DataSource(MODE, serverShardingIndex, mainLogger).getSQLConnection();
                 conn.setTransactionIsolation(1); // isolation
                 ExecuteManager executeManager = new ExecuteManager();
                 executeManager.reportSQL(conn, mainLogger);
@@ -191,7 +202,7 @@ public class SampleApp {
             }
         }else {
             try {
-                cqlSession = new DataSource(MODE, 1, mainLogger).getCQLSession();
+                cqlSession = new DataSource(MODE, serverShardingIndex, mainLogger).getCQLSession();
                 ExecuteManager executeManager = new ExecuteManager();
                 executeManager.reportCQL(cqlSession, mainLogger);
             }catch (Exception e) {
@@ -202,6 +213,8 @@ public class SampleApp {
             }
         }
     }
+
+
 
     public void doWork(String MODE, String inputFileName, Logger logger, int serverIndex) {
         logger.log(Level.SEVERE, Thread.currentThread().getName() + " do work");
@@ -230,7 +243,7 @@ public class SampleApp {
                 cqlSession = new DataSource(MODE, serverIndex, logger).getCQLSession();
                 logger.log(Level.INFO, "CQLSession = "+ cqlSession.getName());
             }
-            logger.log(Level.WARNING, ">>>> Successfully connected to YugabyteDB.");
+            logger.log(Level.WARNING, "Thread = " + serverIndex +  ", Successfully connected to YugabyteDB.");
         } catch (SQLException e) {
             e.printStackTrace();
             logger.log(Level.SEVERE, "DB Connection exception= ",e);
@@ -281,14 +294,14 @@ public class SampleApp {
                 logger.log(Level.WARNING,String.format("95 latency(ms): %.2f\n", num2));
 
                 // 创建文件夹和写文件
-//                Path path = Paths.get("/tmp/dataCSV");
+//                Path path = Paths.get("dataCSV");
                 try {
 //                    Files.createDirectory(path);
                     // 如果存在同名则覆盖文件
-                    File writeSQLFile = new File("/tmp/clients_sql.csv");
+                    File writeSQLFile = new File("clients_sql.csv");
                     boolean flag;
                     flag = writeSQLFile.exists();
-//                    File writeSQLFile = new File("/tmp/client_" + threadID + "_sql.csv");
+//                    File writeSQLFile = new File("client_" + threadID + "_sql.csv");
                     try {
                         BufferedWriter writeText = new BufferedWriter(new FileWriter(writeSQLFile, true));
                         if (!flag) {
@@ -358,13 +371,13 @@ public class SampleApp {
                 logger.log(Level.WARNING,String.format("95 latency(ms): %.2f\n", num2));
 
                 // 创建文件夹和写文件
-//                Path path = Paths.get("/tmp/dataCSV");
+//                Path path = Paths.get("dataCSV");
                 try {
 //                    Files.createDirectory(path);
-                    File writeSQLFile = new File("/tmp/clients_cql.csv");
+                    File writeSQLFile = new File("clients_cql.csv");
                     boolean flag;
                     flag = writeSQLFile.exists();
-//                    File writeSQLFile = new File("/tmp/client_" + threadID + "_cql.csv");
+//                    File writeSQLFile = new File("client_" + threadID + "_cql.csv");
                     try {
                         BufferedWriter writeText = new BufferedWriter(new FileWriter(writeSQLFile, true));
                         if (!flag) {

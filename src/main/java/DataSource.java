@@ -70,7 +70,7 @@ public class DataSource {
             config.validate();
 
             ds = new HikariDataSource(config);
-            System.out.println("Connect to DB successfully");
+//            System.out.println("Connect to DB successfully");
 
             /*
             ds = new YBClusterAwareDataSource();
@@ -90,7 +90,7 @@ public class DataSource {
                     .builder()
                     .addContactPoint(new InetSocketAddress(settings.getProperty(hostKey), Integer.parseInt(settings.getProperty("port_cql"))))
                     .build();
-            System.out.println("Connect to DB successfully");
+//            System.out.println("Connect to DB successfully");
         }
         else throw new RuntimeException("mode in app.properties has to be YCQL/YSQL!");
     }
