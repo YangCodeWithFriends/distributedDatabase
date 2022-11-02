@@ -10,8 +10,8 @@
 
 home=/home/stuproj/cs4224j
 shellPath=$home/yugabyte-2.14.1.0/bin/ycqlsh
-
-filePath=$home/db_init_csql_SoCluster/db_create_ycql_cluster_addidx.cql
+filePath=$home/db_init_csql_SoCluster/db_create_ycql_cluster.cql
+# filePath=$home/db_init_csql_SoCluster/db_create_ycql_cluster_addidx.cql
 
 username=cs4224j@
 # serverhost=xcnd24.comp.nus.edu.sg

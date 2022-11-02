@@ -3,8 +3,8 @@
  # @Author: YuhaoWU
  # @Date: 2022-10-30 20:34:26
  # @LastEditors: YuhaoWU
- # @LastEditTime: 2022-11-01 13:27:45
- # @Description: 
+ # @LastEditTime: 2022-11-02 12:08:22
+ # @Description: 停掉现有的cluster，重新启动cluster, 不包括删除之前的数据
 ### 
 
 yb_bin=/home/stuproj/cs4224j/yugabyte-2.14.1.0/bin
@@ -18,6 +18,11 @@ echo "upload all gj3 conf files"
 # bash get current bash file directory
 bashCurPath=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 scp ${bashCurPath}/*.conf ${username}${loadIP}:${yb_bin}
+
+
+# 停掉如果还在run的集群
+${bashCurPath}/end_cluster_gj3.sh
+
 
 # run master
 ssh cs4224j@xcnd22.comp.nus.edu.sg \
