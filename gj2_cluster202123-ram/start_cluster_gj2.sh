@@ -3,8 +3,8 @@
  # @Author: YuhaoWU
  # @Date: 2022-10-30 20:34:26
  # @LastEditors: YuhaoWU
- # @LastEditTime: 2022-11-01 13:32:33
- # @Description: 
+ # @LastEditTime: 2022-11-02 12:07:47
+ # @Description: 停掉现有的cluster，重新启动cluster, 不包括删除之前的数据
 ### 
 
 yb_bin=/home/stuproj/cs4224j/yugabyte-2.14.1.0/bin
@@ -20,9 +20,12 @@ loadIP=192.168.48.$1
 echo "upload all gj2 conf files"
 # bash get current bash file directory
 bashCurPath=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-echo "Your script path is: $bashCurPath"
+echo "Your local script path is: $bashCurPath"
 scp ${bashCurPath}/*.conf ${username}${loadIP}:${yb_bin}
 
+
+# 停掉如果还在run的集群
+${bashCurPath}/end_cluster_gj2.sh
 
 
 # run master
@@ -58,6 +61,8 @@ ssh cs4224j@xcnd21.comp.nus.edu.sg \
 "sh -c 'cd ${yb_bin} && ./yb-tserver --flagfile 2ts21.conf > ${cluster_file_path}/disk1/yb-tserver.out 2>&1 &'"
 
 
+ssh cs4224j@xcnd22.comp.nus.edu.sg \
+"sh -c 'mkdir -p ${cluster_file_path}/disk1 ${cluster_file_path}/disk2'"
 ssh cs4224j@xcnd22.comp.nus.edu.sg \
 "sh -c 'cd ${yb_bin} && ./yb-tserver --flagfile 2ts22.conf > ${cluster_file_path}/disk1/yb-tserver.out 2>&1 &'"
 
