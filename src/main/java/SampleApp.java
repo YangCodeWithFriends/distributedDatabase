@@ -248,7 +248,7 @@ public class SampleApp {
             try {
                 // 执行SQL的语句
                 executeManager.executeYSQL(conn, list, logger);
-            } catch (SQLException e) {
+            } catch (Exception e) {
                 logger.log(Level.SEVERE, "YSQL Execute exception= ", e);
             } finally {
                 try {
@@ -262,6 +262,8 @@ public class SampleApp {
             try {
                 // 开始执行CQL的代码
                 executeManager.executeYCQL(cqlSession, list, logger);
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "YCQL Execute exception= ", e);
             } finally {
                 cqlSession.close();
             }

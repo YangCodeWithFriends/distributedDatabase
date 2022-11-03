@@ -80,7 +80,7 @@ public class ExecuteManager {
 //        skipSet.remove(TransactionType.POPULAR_ITEM);
     }
 
-    public void executeYSQL(Connection conn, List<Transaction> list, Logger logger) throws SQLException {
+    public void executeYSQL(Connection conn, List<Transaction> list, Logger logger) throws Exception {
         logger.log(Level.INFO, "Execute YSQL transactions\n");
         for (Transaction transaction : list) {
             if (skipSet.contains(transaction.getTransactionType())) continue;
@@ -90,14 +90,19 @@ public class ExecuteManager {
                 skipMap.put(transaction.getTransactionType(), cnt + 1);
             }
 
-            long executionTime = transaction.executeYSQL(conn, logger);
+            long executionTime = 0;
+            try {
+                executionTime = transaction.executeYSQL(conn, logger);
+            } catch (SQLException e) {
+                logger.log(Level.SEVERE, "YSQL Execute exception= ", e);
+            }
             transactionTypeList.get(transaction.getTransactionType().index).addNewData(executionTime);
             // 平常执行输出的是这个导致的
             report(logger);
         }
     }
 
-    public void executeYCQL(CqlSession session, List<Transaction> list, Logger logger) throws Exception{
+    public void executeYCQL(CqlSession session, List<Transaction> list, Logger logger) throws Exception {
         logger.log(Level.INFO, "Execute YCQL transactions\n");
         for (Transaction transaction : list) {
             if (skipSet.contains(transaction.getTransactionType())) continue;
@@ -107,7 +112,12 @@ public class ExecuteManager {
                 skipMap.put(transaction.getTransactionType(), cnt + 1);
             }
 
-            long executionTime = transaction.executeYCQL(session, logger);
+            long executionTime = 0;
+            try {
+                transaction.executeYCQL(session, logger);
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "YCQL Execute exception= ", e);
+            }
             transactionTypeList.get(transaction.getTransactionType().index).addNewData(executionTime);
             // 平常执行输出的是这个导致的
             report(logger);
@@ -242,10 +252,10 @@ public class ExecuteManager {
 //                    + sum_o_ol_cnt + "," + sum_ol_amount + "," + sum_ol_quantity + "," + sum_s_quantity + "," + sum_s_ytd + "," + sum_s_order_cnt + "," + sum_s_remote_cnt);
                     writeText.flush();
                     writeText.close();
-                }catch (Exception e) {
+                } catch (Exception e) {
                     mainLogger.log(Level.SEVERE, "reportSQL write file exception = ", e);
                 }
-            }catch (Exception e) {
+            } catch (Exception e) {
                 mainLogger.log(Level.SEVERE, "reportSQL middle exception = ", e);
             }
         } catch (SQLException e) {
@@ -386,10 +396,10 @@ public class ExecuteManager {
 //                        + sum_o_ol_cnt + "," + sum_ol_amount + "," + sum_ol_quantity + "," + sum_s_quantity + "," + sum_s_ytd + "," + sum_s_order_cnt + "," + sum_s_remote_cnt);
                 writeText.flush();
                 writeText.close();
-            }catch (Exception e) {
+            } catch (Exception e) {
                 mainLogger.log(Level.SEVERE, "report write file exception = ", e);
             }
-        }catch (Exception e) {
+        } catch (Exception e) {
             mainLogger.log(Level.SEVERE, "reportCQL exception = ", e);
         }
     }
