@@ -1,6 +1,7 @@
 
 DROP DATABASE IF EXISTS dbysql;
-CREATE DATABASE dbysql;
+-- Colocated Tables 
+CREATE DATABASE dbysql WITH colocated = true;
 -- show all tables
 -- \dt;
 
@@ -11,7 +12,7 @@ CREATE DATABASE dbysql;
 
 --  5 entity tables --
 DROP TABLE if EXISTS warehouse CASCADE;
-CREATE TABLE warehouse (
+CREATE TABLE warehouse(
   W_id int NOT NULL,
   W_name varchar(10) NOT NULL,
   W_street_1 varchar(20) NOT NULL,
@@ -22,8 +23,8 @@ CREATE TABLE warehouse (
   W_tax decimal(4,4) NOT NULL,
   W_ytd decimal(12,2) NOT NULL,
   
-  PRIMARY KEY(W_id HASH) -- yugabyte distrbuted table sharding
-);
+  PRIMARY KEY(W_id) -- yugabyte distrbuted table sharding
+) WITH (colocated = true);
 
 -- insert from csv
 \copy warehouse from '~/project_data/data_files/warehouse.csv' WITH (FORMAT CSV, NULL 'null');
@@ -49,7 +50,8 @@ CREATE TABLE district (
   D_ytd decimal(12,2) NOT NULL,
   D_next_O_id int NOT NULL,
   PRIMARY KEY((D_W_id, D_id) HASH)
-);
+)
+WITH (colocated = true);
 
 \copy district from '~/project_data/data_files/district.csv' WITH (FORMAT CSV, NULL 'null');
 
@@ -123,13 +125,13 @@ select count(*) as no_imported_orders from orders;
 DROP TABLE if EXISTS item CASCADE;
 CREATE TABLE item (
   I_id int NOT NULL,
-  
   I_name varchar(24) NOT NULL,
   i_price decimal(5,2) NOT NULL,
   -- I_im_id int NOT NULL,
   -- I_data varchar(50) NOT NULL
   PRIMARY KEY(I_id HASH)
-);
+)
+WITH (colocated = true);
 -- insert from csv
 \copy item from '~/project_data/data_files/item_new.csv' WITH (FORMAT CSV, NULL 'null');
 select count(*) as no_imported_Item from item;
@@ -149,18 +151,6 @@ CREATE TABLE stock (
   S_ytd decimal(8,2) NOT NULL,
   S_order_cnt int NOT NULL,
   S_remote_cnt int NOT NULL,
-  -- ,
-  -- S_dist_01 char(24) NOT NULL,
-  -- S_dist_02 char(24) NOT NULL,
-  -- S_dist_03 char(24) NOT NULL,
-  -- S_dist_04 char(24) NOT NULL,
-  -- S_dist_05 char(24) NOT NULL,
-  -- S_dist_06 char(24) NOT NULL,
-  -- S_dist_07 char(24) NOT NULL,
-  -- S_dist_08 char(24) NOT NULL,
-  -- S_dist_09 char(24) NOT NULL,
-  -- S_dist_10 char(24) NOT NULL,
-  -- S_data varchar(50) NOT NULL
   PRIMARY KEY((S_W_id, S_I_id) HASH)
 );
 \copy stock from '~/project_data/data_files/stock_new.csv' WITH (FORMAT CSV, NULL 'null');
@@ -173,8 +163,6 @@ select count(*) as no_imported_stock from stock;
 -- 300万
 DROP TABLE if EXISTS orderline CASCADE;
 CREATE TABLE orderline (
-  -- (OL W ID, OL D ID, OL O ID) is a foreign key that refers to Order table. 
-  -- OL I ID is a foreign key that refers to item table.
   OL_W_id int NOT NULL, 
   OL_D_id int NOT NULL, 
   OL_O_id int NOT NULL,

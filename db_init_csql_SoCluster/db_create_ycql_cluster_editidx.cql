@@ -10,7 +10,7 @@ DROP TABLE IF EXISTS dbycql.customer_item;
 DROP TABLE IF EXISTS dbycql.customer_balance_top10;
 DROP KEYSPACE IF EXISTS dbycql;
 
--- data path: /home/stuproj/cs4224j/project_data/data_files/
+-- data path: ~/project_data/data_files/
 
 -- show all key spaces(DBs)
 CREATE KEYSPACE dbycql 
@@ -42,7 +42,7 @@ CREATE TABLE dbycql.warehouse (
 WITH transactions = { 'enabled' : true };
 
 -- WITH NULL='null': set NULL='null' or whatever character you want for null value ...
-copy dbycql.warehouse from '/home/stuproj/cs4224j/project_data/data_files/warehouse.csv'
+copy dbycql.warehouse from '~/project_data/data_files/warehouse.csv'
 WITH NULL='null';
 
 
@@ -66,7 +66,7 @@ CREATE TABLE dbycql.district (
 )
 WITH transactions = { 'enabled' : true };
 
-copy dbycql.district from '/home/stuproj/cs4224j/project_data/data_files/district.csv' 
+copy dbycql.district from '~/project_data/data_files/district.csv' 
 WITH NULL='null';
 
 
@@ -99,8 +99,8 @@ WITH CLUSTERING ORDER BY (C_BALANCE DESC, C_ID ASC)
 and transactions = { 'enabled' : true };
 
 copy dbycql.customer (C_W_id,C_D_id,C_id,C_first,C_middle,C_last,C_street_1,C_street_2,C_city,C_state,C_zip,C_phone,C_since,C_credit,C_credit_lim,C_discount,C_balance,C_ytd_payment,C_payment_cnt,C_delivery_cnt)
-from '/home/stuproj/cs4224j/project_data/data_files/customer_new.csv' 
-WITH NULL='null' AND INGESTRATE=7000;
+from '~/project_data/data_files/customer_new.csv' 
+WITH NULL='null' AND INGESTRATE=10000;
 select count(*) as no_imported_customer from dbycql.customer;
 
 
@@ -120,8 +120,8 @@ CREATE TABLE dbycql.orders (
 )
 WITH transactions = { 'enabled' : true };
 -- insert from csv
-copy dbycql.orders from '/home/stuproj/cs4224j/project_data/data_files/order.csv'
-WITH NULL='null' AND INGESTRATE=7000;
+copy dbycql.orders from '~/project_data/data_files/order.csv'
+WITH NULL='null' AND INGESTRATE=10000;
 select count(*) as row_imported_orders from dbycql.orders;
 -- select count(*) from orders;
 
@@ -137,8 +137,8 @@ CREATE TABLE dbycql.item (
 )
 WITH transactions = { 'enabled' : true };
 -- insert from csv
-copy dbycql.item from '/home/stuproj/cs4224j/project_data/data_files/item_new.csv'
-WITH NULL='null' AND INGESTRATE=7000;
+copy dbycql.item from '~/project_data/data_files/item_new.csv'
+WITH NULL='null' AND INGESTRATE=10000;
 select count(*) as no_imported_Item from dbycql.item;
 
 
@@ -169,7 +169,7 @@ CREATE TABLE dbycql.stock (
 WITH transactions = { 'enabled' : true };
 
 
-copy dbycql.stock from '/home/stuproj/cs4224j/project_data/data_files/stock_new.csv'
+copy dbycql.stock from '~/project_data/data_files/stock_new.csv'
 WITH NULL='null' AND INGESTRATE=10000;
 select count(*) as no_imported_stocks from dbycql.stock;
 
@@ -192,8 +192,8 @@ CREATE TABLE dbycql.orderline (
 and transactions = { 'enabled' : true };
 
 copy dbycql.orderline (ol_w_id, ol_d_id, ol_o_id, ol_number, ol_i_id, ol_delivery_d, ol_amount, ol_supply_w_id, ol_quantity, ol_dist_info)
-from '/home/stuproj/cs4224j/project_data/data_files/order-line.csv' 
-WITH NULL='null' AND INGESTRATE=10000;
+from '~/project_data/data_files/order-line.csv' 
+WITH NULL='null' AND INGESTRATE=15000;
 -- select count(*) as no_imported_OL from dbycql.orderline;
 
 
@@ -213,8 +213,8 @@ create table dbycql.customer_item(
 WITH transactions = { 'enabled' : true };
 
 -- cql
-copy customer_item from '/home/stuproj/cs4224j/project_data/data_files/customer_item.csv' 
-WITH NULL='null' AND INGESTRATE=10000;
+copy customer_item from '~/project_data/data_files/customer_item.csv' 
+WITH NULL='null' AND INGESTRATE=15000;
 -- select count(*) as no_imported_customer_item from dbycql.orderline;
 
 
