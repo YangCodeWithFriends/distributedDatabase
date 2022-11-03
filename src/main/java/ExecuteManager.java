@@ -97,7 +97,7 @@ public class ExecuteManager {
         }
     }
 
-    public void executeYCQL(CqlSession session, List<Transaction> list, Logger logger) {
+    public void executeYCQL(CqlSession session, List<Transaction> list, Logger logger) throws Exception{
         logger.log(Level.INFO, "Execute YCQL transactions\n");
         for (Transaction transaction : list) {
             if (skipSet.contains(transaction.getTransactionType())) continue;
@@ -122,7 +122,7 @@ public class ExecuteManager {
         }
         if (counter % LIMIT == 0) {
             logger.log(Level.WARNING, "---Statistics start---");
-            logger.log(Level.WARNING, "Number of transactions executed = " + counter);
+            logger.log(Level.WARNING, "Statistics: number of transactions executed = " + counter);
             for (Statistics statistics : transactionTypeList) {
                 logger.log(Level.WARNING, statistics.toString());
             }
@@ -243,15 +243,12 @@ public class ExecuteManager {
                     writeText.flush();
                     writeText.close();
                 }catch (Exception e) {
-                    e.printStackTrace();
                     mainLogger.log(Level.SEVERE, "reportSQL write file exception = ", e);
                 }
             }catch (Exception e) {
-                e.printStackTrace();
                 mainLogger.log(Level.SEVERE, "reportSQL middle exception = ", e);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
             mainLogger.log(Level.SEVERE, "reportSQL exception = ", e);
         }
     }
@@ -390,11 +387,9 @@ public class ExecuteManager {
                 writeText.flush();
                 writeText.close();
             }catch (Exception e) {
-                e.printStackTrace();
                 mainLogger.log(Level.SEVERE, "report write file exception = ", e);
             }
         }catch (Exception e) {
-            e.printStackTrace();
             mainLogger.log(Level.SEVERE, "reportCQL exception = ", e);
         }
     }

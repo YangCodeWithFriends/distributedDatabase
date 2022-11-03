@@ -32,7 +32,6 @@ public class DataSource {
         try {
             settings.load(SampleApp.class.getResourceAsStream("app.properties"));
         } catch (IOException e) {
-            e.printStackTrace();
             logger.log(Level.SEVERE,"Load app.properties exception= ", e);
         }
 
