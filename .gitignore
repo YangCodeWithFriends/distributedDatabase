@@ -19,3 +19,7 @@ db_sql_join_subtb_4cql/
 Y*QL-log*txt*
 throughput-statistics-Y*QL.txt
 log*.txt
+
+*QL_clients_*.csv
+*QL_throughput_*.csv
+*QL_dbstate.csv

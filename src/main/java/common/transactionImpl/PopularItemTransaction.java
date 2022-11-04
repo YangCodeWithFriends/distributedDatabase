@@ -76,7 +76,6 @@ public class PopularItemTransaction extends Transaction {
             /*
             // CQL3
             String CQL3 = String.format("select C_FIRST, C_MIDDLE, C_LAST from dbycql.Customer where C_W_ID = %d and C_D_ID = %d and C_ID = %d", W_ID, D_ID, O_C_ID);
-//            rs = cqlSession.execute(CQL3);
             simpleStatement = SimpleStatement.builder(CQL3)
                     .setExecutionProfileName("oltp")
                     .build();
@@ -98,6 +97,8 @@ public class PopularItemTransaction extends Transaction {
                     .build();
             rs = cqlSession.execute(simpleStatement);
             onerow = rs.one();
+            if (onerow == null) continue;
+
             int OL_O_ID = onerow.getInt(2);
             BigDecimal MAX_OL_QUANTITY = onerow.getBigDecimal(3);
 
@@ -122,7 +123,6 @@ public class PopularItemTransaction extends Transaction {
             for (int OL_I_ID : OL_I_IDs) {
                 // CQL6
                 String CQL6 = String.format("select I_NAME from dbycql.Item where I_ID = %d;", OL_I_ID);
-//                rs = cqlSession.execute(CQL6);
                 simpleStatement = SimpleStatement.builder(CQL6)
                         .setExecutionProfileName("oltp")
                         .build();
@@ -130,13 +130,13 @@ public class PopularItemTransaction extends Transaction {
                 String I_NAME = rs.one().getString(0);
                logger.log(Level.FINE, String.format("O_ID=%d,I_NAME=%s,MAX_OL_QUANTITY=%f\n", O_ID, I_NAME, MAX_OL_QUANTITY));
             }
-
+             */
         }
 
+        /*
         for (int OL_I_ID : all_item_set) {
             // CQL7
             String CQL7 = String.format("select I_NAME from dbycql.Item where I_ID = %d;", OL_I_ID);
-//            rs = cqlSession.execute(CQL7);
             simpleStatement = SimpleStatement.builder(CQL7)
                     .setExecutionProfileName("oltp")
                     .build();
@@ -151,9 +151,9 @@ public class PopularItemTransaction extends Transaction {
             rs = cqlSession.execute(simpleStatement);
             long I_NUM = rs.one().getLong(0);
             double I_Percentage = I_NUM * 100.0 / L;
-           logger.log(Level.FINE, String.format("I_NAME=%s, I_Percentage= %f%% \n", I_NAME, I_Percentage));
-             */
+            logger.log(Level.FINE, String.format("I_NAME=%s, I_Percentage= %f%% \n", I_NAME, I_Percentage));
         }
+         */
     }
 
     @Override
@@ -257,7 +257,6 @@ public class PopularItemTransaction extends Transaction {
             conn.commit();
             logger.log(Level.INFO, "Popularitem ends");
         } catch (SQLException e) {
-            e.printStackTrace();
             logger.log(Level.SEVERE, String.format("Error in %s transaction, exception= ",getTransactionType().type),e);
             if (conn != null) {
 //                System.err.print("Transaction is being rolled back\n");

@@ -3,13 +3,14 @@
  # @Author: YuhaoWU
  # @Date: 2022-10-31 15:14:06
  # @LastEditors: YuhaoWU
- # @LastEditTime: 2022-11-01 13:08:30
+ # @LastEditTime: 2022-11-02 02:47:19
  # @Description: 
 ### 
 
 
 home=/home/stuproj/cs4224j
 shellPath=$home/yugabyte-2.14.1.0/bin/ycqlsh
+
 filePath=$home/db_init_csql_SoCluster/db_create_ycql_cluster_addidx.cql
 
 username=cs4224j@

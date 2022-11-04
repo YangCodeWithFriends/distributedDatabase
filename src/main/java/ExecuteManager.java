@@ -7,9 +7,6 @@ import common.TransactionType;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -29,7 +26,7 @@ public class ExecuteManager {
     private List<Statistics> transactionTypeList;
     private Map<TransactionType, Integer> skipMap;
     private int counter;
-    private int LIMIT;
+    private int LIMIT = 500;
     // 定义变量
     private ArrayList<Long> time_lst = new ArrayList<>();
     private ArrayList<Long> percentage_time_lst = new ArrayList<Long>();
@@ -68,12 +65,10 @@ public class ExecuteManager {
         transactionTypeList.add(new Statistics(TransactionType.TOP_BALANCE));
         transactionTypeList.add(new Statistics(TransactionType.RELATED_CUSTOMER));
 
-        for (TransactionType transactionType : TransactionType.values()) {
-            skipMap.put(transactionType, 0);
-        }
-        LIMIT = 1;
-
-//        LIMIT = 1;
+//        for (TransactionType transactionType : TransactionType.values()) {
+//            skipMap.put(transactionType, 0);
+//        }
+        LIMIT = 100;
 
         // 正选逻辑
 //        skipSet.add(TransactionType.NEW_ORDER);
@@ -82,10 +77,10 @@ public class ExecuteManager {
 
         // 反选逻辑
 //        skipSet.addAll(Arrays.asList(TransactionType.values()));
-//        skipSet.remove(TransactionType.POPULAR_ITEM);
+//        skipSet.remove(TransactionType.NEW_ORDER);
     }
 
-    public void executeYSQL(Connection conn, List<Transaction> list, Logger logger) throws SQLException {
+    public void executeYSQL(Connection conn, List<Transaction> list, Logger logger) throws Exception {
         logger.log(Level.INFO, "Execute YSQL transactions\n");
         for (Transaction transaction : list) {
             if (skipSet.contains(transaction.getTransactionType())) continue;
@@ -95,14 +90,19 @@ public class ExecuteManager {
                 skipMap.put(transaction.getTransactionType(), cnt + 1);
             }
 
-            long executionTime = transaction.executeYSQL(conn, logger);
+            long executionTime = 0;
+            try {
+                executionTime = transaction.executeYSQL(conn, logger);
+            } catch (SQLException e) {
+                logger.log(Level.SEVERE, "YSQL Execute exception= ", e);
+            }
             transactionTypeList.get(transaction.getTransactionType().index).addNewData(executionTime);
             // 平常执行输出的是这个导致的
-            report(logger);
+            report(logger, list.size());
         }
     }
 
-    public void executeYCQL(CqlSession session, List<Transaction> list, Logger logger) {
+    public void executeYCQL(CqlSession session, List<Transaction> list, Logger logger) throws Exception {
         logger.log(Level.INFO, "Execute YCQL transactions\n");
         for (Transaction transaction : list) {
             if (skipSet.contains(transaction.getTransactionType())) continue;
@@ -112,25 +112,31 @@ public class ExecuteManager {
                 skipMap.put(transaction.getTransactionType(), cnt + 1);
             }
 
-            long executionTime = transaction.executeYCQL(session, logger);
+            long executionTime = 0;
+            try {
+                transaction.executeYCQL(session, logger);
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "YCQL Execute exception= ", e);
+            }
             transactionTypeList.get(transaction.getTransactionType().index).addNewData(executionTime);
             // 平常执行输出的是这个导致的
-            report(logger);
+            report(logger, list.size());
         }
     }
 
-    public void report(Logger logger) {
+    public void report(Logger logger, int total) {
         counter++; // print statistics every 5 transactions.
         // get all the transaction execution time and add them into list.
         for (Statistics statistics : transactionTypeList) {
             percentage_time_lst.add(statistics.getExeTime());
         }
-        if (counter % 5 == 0) {
-            logger.log(Level.INFO, "---Statistics start---");
+        if (counter % LIMIT == 0) {
+            logger.log(Level.WARNING, "---Statistics start---");
+            logger.log(Level.WARNING, String.format("Statistics: number of transactions executed = %d, total = %d, percentage = %.2f", counter, total, total == 0 ? 0.0 : counter * 1.0 / total));
             for (Statistics statistics : transactionTypeList) {
-                logger.log(Level.INFO, statistics.toString());
+                logger.log(Level.WARNING, statistics.toString());
             }
-            logger.log(Level.INFO, "---Statistics end---");
+            logger.log(Level.WARNING, "---Statistics end---");
         }
     }
 
@@ -167,7 +173,7 @@ public class ExecuteManager {
         return percentage_time_lst;
     }
 
-    public void reportSQL(Connection conn) {
+    public void reportSQL(Connection conn, Logger mainLogger) {
         try {
             // get all the sql information into the result set
             Statement stmt = conn.createStatement();
@@ -205,10 +211,10 @@ public class ExecuteManager {
                 sum_s_remote_cnt = rs6.getInt(4);
             }
             // 拿完了所有的数据，开始进行输出到文件
-//            Path path = Paths.get("/tmp/dataCSV");
+//            Path path = Paths.get("dataCSV");
             try {
 //                Files.createDirectory(path);
-                File writeSQLFile = new File("/tmp/dbstate_sql.csv");
+                File writeSQLFile = new File("SQL_dbstate.csv");
                 try {
                     BufferedWriter writeText = new BufferedWriter(new FileWriter(writeSQLFile));
                     writeText.newLine();
@@ -246,18 +252,18 @@ public class ExecuteManager {
 //                    + sum_o_ol_cnt + "," + sum_ol_amount + "," + sum_ol_quantity + "," + sum_s_quantity + "," + sum_s_ytd + "," + sum_s_order_cnt + "," + sum_s_remote_cnt);
                     writeText.flush();
                     writeText.close();
-                }catch (Exception e) {
-                    e.printStackTrace();
+                } catch (Exception e) {
+                    mainLogger.log(Level.SEVERE, "reportSQL write file exception = ", e);
                 }
-            }catch (Exception e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                mainLogger.log(Level.SEVERE, "reportSQL middle exception = ", e);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            mainLogger.log(Level.SEVERE, "reportSQL exception = ", e);
         }
     }
 
-    public void reportCQL(CqlSession session) {
+    public void reportCQL(CqlSession session, Logger mainLogger) {
         // get all the cql information into the result set
         SimpleStatement simpleStatement_0 = null;
         // cql1
@@ -349,10 +355,10 @@ public class ExecuteManager {
         }
 //        System.out.println("结束执行cql6");
         // 拿完了所有的数据，开始进行输出到文件
-//        Path path = Paths.get("/tmp/dataCSV");
+//        Path path = Paths.get("dataCSV");
         try {
 //            Files.createDirectory(path);
-            File writeSQLFile = new File("/tmp/dbstate_cql.csv");
+            File writeSQLFile = new File("CQL_dbstate.csv");
             try {
                 BufferedWriter writeText = new BufferedWriter(new FileWriter(writeSQLFile));
                 writeText.newLine();
@@ -390,11 +396,11 @@ public class ExecuteManager {
 //                        + sum_o_ol_cnt + "," + sum_ol_amount + "," + sum_ol_quantity + "," + sum_s_quantity + "," + sum_s_ytd + "," + sum_s_order_cnt + "," + sum_s_remote_cnt);
                 writeText.flush();
                 writeText.close();
-            }catch (Exception e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                mainLogger.log(Level.SEVERE, "report write file exception = ", e);
             }
-        }catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            mainLogger.log(Level.SEVERE, "reportCQL exception = ", e);
         }
     }
 }

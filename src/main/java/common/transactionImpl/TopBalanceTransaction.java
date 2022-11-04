@@ -115,7 +115,6 @@ public class TopBalanceTransaction extends Transaction {
             }
             conn.commit();
         } catch (SQLException e) {
-            e.printStackTrace();
             logger.log(Level.SEVERE, String.format("Error in %s transaction, exception= ",getTransactionType().type),e);
 
             if (conn != null) {

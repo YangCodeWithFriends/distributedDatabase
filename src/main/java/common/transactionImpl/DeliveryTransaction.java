@@ -115,7 +115,6 @@ public class DeliveryTransaction extends Transaction {
             logger.log(Level.INFO, "D transaction ends");
         } catch (SQLException e) {
             logger.log(Level.SEVERE, String.format("Error in %s transaction, exception= ",getTransactionType().type),e);
-            e.printStackTrace();
             if (conn != null) {
                 logger.log(Level.WARNING, "Transaction is being rolled back");
                 conn.rollback();
