@@ -132,7 +132,7 @@ public class ExecuteManager {
         }
         if (counter % LIMIT == 0) {
             logger.log(Level.WARNING, "---Statistics start---");
-            logger.log(Level.WARNING, String.format("Statistics: number of transactions executed = %d, total = %d, percentage = %.2f", counter, total, total == 0 ? 0.0 : counter * 1.0 / total));
+            logger.log(Level.WARNING, String.format("Statistics: number of transactions executed = %d, total = %d, percentage = %.2f%%", counter, total, total == 0 ? 0.0 : counter * 100.0 / total));
             for (Statistics statistics : transactionTypeList) {
                 logger.log(Level.WARNING, statistics.toString());
             }
