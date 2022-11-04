@@ -77,7 +77,7 @@ public class ExecuteManager {
 
         // 反选逻辑
 //        skipSet.addAll(Arrays.asList(TransactionType.values()));
-//        skipSet.remove(TransactionType.POPULAR_ITEM);
+//        skipSet.remove(TransactionType.NEW_ORDER);
     }
 
     public void executeYSQL(Connection conn, List<Transaction> list, Logger logger) throws Exception {
@@ -132,7 +132,8 @@ public class ExecuteManager {
         }
         if (counter % LIMIT == 0) {
             logger.log(Level.WARNING, "---Statistics start---");
-            logger.log(Level.WARNING, "Statistics: number of transactions executed = " + counter);
+            int total = transactionTypeList.size();
+            logger.log(Level.WARNING, String.format("Statistics: number of transactions executed = %d, total=%d,percentage=%f",counter,total,total == 0 ? 0.0 : counter * 1.0 / total));
             for (Statistics statistics : transactionTypeList) {
                 logger.log(Level.WARNING, statistics.toString());
             }
@@ -214,7 +215,7 @@ public class ExecuteManager {
 //            Path path = Paths.get("dataCSV");
             try {
 //                Files.createDirectory(path);
-                File writeSQLFile = new File("dbstate_sql.csv");
+                File writeSQLFile = new File("SQL_dbstate.csv");
                 try {
                     BufferedWriter writeText = new BufferedWriter(new FileWriter(writeSQLFile));
                     writeText.newLine();
@@ -358,7 +359,7 @@ public class ExecuteManager {
 //        Path path = Paths.get("dataCSV");
         try {
 //            Files.createDirectory(path);
-            File writeSQLFile = new File("dbstate_cql.csv");
+            File writeSQLFile = new File("CQL_dbstate.csv");
             try {
                 BufferedWriter writeText = new BufferedWriter(new FileWriter(writeSQLFile));
                 writeText.newLine();

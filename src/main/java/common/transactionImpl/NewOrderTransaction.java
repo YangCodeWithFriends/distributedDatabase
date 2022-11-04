@@ -164,6 +164,7 @@ public class NewOrderTransaction extends Transaction {
 
              */
 
+
             String SQL10 = "insert into customer_item select NO_W_ID, NO_D_ID, NO_C_ID, NO_O_ID, NO_I_ID from " +
                     "(select * from new_order_info where NO_W_ID = ? and NO_D_ID = ? and NO_O_ID = ? and NO_C_ID = ?) t;";
             statement = conn.prepareStatement(SQL10);
@@ -171,6 +172,14 @@ public class NewOrderTransaction extends Transaction {
             statement.setInt(2, D_ID);
             statement.setInt(3, N);
             statement.setInt(4, C_ID);
+            statement.executeUpdate();
+
+            String SQL_DELETE = "delete from new_order_info where NO_W_ID = ? and NO_D_ID = ? and NO_C_ID = ? and NO_O_ID = ?";
+            statement = conn.prepareStatement(SQL_DELETE);
+            statement.setInt(1, W_ID);
+            statement.setInt(2, D_ID);
+            statement.setInt(3, C_ID);
+            statement.setInt(4, N);
             statement.executeUpdate();
 
             conn.commit();

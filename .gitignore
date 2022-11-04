@@ -20,5 +20,6 @@ Y*QL-log*txt*
 throughput-statistics-Y*QL.txt
 log*.txt
 
-clients_*ql.csv
-throughput_*ql.csv
+*QL_clients_*.csv
+*QL_throughput_*.csv
+*QL_dbstate.csv
