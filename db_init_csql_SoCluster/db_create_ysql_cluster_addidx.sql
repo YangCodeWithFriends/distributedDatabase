@@ -7,7 +7,7 @@ CREATE DATABASE dbysql;
 -- USE dbysql5424J; MySQL 
 \c dbysql;
 
--- data path: ~/project_data/data_files/
+-- data path: /home/stuproj/cs4224j/project_data/data_files/
 
 --  5 entity tables --
 DROP TABLE if EXISTS warehouse CASCADE;
@@ -26,7 +26,7 @@ CREATE TABLE warehouse (
 );
 
 -- insert from csv
-\copy warehouse from '~/project_data/data_files/warehouse.csv' WITH (FORMAT CSV, NULL 'null');
+\copy warehouse from '/home/stuproj/cs4224j/project_data/data_files/warehouse.csv' WITH (FORMAT CSV, NULL 'null');
 
 -- idx 
 -- create index if not exists w_id_idx on warehouse (W_id);
@@ -48,10 +48,10 @@ CREATE TABLE district (
   D_tax decimal(4,4) NOT NULL,
   D_ytd decimal(12,2) NOT NULL,
   D_next_O_id int NOT NULL,
-  PRIMARY KEY((D_W_id, D_id) HASH)
+  PRIMARY KEY(D_W_id HASH, D_id)
 );
 
-\copy district from '~/project_data/data_files/district.csv' WITH (FORMAT CSV, NULL 'null');
+\copy district from '/home/stuproj/cs4224j/project_data/data_files/district.csv' WITH (FORMAT CSV, NULL 'null');
 
 
 -- 3e5
@@ -83,10 +83,10 @@ CREATE TABLE customer (
   C_delivery_cnt int NOT NULL,
   -- C_data varchar(500) NOT NULL
   FOREIGN KEY (C_W_id, C_D_id) REFERENCES district(D_W_id, D_id),
-  PRIMARY KEY ((C_W_id, C_D_id, C_id) HASH) -- yugabyte distrbuted table sharding
+  PRIMARY KEY (C_W_id HASH, C_D_id, C_id) -- yugabyte distrbuted table sharding
 );
 -- insert from csv
-\copy customer from '~/project_data/data_files/customer_new.csv' WITH (FORMAT CSV, NULL 'null');
+\copy customer from '/home/stuproj/cs4224j/project_data/data_files/customer_new.csv' WITH (FORMAT CSV, NULL 'null');
 select count(*) as no_imported_customers from customer;
 
 
@@ -104,15 +104,15 @@ CREATE TABLE orders (
   O_C_id int NOT NULL,
   
   -- The range of O CARRIER ID is [1,10]: use smallint in pgsql(but small int is 16 bit in CQL, tinyint is 8)
-  O_carrier_id smallint, -- data has lots of null
+  O_carrier_id int, -- data has lots of null
   O_OL_cnt decimal(2,0) NOT NULL,
   O_all_local decimal(1,0) NOT NULL,
   O_entry_d timestamp NOT NULL,
-  PRIMARY KEY((O_W_id, O_D_id, O_id) HASH),
+  PRIMARY KEY(O_W_id HASH, O_D_id, O_id)
   FOREIGN KEY (O_W_id, O_D_id, O_C_id) REFERENCES customer(C_W_id, C_D_id, C_id)
 );
 -- insert from csv
-\copy orders from '~/project_data/data_files/order.csv' WITH (FORMAT CSV, NULL 'null');
+\copy orders from '/home/stuproj/cs4224j/project_data/data_files/order.csv' WITH (FORMAT CSV, NULL 'null');
 select count(*) as no_imported_orders from orders;
 
 -- idx 
@@ -131,7 +131,7 @@ CREATE TABLE item (
   PRIMARY KEY(I_id HASH)
 );
 -- insert from csv
-\copy item from '~/project_data/data_files/item_new.csv' WITH (FORMAT CSV, NULL 'null');
+\copy item from '/home/stuproj/cs4224j/project_data/data_files/item_new.csv' WITH (FORMAT CSV, NULL 'null');
 select count(*) as no_imported_Item from item;
 
 -- idx 
@@ -149,21 +149,9 @@ CREATE TABLE stock (
   S_ytd decimal(8,2) NOT NULL,
   S_order_cnt int NOT NULL,
   S_remote_cnt int NOT NULL,
-  -- ,
-  -- S_dist_01 char(24) NOT NULL,
-  -- S_dist_02 char(24) NOT NULL,
-  -- S_dist_03 char(24) NOT NULL,
-  -- S_dist_04 char(24) NOT NULL,
-  -- S_dist_05 char(24) NOT NULL,
-  -- S_dist_06 char(24) NOT NULL,
-  -- S_dist_07 char(24) NOT NULL,
-  -- S_dist_08 char(24) NOT NULL,
-  -- S_dist_09 char(24) NOT NULL,
-  -- S_dist_10 char(24) NOT NULL,
-  -- S_data varchar(50) NOT NULL
-  PRIMARY KEY((S_W_id, S_I_id) HASH)
+  PRIMARY KEY(S_W_id HASH, S_I_id)
 );
-\copy stock from '~/project_data/data_files/stock_new.csv' WITH (FORMAT CSV, NULL 'null');
+\copy stock from '/home/stuproj/cs4224j/project_data/data_files/stock_new.csv' WITH (FORMAT CSV, NULL 'null');
 select count(*) as no_imported_stock from stock;
 
 
@@ -186,10 +174,10 @@ CREATE TABLE orderline (
   OL_supply_W_id int NOT NULL,
   OL_quantity decimal(2,0) NOT NULL,
   OL_dist_info char(24) NOT NULL,
-  PRIMARY KEY((OL_W_id, OL_D_id, OL_O_id, OL_number) HASH),
+  PRIMARY KEY(OL_W_id HASH, OL_D_id, OL_O_id, OL_number),
   FOREIGN KEY (OL_W_id, OL_D_id, OL_O_id) REFERENCES orders(O_W_id, O_D_id, O_id)
 );
-\copy orderline from '~/project_data/data_files/order-line.csv' WITH (FORMAT CSV, NULL 'null');
+\copy orderline from '/home/stuproj/cs4224j/project_data/data_files/order-line.csv' WITH (FORMAT CSV, NULL 'null');
 select count(*) as no_imported_OLine from "orderline";
 
 -- idx on orderline
@@ -208,7 +196,7 @@ create table customer_item(
     CI_I_ID int,
     primary key(CI_W_ID, CI_D_ID, CI_C_ID, CI_O_ID, CI_I_ID)
 );
-\copy customer_item from '~/project_data/data_files/customer_item.csv' WITH (FORMAT CSV, NULL 'null');
+\copy customer_item from '/home/stuproj/cs4224j/project_data/data_files/customer_item.csv' WITH (FORMAT CSV, NULL 'null');
 select count(*) as no_imported_customer_item from customer_item; 
 
 
@@ -225,7 +213,7 @@ create table new_order_info (
     NO_I_ID int NOT NULL, 
     NO_SUPPLY_W_ID int NOT NULL, 
     NO_QUANTITY decimal(2,0) NOT NULL, 
-    primary key (NO_O_ID, NO_N, NO_W_ID, NO_D_ID, NO_C_ID)
+    primary key (NO_O_ID HASH, NO_N, NO_W_ID, NO_D_ID, NO_C_ID)
 );
 
 
@@ -249,8 +237,14 @@ select count(*) as no_new_order_info from new_order_info;
 -- create index if not exists w_id_idx on warehouse (W_id);
 -- create index if not exists district_idx on district (D_W_ID, D_ID);
 -- create index if not exists customer_idx on customer (C_W_ID, C_D_ID, C_ID);
-create index if not exists orders_idx on orders (O_W_ID, O_D_ID, O_C_ID, O_ID, O_CARRIER_ID);
--- create index if not exists item_idx on item (I_ID);
+
+-- create index if not exists orders_idx on orders (O_W_ID, O_D_ID, O_C_ID, O_ID, O_CARRIER_ID);
+-- O_W_ID, O_D_ID, O_ID,是主键，1级索引，
+-- create index if not exists orders_idx on orders (O_C_ID);
+
 create index if not exists stock_idx on stock (S_W_ID, S_I_ID, S_QUANTITY);
-create index if not exists orderline_idx on orderline (OL_W_ID, OL_D_ID, OL_O_ID);
-create index if not exists customer_item_idx on customer_item (CI_W_ID, CI_I_ID);
+-- stock表增删很少，可以加
+-- create index if not exists stock_idx on stock (S_QUANTITY); 
+
+-- create index if not exists orderline_idx on orderline (OL_W_ID, OL_D_ID, OL_O_ID);
+-- create index if not exists customer_item_idx on customer_item (CI_W_ID, CI_I_ID);

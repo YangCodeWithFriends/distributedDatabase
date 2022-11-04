@@ -3,7 +3,7 @@
  # @Author: YuhaoWU
  # @Date: 2022-11-03 00:27:08
  # @LastEditors: YuhaoWU
- # @LastEditTime: 2022-11-03 00:58:34
+ # @LastEditTime: 2022-11-04 14:07:28
  # @Description: 
 ### 
 
@@ -25,13 +25,13 @@ case $char in
         printf "\ndrop dbycql in CQL\n"
         # drop ycql datbase
         ssh cs4224j@xcnd${ms2}.comp.nus.edu.sg \
-        "sh -c '~/yugabyte-2.14.1.0/bin/ycqlsh 192.168.48.243 9040 -u cassandra -p cassandra --execute==\'drop database dbycql;\''"
+        "sh -c '~/yugabyte-2.14.1.0/bin/ycqlsh 192.168.48.243 9042 -u cassandra -p cassandra --execute==\'drop database dbycql;\''"
         ;;
     [s])
         printf "\ndrop dbycql in SQL\n"
         # drop ysql datbase
         ssh cs4224j@xcnd${ms2}.comp.nus.edu.sg \
-        "sh -c '~/yugabyte-2.14.1.0/bin/ysqlsh -h 192.168.48.241 -p 5450 -U yugabyte -d yugabyte --command=='drop database dbysql;''"
+        "sh -c '~/yugabyte-2.14.1.0/bin/ysqlsh -h 192.168.48.241 -p 5432 -U yugabyte -d yugabyte --command=='drop database dbysql;''"
         ;;
     *)
         printf "\nerror, $char is not either cql or sql\n"

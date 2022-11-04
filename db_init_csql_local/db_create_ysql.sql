@@ -55,7 +55,6 @@ CREATE TABLE customer (
   -- combined (C W ID, C D ID) is a foreign key that refers to district table.
   C_W_id int NOT NULL,
   C_D_id int NOT NULL,
-  FOREIGN KEY (C_W_id, C_D_id) REFERENCES district(D_W_id, D_id),
   C_id int NOT NULL,
   -- Note: as compound foreign key
   PRIMARY KEY((C_W_id, C_D_id, C_id) HASH), -- yugabyte distrbuted table sharding
@@ -77,7 +76,8 @@ CREATE TABLE customer (
   C_ytd_payment float NOT NULL,
   C_payment_cnt int NOT NULL,
   C_delivery_cnt int NOT NULL,
-  C_data varchar(500) NOT NULL);
+  C_data varchar(500) NOT NULL
+);
 
 -- insert from csv
 \copy customer from '/Users/kennywu/Documents/NUScode/CS5424proj/distributedDatabase/data_files/customer.csv' WITH (FORMAT CSV, NULL 'null');
@@ -97,7 +97,7 @@ CREATE TABLE orders (
   UNIQUE(O_W_id, O_D_id, O_C_id),
 
   -- The range of O CARRIER ID is [1,10]: use smallint in pgsql(but small int is 16 bit in CQL, tinyint is 8)
-  O_carrier_id smallint, -- data has lots of null
+  O_carrier_id int, -- data has lots of null
   O_OL_cnt decimal(2,0) NOT NULL,
   O_all_local decimal(1,0) NOT NULL,
   O_entry_d timestamp NOT NULL

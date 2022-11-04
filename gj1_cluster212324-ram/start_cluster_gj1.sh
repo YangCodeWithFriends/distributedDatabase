@@ -3,7 +3,7 @@
  # @Author: YuhaoWU
  # @Date: ${ms1}22-10-30 ${ms1}:34:26
  # @LastEditors: YuhaoWU
- # @LastEditTime: 2022-11-03 05:20:04
+ # @LastEditTime: 2022-11-03 12:16:16
  # @Description: 停掉现有的cluster，重新启动cluster, 不包括删除之前的数据
 ### 
 
@@ -25,7 +25,7 @@ scp ${bashCurPath}/*.conf ${username}${loadIP}:${yb_bin}
 
 
 # 停掉如果还在run的集群
-${bashCurPath}/end_cluster_gj1.sh
+# ${bashCurPath}/end_cluster_gj1.sh
 
 clusterno='' # 1
 # master & tserver
@@ -68,7 +68,6 @@ ssh cs4224j@xcnd${ts1}.comp.nus.edu.sg \
 "sh -c 'mkdir -p ${cluster_file_path}/disk1 ${cluster_file_path}/disk2'"
 ssh cs4224j@xcnd${ts1}.comp.nus.edu.sg \
 "sh -c 'cd ${yb_bin} && ./yb-tserver --flagfile ${clusterno}ts${ts1}.conf > ${cluster_file_path}/disk1/yb-tserver.out 2>&1 &'"
-
 
 
 ssh cs4224j@xcnd${ts2}.comp.nus.edu.sg \

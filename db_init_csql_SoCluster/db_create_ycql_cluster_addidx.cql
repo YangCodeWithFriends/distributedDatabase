@@ -153,17 +153,6 @@ CREATE TABLE dbycql.stock (
   S_ytd decimal,
   S_order_cnt int,
   S_remote_cnt int,
-  -- S_dist_01 varchar,
-  -- S_dist_02 varchar,
-  -- S_dist_03 varchar,
-  -- S_dist_04 varchar,
-  -- S_dist_05 varchar,
-  -- S_dist_06 varchar,
-  -- S_dist_07 varchar,
-  -- S_dist_08 varchar,
-  -- S_dist_09 varchar,
-  -- S_dist_10 varchar,
-  -- S_data varchar
   PRIMARY KEY(S_W_id, S_I_id)
 )
 WITH transactions = { 'enabled' : true };
@@ -251,8 +240,11 @@ DESCRIBE tables;
 -- 加索引
 -- create index if not exists w_id_idx on dbycql.warehouse (W_id);
 -- create index if not exists district_idx on dbycql.district (D_W_ID, D_ID);
-create index if not exists customer_idx on dbycql.customer (C_W_ID, C_D_ID, C_ID);
-create index if not exists orders_idx on dbycql.orders (O_W_ID, O_D_ID, O_C_ID, O_ID, O_CARRIER_ID);
-create index if not exists stock_idx on dbycql.stock (S_W_ID, S_I_ID);
-create index if not exists orderline_idx on dbycql.orderline (OL_W_ID, OL_D_ID, OL_O_ID, OL_NUMBER, OL_QUANTITY);
-create index if not exists customer_item_idx on dbycql.customer_item (CI_W_ID, CI_I_ID);
+
+-- low基数的
+create index if not exists orders_idx on dbycql.orders (O_CARRIER_ID);
+-- create index if not exists customer_idx on dbycql.customer (C_W_ID, C_D_ID, C_ID);
+-- create index if not exists orders_idx on dbycql.orders (O_W_ID, O_D_ID, O_C_ID, O_ID, O_CARRIER_ID);
+-- create index if not exists stock_idx on dbycql.stock (S_W_ID, S_I_ID);
+-- create index if not exists orderline_idx on dbycql.orderline (OL_W_ID, OL_D_ID, OL_O_ID, OL_NUMBER, OL_QUANTITY);
+-- create index if not exists customer_item_idx on dbycql.customer_item (CI_W_ID, CI_I_ID);

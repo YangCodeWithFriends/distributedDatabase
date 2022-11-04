@@ -7,7 +7,7 @@ CREATE DATABASE dbysql;
 -- USE dbysql5424J; MySQL 
 \c dbysql;
 
--- data path: ~/project_data/data_files/
+-- data path: /home/stuproj/cs4224j/project_data/data_files/
 
 --  5 entity tables --
 DROP TABLE if EXISTS warehouse CASCADE;
@@ -26,7 +26,7 @@ CREATE TABLE warehouse (
 );
 
 -- insert from csv
-\copy warehouse from '~/project_data/data_files/warehouse.csv' WITH (FORMAT CSV, NULL 'null');
+\copy warehouse from '/home/stuproj/cs4224j/project_data/data_files/warehouse.csv' WITH (FORMAT CSV, NULL 'null');
 
 
 DROP TABLE if EXISTS district CASCADE;
@@ -48,7 +48,7 @@ CREATE TABLE district (
   D_next_O_id int NOT NULL
 );
 
-\copy district from '~/project_data/data_files/district.csv' WITH (FORMAT CSV, NULL 'null');
+\copy district from '/home/stuproj/cs4224j/project_data/data_files/district.csv' WITH (FORMAT CSV, NULL 'null');
 
 
 DROP TABLE if EXISTS customer CASCADE;
@@ -78,9 +78,10 @@ CREATE TABLE customer (
   C_ytd_payment float NOT NULL,
   C_payment_cnt int NOT NULL,
   C_delivery_cnt int NOT NULL,
-  C_data varchar(500) NOT NULL);
+  C_data varchar(500) NOT NULL
+);
 -- insert from csv
-\copy customer from '~/project_data/data_files/customer.csv' WITH (FORMAT CSV, NULL 'null');
+\copy customer from '/home/stuproj/cs4224j/project_data/data_files/customer.csv' WITH (FORMAT CSV, NULL 'null');
 select count(*) as no_imported_customers from customer;
 
 
@@ -100,13 +101,13 @@ CREATE TABLE orders (
   
 
   -- The range of O CARRIER ID is [1,10]: use smallint in pgsql(but small int is 16 bit in CQL, tinyint is 8)
-  O_carrier_id smallint, -- data has lots of null
+  O_carrier_id int, -- data has lots of null
   O_OL_cnt decimal(2,0) NOT NULL,
   O_all_local decimal(1,0) NOT NULL,
   O_entry_d timestamp NOT NULL
 );
 -- insert from csv
-\copy orders from '~/project_data/data_files/order.csv' WITH (FORMAT CSV, NULL 'null');
+\copy orders from '/home/stuproj/cs4224j/project_data/data_files/order.csv' WITH (FORMAT CSV, NULL 'null');
 select count(*) as no_imported_orders from orders;
 
 
@@ -121,15 +122,13 @@ CREATE TABLE item (
   I_data varchar(50) NOT NULL
 );
 -- insert from csv
-\copy item from '~/project_data/data_files/item.csv' WITH (FORMAT CSV, NULL 'null');
+\copy item from '/home/stuproj/cs4224j/project_data/data_files/item.csv' WITH (FORMAT CSV, NULL 'null');
 select count(*) as no_imported_Item from item;
 
 
 -- 1e6
 DROP TABLE if EXISTS stock CASCADE;
 CREATE TABLE stock (
-  -- S I ID is a foreign key that refers to item table. 
-  -- S W ID is a foreign key that refers to warehouse table.
   S_W_id int NOT NULL REFERENCES warehouse(W_id),
   S_I_id int NOT NULL REFERENCES item(I_id),
   PRIMARY KEY((S_W_id, S_I_id) HASH),
@@ -150,7 +149,7 @@ CREATE TABLE stock (
   S_dist_10 char(24) NOT NULL,
   S_data varchar(50) NOT NULL
 );
-\copy stock from '~/project_data/data_files/stock.csv' WITH (FORMAT CSV, NULL 'null');
+\copy stock from '/home/stuproj/cs4224j/project_data/data_files/stock.csv' WITH (FORMAT CSV, NULL 'null');
 select count(*) as no_imported_stock from stock;
 
 
@@ -177,7 +176,7 @@ CREATE TABLE orderline (
   OL_quantity decimal(2,0) NOT NULL,
   OL_dist_info char(24) NOT NULL
 );
-\copy orderline from '~/project_data/data_files/order-line.csv' WITH (FORMAT CSV, NULL 'null');
+\copy orderline from '/home/stuproj/cs4224j/project_data/data_files/order-line.csv' WITH (FORMAT CSV, NULL 'null');
 select count(*) as no_imported_OLine from "orderline";
 
 
@@ -190,9 +189,9 @@ create table customer_item(
   CI_C_ID int, 
   CI_O_ID int, 
   CI_I_ID int,
-  primary key(CI_W_ID,CI_D_ID,CI_C_ID,CI_O_ID,CI_I_ID)
+  primary key(CI_W_ID HASH,CI_D_ID,CI_C_ID,CI_O_ID,CI_I_ID)
 );
-\copy customer_item from '~/project_data/data_files/customer_item.csv' WITH (FORMAT CSV, NULL 'null');
+\copy customer_item from '/home/stuproj/cs4224j/project_data/data_files/customer_item.csv' WITH (FORMAT CSV, NULL 'null');
 select count(*) as no_imported_customer_item from customer_item; 
 
 
