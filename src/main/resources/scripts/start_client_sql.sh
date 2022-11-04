@@ -1,15 +1,6 @@
 # YSQL
 ssh cs4224j@xcnd20.comp.nus.edu.sg \
-    "sh -c 'cd ~/target && rm YSQL-log-*.txt'" &
-
-ssh cs4224j@xcnd20.comp.nus.edu.sg \
-    "sh -c 'cd ~/target && rm YSQL-log-*.txt.lck'" &
-
-ssh cs4224j@xcnd20.comp.nus.edu.sg \
-    "sh -c 'cd ~/target && rm YSQL-log-main-thread-*.txt'" &
-
-ssh cs4224j@xcnd20.comp.nus.edu.sg \
-    "sh -c 'cd ~/target && rm YSQL-log-main-thread-*.txt.lck'" &
+    "sh -c 'cd ~/target && rm YSQL-log-*'" &
 
 ssh cs4224j@xcnd20.comp.nus.edu.sg \
     "sh -c 'cd ~/target && java -cp yugabyte-simple-java-app-1.0-SNAPSHOT.jar SampleApp YSQL 0 &'" &

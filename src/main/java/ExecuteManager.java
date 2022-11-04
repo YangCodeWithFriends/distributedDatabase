@@ -98,7 +98,7 @@ public class ExecuteManager {
             }
             transactionTypeList.get(transaction.getTransactionType().index).addNewData(executionTime);
             // 平常执行输出的是这个导致的
-            report(logger);
+            report(logger, list.size());
         }
     }
 
@@ -120,11 +120,11 @@ public class ExecuteManager {
             }
             transactionTypeList.get(transaction.getTransactionType().index).addNewData(executionTime);
             // 平常执行输出的是这个导致的
-            report(logger);
+            report(logger, list.size());
         }
     }
 
-    public void report(Logger logger) {
+    public void report(Logger logger, int total) {
         counter++; // print statistics every 5 transactions.
         // get all the transaction execution time and add them into list.
         for (Statistics statistics : transactionTypeList) {
@@ -132,8 +132,7 @@ public class ExecuteManager {
         }
         if (counter % LIMIT == 0) {
             logger.log(Level.WARNING, "---Statistics start---");
-            int total = transactionTypeList.size();
-            logger.log(Level.WARNING, String.format("Statistics: number of transactions executed = %d, total=%d,percentage=%f",counter,total,total == 0 ? 0.0 : counter * 1.0 / total));
+            logger.log(Level.WARNING, String.format("Statistics: number of transactions executed = %d, total = %d, percentage = %.2f", counter, total, total == 0 ? 0.0 : counter * 1.0 / total));
             for (Statistics statistics : transactionTypeList) {
                 logger.log(Level.WARNING, statistics.toString());
             }
