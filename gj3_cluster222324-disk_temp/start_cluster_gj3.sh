@@ -3,7 +3,7 @@
  # @Author: YuhaoWU
  # @Date: ${ms1}22-10-30 ${ms1}:34:26
  # @LastEditors: YuhaoWU
- # @LastEditTime: 2022-11-04 14:00:15
+ # @LastEditTime: 2022-11-05 01:40:08
  # @Description: 停掉现有的cluster，重新启动cluster, 不包括删除之前的数据
 ### 
 
@@ -34,7 +34,7 @@ ms2=23
 ms3=24
 # tserver
 ts1=20
-ts2=22
+ts2=21
 
 
 # run master
