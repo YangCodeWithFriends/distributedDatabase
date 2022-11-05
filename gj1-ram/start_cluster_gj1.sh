@@ -3,7 +3,7 @@
  # @Author: YuhaoWU
  # @Date: ${ms1}22-10-30 ${ms1}:34:26
  # @LastEditors: YuhaoWU
- # @LastEditTime: 2022-11-03 12:16:16
+ # @LastEditTime: 2022-11-05 21:44:32
  # @Description: 停掉现有的cluster，重新启动cluster, 不包括删除之前的数据
 ### 
 
@@ -40,37 +40,37 @@ ts2=22
 # run master
 echo 'start master, ${ms1}'
 ssh cs4224j@xcnd${ms1}.comp.nus.edu.sg \
-"sh -c 'mkdir -p ${cluster_file_path}/disk1 ${cluster_file_path}/disk2'"
+"sh -c 'mkdir -p ${cluster_file_path}'"
 ssh cs4224j@xcnd${ms1}.comp.nus.edu.sg \
-"sh -c 'cd ${yb_bin} && ./yb-master --flagfile ${clusterno}ms${ms1}.conf > ${cluster_file_path}/disk1/yb-master.out 2>&1 &'"
+"sh -c 'cd ${yb_bin} && ./yb-master --flagfile ${clusterno}ms${ms1}.conf > ${cluster_file_path}/yb-master.out 2>&1 &'"
 ssh cs4224j@xcnd${ms1}.comp.nus.edu.sg \
-"sh -c 'cd ${yb_bin} && ./yb-tserver --flagfile ${clusterno}ts${ms1}.conf > ${cluster_file_path}/disk1/yb-tserver.out 2>&1 &'"
+"sh -c 'cd ${yb_bin} && ./yb-tserver --flagfile ${clusterno}ts${ms1}.conf > ${cluster_file_path}/yb-tserver.out 2>&1 &'"
 
 echo 'start master, ${ms2}'
 ssh cs4224j@xcnd${ms2}.comp.nus.edu.sg \
-"sh -c 'mkdir -p ${cluster_file_path}/disk1 ${cluster_file_path}/disk2'"
+"sh -c 'mkdir -p ${cluster_file_path}'"
 ssh cs4224j@xcnd${ms2}.comp.nus.edu.sg \
-"sh -c 'cd ${yb_bin} && ./yb-master --flagfile ${clusterno}ms${ms2}.conf > ${cluster_file_path}/disk1/yb-master.out 2>&1 &'"
+"sh -c 'cd ${yb_bin} && ./yb-master --flagfile ${clusterno}ms${ms2}.conf > ${cluster_file_path}/yb-master.out 2>&1 &'"
 ssh cs4224j@xcnd${ms2}.comp.nus.edu.sg \
-"sh -c 'cd ${yb_bin} && ./yb-tserver --flagfile ${clusterno}ts${ms2}.conf > ${cluster_file_path}/disk1/yb-tserver.out 2>&1 &'"
+"sh -c 'cd ${yb_bin} && ./yb-tserver --flagfile ${clusterno}ts${ms2}.conf > ${cluster_file_path}/yb-tserver.out 2>&1 &'"
 
 echo 'start master, ${ms3}'
 ssh cs4224j@xcnd${ms3}.comp.nus.edu.sg \
-"sh -c 'mkdir -p ${cluster_file_path}/disk1 ${cluster_file_path}/disk2'"
+"sh -c 'mkdir -p ${cluster_file_path}'"
 ssh cs4224j@xcnd${ms3}.comp.nus.edu.sg \
-"sh -c 'cd ${yb_bin} && ./yb-master --flagfile ${clusterno}ms${ms3}.conf > ${cluster_file_path}/disk1/yb-master.out 2>&1 &'"
+"sh -c 'cd ${yb_bin} && ./yb-master --flagfile ${clusterno}ms${ms3}.conf > ${cluster_file_path}/yb-master.out 2>&1 &'"
 ssh cs4224j@xcnd${ms3}.comp.nus.edu.sg \
-"sh -c 'cd ${yb_bin} && ./yb-tserver --flagfile ${clusterno}ts${ms3}.conf > ${cluster_file_path}/disk1/yb-tserver.out 2>&1 &'"
+"sh -c 'cd ${yb_bin} && ./yb-tserver --flagfile ${clusterno}ts${ms3}.conf > ${cluster_file_path}/yb-tserver.out 2>&1 &'"
 
 
 # run rest t-server
 ssh cs4224j@xcnd${ts1}.comp.nus.edu.sg \
-"sh -c 'mkdir -p ${cluster_file_path}/disk1 ${cluster_file_path}/disk2'"
+"sh -c 'mkdir -p ${cluster_file_path}'"
 ssh cs4224j@xcnd${ts1}.comp.nus.edu.sg \
-"sh -c 'cd ${yb_bin} && ./yb-tserver --flagfile ${clusterno}ts${ts1}.conf > ${cluster_file_path}/disk1/yb-tserver.out 2>&1 &'"
+"sh -c 'cd ${yb_bin} && ./yb-tserver --flagfile ${clusterno}ts${ts1}.conf > ${cluster_file_path}/yb-tserver.out 2>&1 &'"
 
 
 ssh cs4224j@xcnd${ts2}.comp.nus.edu.sg \
-"sh -c 'mkdir -p ${cluster_file_path}/disk1 ${cluster_file_path}/disk2'"
+"sh -c 'mkdir -p ${cluster_file_path}'"
 ssh cs4224j@xcnd${ts2}.comp.nus.edu.sg \
-"sh -c 'cd ${yb_bin} && ./yb-tserver --flagfile ${clusterno}ts{ts2}.conf > ${cluster_file_path}/disk1/yb-tserver.out 2>&1 &'"
+"sh -c 'cd ${yb_bin} && ./yb-tserver --flagfile ${clusterno}ts{ts2}.conf > ${cluster_file_path}/yb-tserver.out 2>&1 &'"

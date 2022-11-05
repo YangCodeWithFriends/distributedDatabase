@@ -19,7 +19,7 @@ CREATE TABLE warehouse(
   W_zip char(9) NOT NULL,
   W_tax decimal(4,4) NOT NULL,
   W_ytd decimal(12,2) NOT NULL,
-  PRIMARY KEY(W_id ASC) -- yugabyte distrbuted table sharding
+  PRIMARY KEY(W_id) -- yugabyte distrbuted table sharding
 ) 
 WITH (colocated = true);
 
@@ -47,7 +47,7 @@ CREATE TABLE district (
   D_tax decimal(4,4) NOT NULL,
   D_ytd decimal(12,2) NOT NULL,
   D_next_O_id int NOT NULL,
-  PRIMARY KEY(D_W_id ASC, D_id)
+  PRIMARY KEY(D_W_id, D_id)
 )
 WITH (colocated = true);
 
@@ -95,7 +95,7 @@ CREATE TABLE customer (
   C_delivery_cnt int NOT NULL,
   -- FOREIGN KEY (C_W_id, C_D_id) REFERENCES district(D_W_id, D_id),
   -- PRIMARY KEY ((C_W_id, C_D_id, C_id))
-  PRIMARY KEY (C_W_id, C_D_id, C_id)
+  PRIMARY KEY (C_W_id ASC, C_D_id, C_id)
 )
 -- ;
 PARTITION BY RANGE (C_W_id);

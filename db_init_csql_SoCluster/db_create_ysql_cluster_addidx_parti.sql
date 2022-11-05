@@ -309,7 +309,7 @@ create table new_order_info (
     NO_I_ID int NOT NULL, 
     NO_SUPPLY_W_ID int NOT NULL, 
     NO_QUANTITY decimal(2,0) NOT NULL, 
-    primary key ((NO_O_ID, NO_N, NO_W_ID, NO_D_ID, NO_C_ID) ASC)
+    primary key (NO_O_ID ASC, NO_N, NO_W_ID, NO_D_ID, NO_C_ID)
 );
 
 
