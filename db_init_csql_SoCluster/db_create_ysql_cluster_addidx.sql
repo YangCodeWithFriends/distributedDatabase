@@ -237,7 +237,7 @@ select count(*) as no_new_order_info from new_order_info;
 -- create index if not exists district_idx on district (D_W_ID, D_ID);
 -- create index if not exists customer_idx on customer (C_W_ID, C_D_ID, C_ID);
 
--- create index if not exists orders_idx on orders (O_W_ID, O_D_ID, O_C_ID, O_ID, O_CARRIER_ID);
+create index if not exists orders_idx on orders (O_W_ID, O_D_ID, O_C_ID, O_ID, O_CARRIER_ID);
 -- O_W_ID, O_D_ID, O_ID,是主键，1级索引，
 -- create index if not exists orders_idx on orders (O_C_ID);
 
@@ -245,5 +245,5 @@ create index if not exists stock_idx on stock (S_W_ID, S_I_ID, S_QUANTITY);
 -- stock表增删很少，可以加
 -- create index if not exists stock_idx on stock (S_QUANTITY); 
 
--- create index if not exists orderline_idx on orderline (OL_W_ID, OL_D_ID, OL_O_ID);
--- create index if not exists customer_item_idx on customer_item (CI_W_ID, CI_I_ID);
+create index if not exists orderline_idx on orderline (OL_W_ID, OL_D_ID, OL_O_ID);
+create index if not exists customer_item_idx on customer_item (CI_W_ID, CI_I_ID);
