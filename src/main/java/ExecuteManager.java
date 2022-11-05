@@ -25,13 +25,12 @@ public class ExecuteManager {
     private Set<TransactionType> skipSet;
     private List<Statistics> transactionTypeList;
     private Map<TransactionType, Integer> skipMap;
-    private int counter;
     private int LIMIT = 500;
+
     // 定义变量
-    private ArrayList<Long> time_lst = new ArrayList<>();
     private ArrayList<Long> percentage_time_lst = new ArrayList<Long>();
-    private long sum = 0;
-    private long cnt = 0;
+    private long numberOfTxnExecuted = 0;
+    private long totalExecuteTime = 0;
 
     // 定义performance3变量
     private float sum_w_ytd = 0;
@@ -54,7 +53,6 @@ public class ExecuteManager {
         transactionTypeList = new ArrayList<>(8);
         skipSet = new HashSet<>(8);
         skipMap = new HashMap<>(8);
-        counter = 0;
 
         transactionTypeList.add(new Statistics(TransactionType.NEW_ORDER));
         transactionTypeList.add(new Statistics(TransactionType.PAYMENT));
@@ -98,7 +96,7 @@ public class ExecuteManager {
             }
             transactionTypeList.get(transaction.getTransactionType().index).addNewData(executionTime);
             // 平常执行输出的是这个导致的
-            report(logger, list.size());
+            report(logger, list.size(), executionTime);
         }
     }
 
@@ -120,19 +118,17 @@ public class ExecuteManager {
             }
             transactionTypeList.get(transaction.getTransactionType().index).addNewData(executionTime);
             // 平常执行输出的是这个导致的
-            report(logger, list.size());
+            report(logger, list.size(), executionTime);
         }
     }
 
-    public void report(Logger logger, int total) {
-        counter++; // print statistics every 5 transactions.
-        // get all the transaction execution time and add them into list.
-        for (Statistics statistics : transactionTypeList) {
-            percentage_time_lst.add(statistics.getExeTime());
-        }
-        if (counter % LIMIT == 0) {
+    public void report(Logger logger, int total, long executionTime) {
+        numberOfTxnExecuted++;
+        totalExecuteTime += executionTime;
+
+        if (numberOfTxnExecuted % LIMIT == 0) {
             logger.log(Level.WARNING, "---Statistics start---");
-            logger.log(Level.WARNING, String.format("Statistics: number of transactions executed = %d, total = %d, percentage = %.2f%%", counter, total, total == 0 ? 0.0 : counter * 100.0 / total));
+            logger.log(Level.WARNING, String.format("Statistics: numberOfTxnExecuted=%d, numberOfTxnToExecute=%d, percentage=%.2f%%,throughput=%.2f(/s)", numberOfTxnExecuted, total, total == 0 ? 0.0 : numberOfTxnExecuted * 100.0 / total, totalExecuteTime == 0 ? 0.0 : numberOfTxnExecuted * 1000.0 / totalExecuteTime));
             for (Statistics statistics : transactionTypeList) {
                 logger.log(Level.WARNING, statistics.toString());
             }
@@ -140,33 +136,12 @@ public class ExecuteManager {
         }
     }
 
-    public void summary(Logger logger) {
-        // 在最后一次输出的时候先格式化sum为0
-        sum = 0;
-        cnt = 0;
-        time_lst = new ArrayList<Long>();
-        for (Statistics statistics : transactionTypeList) {
-            // 这是所有transaction的累计执行时间
-//                time_lst.add(statistics.getTimeSum());
-            sum += statistics.getTimeSum();
-            // 获取到最后一次每个transaction执行的总时间
-            time_lst.add(statistics.getTimeSum());
-            // 获得执行的所有transaction的个数
-            cnt += statistics.getCnt();
-            logger.log(Level.SEVERE, statistics.toString());
-        }
-    }
-
     public long getCnt() {
-        return cnt;
+        return numberOfTxnExecuted;
     }
 
     public long getTimeSum() {
-        return sum;
-    }
-
-    public ArrayList<Long> getTime_lst() {
-        return time_lst;
+        return totalExecuteTime;
     }
 
     public ArrayList<Long> getPercentage_time_lst() {

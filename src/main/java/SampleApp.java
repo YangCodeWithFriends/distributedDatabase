@@ -263,22 +263,25 @@ public class SampleApp {
     private void writeClientFiles(ExecuteManager executeManager, Logger logger, String MODE, int serverShardingIndex) {
         // logger is
         // 这是一个client执行完所有的transaction之后最后做的report操作，所以1和2的操作都是在这里
-        executeManager.summary(logger);
+
         // 输出总共执行的transaction数量
         long cnt = executeManager.getCnt();
         logger.log(Level.WARNING, String.format("Total num: %d\n", cnt));
-        // 获取该client的总执行时间
-        long sum = executeManager.getTimeSum();
-        double sum_time = sum / 1000.0;
-        logger.log(Level.WARNING, String.format("Time sum(s): %.2f\n", sum_time));
-        // 输出throughput
-        double throughput = cnt * 1.0 / (sum / 1000.0);
-        throughput_list.add(throughput);
 
+        // 获取该client的总执行时间
+        long sum = executeManager.getTimeSum(); // in ms
+        double sum_time = sum / 1000.0;// in s
+        logger.log(Level.WARNING, String.format("Time sum(s): %.2f\n", sum_time));
+
+        // 输出throughput
+        double throughput = cnt / sum_time;
+        throughput_list.add(throughput);
         logger.log(Level.WARNING, String.format("Transaction throughput: %.2f\n", throughput));
+
         // 获取该client的执行平均时间并输出
         double avg_time = sum * 1.0 / cnt;
         logger.log(Level.WARNING, String.format("Time average(ms): %.2f\n", avg_time));
+
         // 获取8个transaction执行总时间组成的arraylist,然后输出中位数
         //ArrayList<Long> time_lst = executeManager.getTime_lst();
         ArrayList<Long> N1 = executeManager.getPercentage_time_lst();
@@ -290,28 +293,30 @@ public class SampleApp {
             medium = N1.get(N1.size() / 2);
         }
         logger.log(Level.WARNING, String.format("Medium latency(ms): %d\n", medium));
+
         // 输出95%
         int index1 = (int) (N1.size() * 0.95);
-        double num1 = (double) N1.get(index1);
-        logger.log(Level.WARNING, String.format("95 latency(ms): %.2f\n", num1));
+        long num1 = N1.get(index1);
+        logger.log(Level.WARNING, String.format("95 latency(ms): %d\n", num1));
+
         // 输出99%
         int index2 = (int) (N1.size() * 0.99);
-        double num2 = (double) N1.get(index2);
-        logger.log(Level.WARNING, String.format("95 latency(ms): %.2f\n", num2));
+        long num2 = N1.get(index2);
+        logger.log(Level.WARNING, String.format("95 latency(ms): %d\n", num2));
 
         // 创建文件夹和写文件
         try {
-            String clientOutPutFileName = MODE + "_clients_" + +serverShardingIndex + ".csv";
+            String clientOutPutFileName = MODE + "-clients-" + +serverShardingIndex + ".csv";
             File writeSQLFile = new File(clientOutPutFileName);
             boolean flag;
             flag = writeSQLFile.exists();
             try {
                 BufferedWriter writeText = new BufferedWriter(new FileWriter(writeSQLFile, true));
                 if (!flag) {
-                    writeText.write("number_transactions," + "sum_time," + "throughput," + "avg_time," + "medium," + "95%," + "99%");
+                    writeText.write("number_transactions," + "sum_time(s)," + "throughput," + "avg_time," + "medium," + "95%," + "99%");
                 }
                 writeText.newLine();
-                writeText.write(cnt + "," + String.format("%.2f", sum_time) + "," + String.format("%.2f", throughput) + "," + String.format("%.2f", avg_time) + "," + medium + "," + (int) num1 + "," + (int) num2);
+                writeText.write(cnt + "," + String.format("%.2f", sum_time) + "," + String.format("%.2f", throughput) + "," + String.format("%.2f", avg_time) + "," + medium + "," + num1 + "," + num2);
                 writeText.flush();
                 writeText.close();
             } catch (Exception e) {
