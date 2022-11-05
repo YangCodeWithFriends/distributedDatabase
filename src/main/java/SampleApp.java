@@ -153,7 +153,7 @@ public class SampleApp {
         if (MODE.equals(DataSource.YSQL)) {
             try {
                 conn = new DataSource(MODE, serverShardingIndex, mainLogger).getSQLConnection();
-                conn.setTransactionIsolation(1); // isolation
+                conn.setTransactionIsolation(2); // isolation
                 ExecuteManager executeManager = new ExecuteManager();
                 executeManager.reportSQL(conn, mainLogger);
             } catch (Exception e) {

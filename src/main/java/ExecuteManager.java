@@ -75,7 +75,9 @@ public class ExecuteManager {
 
         // 反选逻辑
 //        skipSet.addAll(Arrays.asList(TransactionType.values()));
+//        skipSet.remove(TransactionType.DELIVERY);
 //        skipSet.remove(TransactionType.NEW_ORDER);
+//        skipSet.remove(TransactionType.PAYMENT);
     }
 
     public void executeYSQL(Connection conn, List<Transaction> list, Logger logger) throws Exception {
@@ -125,10 +127,11 @@ public class ExecuteManager {
     public void report(Logger logger, int total, long executionTime) {
         numberOfTxnExecuted++;
         totalExecuteTime += executionTime;
+        percentage_time_lst.add(executionTime);
 
         if (numberOfTxnExecuted % LIMIT == 0) {
             logger.log(Level.WARNING, "---Statistics start---");
-            logger.log(Level.WARNING, String.format("Statistics: numberOfTxnExecuted=%d, numberOfTxnToExecute=%d, percentage=%.2f%%,throughput=%.2f(/s)", numberOfTxnExecuted, total, total == 0 ? 0.0 : numberOfTxnExecuted * 100.0 / total, totalExecuteTime == 0 ? 0.0 : numberOfTxnExecuted * 1000.0 / totalExecuteTime));
+            logger.log(Level.WARNING, String.format("Statistics: numberOfTxnExecuted=%d, numberOfTxnToExecute=%d, percentage=%.2f%%, throughput=%.2f/s, avgTime=%.2fs", numberOfTxnExecuted, total, total == 0 ? 0.0 : numberOfTxnExecuted * 100.0 / total, totalExecuteTime == 0 ? 0.0 : numberOfTxnExecuted * 1000.0 / totalExecuteTime, totalExecuteTime / (numberOfTxnExecuted * 1000.0)));
             for (Statistics statistics : transactionTypeList) {
                 logger.log(Level.WARNING, statistics.toString());
             }
