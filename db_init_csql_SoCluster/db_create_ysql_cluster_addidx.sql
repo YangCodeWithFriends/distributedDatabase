@@ -36,7 +36,7 @@ CREATE TABLE warehouse (
 DROP TABLE if EXISTS district CASCADE;
 CREATE TABLE district (
   -- D W ID is a foreign key that refers to warehouse table.
-  D_W_id int NOT NULL REFERENCES warehouse(W_id),
+  D_W_id int NOT NULL,
   D_id int NOT NULL,
   -- Note: as compound foreign key
   D_name varchar(10) NOT NULL,
@@ -60,10 +60,8 @@ CREATE TABLE customer (
   -- combined (C W ID, C D ID) is a foreign key that refers to district table.
   C_W_id int NOT NULL,
   C_D_id int NOT NULL,
-  
   C_id int NOT NULL,
   -- Note: as compound foreign key
-  
   C_first varchar(16) NOT NULL,
   C_middle char(2) NOT NULL,
   C_last varchar(16) NOT NULL,
@@ -81,8 +79,7 @@ CREATE TABLE customer (
   C_ytd_payment float NOT NULL,
   C_payment_cnt int NOT NULL,
   C_delivery_cnt int NOT NULL,
-  -- C_data varchar(500) NOT NULL
-  FOREIGN KEY (C_W_id, C_D_id) REFERENCES district(D_W_id, D_id),
+  -- FOREIGN KEY (C_W_id, C_D_id) REFERENCES district(D_W_id, D_id),
   PRIMARY KEY (C_W_id HASH, C_D_id, C_id) -- yugabyte distrbuted table sharding
 );
 -- insert from csv
@@ -109,7 +106,8 @@ CREATE TABLE orders (
   O_all_local decimal(1,0) NOT NULL,
   O_entry_d timestamp NOT NULL,
   PRIMARY KEY(O_W_id HASH, O_D_id, O_id)
-  FOREIGN KEY (O_W_id, O_D_id, O_C_id) REFERENCES customer(C_W_id, C_D_id, C_id)
+  -- ,
+  -- FOREIGN KEY (O_W_id, O_D_id, O_C_id) REFERENCES customer(C_W_id, C_D_id, C_id)
 );
 -- insert from csv
 \copy orders from '/home/stuproj/cs4224j/project_data/data_files/order.csv' WITH (FORMAT CSV, NULL 'null');
@@ -143,8 +141,8 @@ DROP TABLE if EXISTS stock CASCADE;
 CREATE TABLE stock (
   -- S I ID is a foreign key that refers to item table. 
   -- S W ID is a foreign key that refers to warehouse table.
-  S_W_id int NOT NULL REFERENCES warehouse(W_id),
-  S_I_id int NOT NULL REFERENCES item(I_id),
+  S_W_id int NOT NULL,
+  S_I_id int NOT NULL,
   S_quantity decimal(4,0) NOT NULL,
   S_ytd decimal(8,2) NOT NULL,
   S_order_cnt int NOT NULL,
@@ -167,15 +165,16 @@ CREATE TABLE orderline (
   OL_D_id int NOT NULL, 
   OL_O_id int NOT NULL,
   OL_number int NOT NULL,
-  OL_I_id int NOT NULL REFERENCES item(I_id),
-  
+  OL_I_id int NOT NULL,
+  -- ,
   OL_delivery_D timestamp, -- data has lots of null
   OL_amount decimal(7,2) NOT NULL,
   OL_supply_W_id int NOT NULL,
   OL_quantity decimal(2,0) NOT NULL,
   OL_dist_info char(24) NOT NULL,
-  PRIMARY KEY(OL_W_id HASH, OL_D_id, OL_O_id, OL_number),
-  FOREIGN KEY (OL_W_id, OL_D_id, OL_O_id) REFERENCES orders(O_W_id, O_D_id, O_id)
+  PRIMARY KEY(OL_W_id HASH, OL_D_id, OL_O_id, OL_number)
+  -- ,
+  -- FOREIGN KEY (OL_W_id, OL_D_id, OL_O_id) REFERENCES orders(O_W_id, O_D_id, O_id)
 );
 \copy orderline from '/home/stuproj/cs4224j/project_data/data_files/order-line.csv' WITH (FORMAT CSV, NULL 'null');
 select count(*) as no_imported_OLine from "orderline";
