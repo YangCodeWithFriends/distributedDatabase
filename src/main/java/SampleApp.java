@@ -62,6 +62,7 @@ public class SampleApp {
         mainLogger.log(Level.SEVERE, "Your mode = " + MODE);
         mainLogger.log(Level.SEVERE, "Your server sharding index = " + serverShardingIndex);
 
+        Level outputLevel = Level.WARNING;
         // config input and output file for several threads
         String[] inputFileList = new String[numberOfThreads];
         String[] outputFileList = new String[numberOfThreads];
@@ -76,7 +77,7 @@ public class SampleApp {
                 logger.addHandler(handler);
                 // SETLEVEL. Set the logger filtering level.
 
-                logger.setLevel(Level.WARNING);
+                logger.setLevel(outputLevel);
             } catch (IOException e) {
                 mainLogger.log(Level.SEVERE, "IO Exception = ", e);
             }

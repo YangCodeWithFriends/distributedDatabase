@@ -114,7 +114,7 @@ public class ExecuteManager {
 
             long executionTime = 0;
             try {
-                transaction.executeYCQL(session, logger);
+                executionTime = transaction.executeYCQL(session, logger);
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "YCQL Execute exception= ", e);
             }
