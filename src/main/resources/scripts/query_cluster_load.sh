@@ -1,14 +1,10 @@
-ssh cs4224j@xcnd20.comp.nus.edu.sg \
-    "sh -c 'cd ~/target && uptime'"
+#!/bin/bash
 
-ssh cs4224j@xcnd21.comp.nus.edu.sg \
-    "sh -c 'cd ~/target && uptime'"
+for i in $(seq 20 1 24)
+do
+  echo "Query server load from xcnd$i"
+  ssh cs4224j@xcnd$i.comp.nus.edu.sg \
+      "sh -c 'uptime'"
+done
 
-ssh cs4224j@xcnd22.comp.nus.edu.sg \
-    "sh -c 'cd ~/target && uptime'"
-
-ssh cs4224j@xcnd23.comp.nus.edu.sg \
-    "sh -c 'cd ~/target && uptime'"
-
-ssh cs4224j@xcnd24.comp.nus.edu.sg \
-    "sh -c 'cd ~/target && uptime'"
+# ./query_sql.sh | awk '{sum += $NF}; END {print sum}'
