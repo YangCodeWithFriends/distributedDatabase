@@ -214,7 +214,7 @@ public class SampleApp {
             if (MODE.equals(DataSource.YSQL)) {
                 logger.log(Level.WARNING, "Connecting to DB. Your mode is YSQL.");
                 conn = new DataSource(MODE, serverIndex, logger).getSQLConnection();
-//                conn.setTransactionIsolation(1); // isolation
+                conn.setTransactionIsolation(2); // isolation
                 // TODO: 1 / 2(default)
                 logger.log(Level.INFO, "Conn = " + conn.getClientInfo());
 //                logger.log(Level.INFO, "Isolation level=" + conn.getTransactionIsolation());
