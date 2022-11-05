@@ -103,7 +103,7 @@ CREATE TABLE orders (
   UNIQUE(O_W_id, O_D_id, O_C_id),
 
   -- The range of O CARRIER ID is [1,10]: use smallint in pgsql(but small int is 16 bit in CQL, tinyint is 8)
-  O_carrier_id smallint, -- data has lots of null
+  O_carrier_id int, -- data has lots of null
   O_OL_cnt decimal(2,0) NOT NULL,
   O_all_local decimal(1,0) NOT NULL,
   O_entry_d timestamp NOT NULL

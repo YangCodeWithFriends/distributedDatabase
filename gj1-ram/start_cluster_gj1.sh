@@ -3,12 +3,12 @@
  # @Author: YuhaoWU
  # @Date: ${ms1}22-10-30 ${ms1}:34:26
  # @LastEditors: YuhaoWU
- # @LastEditTime: 2022-11-05 01:40:08
+ # @LastEditTime: 2022-11-03 12:16:16
  # @Description: 停掉现有的cluster，重新启动cluster, 不包括删除之前的数据
 ### 
 
 yb_bin=/home/stuproj/cs4224j/yugabyte-2.14.1.0/bin
-cluster_file_path=/temp/gj3
+cluster_file_path=/mnt/ramdisk/gj1
 
 # echo $yb_bin
 # echo $cluster_file_path
@@ -17,7 +17,7 @@ username=cs4224j@
 loadIP=192.168.48.$1
 
 # copy conf files
-echo "upload all conf files"
+echo "upload all gj1 conf files"
 # bash get current bash file directory
 bashCurPath=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 echo "Your local script path is: $bashCurPath"
@@ -25,16 +25,16 @@ scp ${bashCurPath}/*.conf ${username}${loadIP}:${yb_bin}
 
 
 # 停掉如果还在run的集群
-${bashCurPath}/end_cluster_gj3.sh
+# ${bashCurPath}/end_cluster_gj1.sh
 
-clusterno=3 # 1
+clusterno='' # 1
 # master & tserver
-ms1=22
+ms1=21
 ms2=23
 ms3=24
 # tserver
 ts1=20
-ts2=21
+ts2=22
 
 
 # run master
