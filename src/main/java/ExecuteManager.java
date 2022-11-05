@@ -278,6 +278,7 @@ public class ExecuteManager {
             Row row = rsIterator1.next();
             sum_w_ytd = Objects.requireNonNull(row.getBigDecimal(0)).floatValue();
         }
+        mainLogger.log(Level.SEVERE, "Query db state result = " + sum_w_ytd);
 //        System.out.println("结束执行cql1");
         // cql2
 //        System.out.println("开始执行cql2");
@@ -292,6 +293,8 @@ public class ExecuteManager {
             sum_d_ytd = Objects.requireNonNull(row.getBigDecimal(0)).floatValue();
             sum_d_next_o_id = row.getInt(1);
         }
+        mainLogger.log(Level.SEVERE, "Query db state result = " + sum_d_ytd);
+        mainLogger.log(Level.SEVERE, "Query db state result = " + sum_d_next_o_id);
 //        System.out.println("结束执行cql2");
         // cql3
 //        System.out.println("开始执行cql3");
@@ -308,9 +311,10 @@ public class ExecuteManager {
             sum_c_payment_cnt = row.getInt(2);
             sum_c_delivery_cnt = row.getInt(3);
         }
-//        System.out.println("结束执行cql3");
-        // cql4
-//        System.out.println("开始执行cql4");
+        mainLogger.log(Level.SEVERE, "Query db state result = " + sum_c_balance);
+        mainLogger.log(Level.SEVERE, "Query db state result = " + sum_c_ytd_payment);
+        mainLogger.log(Level.SEVERE, "Query db state result = " + sum_c_payment_cnt);
+        mainLogger.log(Level.SEVERE, "Query db state result = " + sum_c_delivery_cnt);//        System.out.println("开始执行cql4");
         String cql4 = String.format("select max(O_ID), sum(O_OL_CNT) from dbycql.Orders");
         simpleStatement_0 = SimpleStatement.builder(cql4)
                 .setExecutionProfileName("oltp")
@@ -323,7 +327,10 @@ public class ExecuteManager {
 //            max_o_id = Math.max(max_o_id, row.getInt(0));
             sum_o_ol_cnt = Objects.requireNonNull(row.getBigDecimal(1)).floatValue();
         }
-//        System.out.println("结束执行cql4");
+        mainLogger.log(Level.SEVERE, "Query db state result = " + max_o_id);
+        mainLogger.log(Level.SEVERE, "Query db state result = " + sum_o_ol_cnt);
+
+        mainLogger.log(Level.SEVERE, "Query db state CQL5 start");
         // cql5
 //        System.out.println("开始执行cql5");
         String cql5 = String.format("select sum(OL_AMOUNT), sum(OL_QUANTITY) from dbycql.OrderLine");
@@ -337,7 +344,10 @@ public class ExecuteManager {
             sum_ol_amount = Objects.requireNonNull(row.getBigDecimal(0)).floatValue();
             sum_ol_quantity = Objects.requireNonNull(row.getBigDecimal(1)).floatValue();
         }
-//        System.out.println("结束执行cql5");
+        mainLogger.log(Level.SEVERE, "Query db state result = " + sum_ol_amount);
+        mainLogger.log(Level.SEVERE, "Query db state result = " + sum_ol_quantity);
+        mainLogger.log(Level.SEVERE, "Query db state CQL5 end");
+
         // cql6
 //        System.out.println("开始执行cql6");
         String cql6 = String.format("select sum(S_QUANTITY), sum(S_YTD), sum(S_ORDER_CNT), sum(S_REMOTE_CNT) from dbycql.Stock");
@@ -353,7 +363,12 @@ public class ExecuteManager {
             sum_s_order_cnt = row.getInt(2);
             sum_s_remote_cnt = row.getInt(3);
         }
-//        System.out.println("结束执行cql6");
+        mainLogger.log(Level.SEVERE, "Query db state result = " + sum_s_quantity);
+        mainLogger.log(Level.SEVERE, "Query db state result = " + sum_s_ytd);
+        mainLogger.log(Level.SEVERE, "Query db state result = " + sum_s_order_cnt);
+        mainLogger.log(Level.SEVERE, "Query db state result = " + sum_s_remote_cnt);
+
+        //        System.out.println("结束执行cql6");
         // 拿完了所有的数据，开始进行输出到文件
 //        Path path = Paths.get("dataCSV");
         try {
