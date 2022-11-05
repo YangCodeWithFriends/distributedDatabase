@@ -3,7 +3,7 @@
  # @Author: YuhaoWU
  # @Date: ${ms1}22-10-30 ${ms1}:34:26
  # @LastEditors: YuhaoWU
- # @LastEditTime: 2022-11-05 21:43:25
+ # @LastEditTime: 2022-11-06 01:55:01
  # @Description: 停掉现有的cluster，重新启动cluster, 不包括删除之前的数据
 ### 
 
@@ -73,4 +73,4 @@ ssh cs4224j@xcnd${ts1}.comp.nus.edu.sg \
 ssh cs4224j@xcnd${ts2}.comp.nus.edu.sg \
 "sh -c 'mkdir -p ${cluster_file_path} ${cluster_file_path}/disk2'"
 ssh cs4224j@xcnd${ts2}.comp.nus.edu.sg \
-"sh -c 'cd ${yb_bin} && ./yb-tserver --flagfile ${clusterno}ts{ts2}.conf > ${cluster_file_path}/yb-tserver.out 2>&1 &'"
+"sh -c 'cd ${yb_bin} && ./yb-tserver --flagfile ${clusterno}ts${ts2}.conf > ${cluster_file_path}/yb-tserver.out 2>&1 &'"
