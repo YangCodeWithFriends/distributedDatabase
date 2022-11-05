@@ -2,6 +2,7 @@
 DROP DATABASE IF EXISTS dbysql;
 -- Colocated Tables 
 CREATE DATABASE dbysql;
+-- CREATE DATABASE dbysql WITH colocated = true;
 -- show all tables
 -- \dt;
 
@@ -9,6 +10,8 @@ CREATE DATABASE dbysql;
 \c dbysql;
 
 -- data path: /home/stuproj/cs4224j/project_data/data_files/
+
+-- 因为用了range, parittion, 所以也用range sharding
 
 --  5 entity tables --
 DROP TABLE if EXISTS warehouse CASCADE;
@@ -23,7 +26,7 @@ CREATE TABLE warehouse(
   W_tax decimal(4,4) NOT NULL,
   W_ytd decimal(12,2) NOT NULL,
   
-  PRIMARY KEY(W_id HASH) -- yugabyte distrbuted table sharding
+  PRIMARY KEY(W_id ASC) -- yugabyte distrbuted table sharding
 );
 -- PARTITION BY RANGE (W_id);
 
@@ -61,7 +64,7 @@ CREATE TABLE district (
   D_tax decimal(4,4) NOT NULL,
   D_ytd decimal(12,2) NOT NULL,
   D_next_O_id int NOT NULL,
-  PRIMARY KEY(D_W_id HASH, D_id)
+  PRIMARY KEY(D_W_id ASC, D_id)
 );
 -- PARTITION BY RANGE (D_W_id);
 
@@ -75,7 +78,6 @@ CREATE TABLE district (
 --   FOR VALUES FROM (7) TO (9);
 -- CREATE TABLE district_pt5 PARTITION OF district
 --   FOR VALUES FROM (9) TO (11);
--- WITH (colocated = true);
 
 \copy district from '/home/stuproj/cs4224j/project_data/data_files/district.csv' WITH (FORMAT CSV, NULL 'null');
 
@@ -107,8 +109,8 @@ CREATE TABLE customer (
   C_delivery_cnt int NOT NULL,
   -- C_data varchar(500) NOT NULL
   -- FOREIGN KEY (C_W_id, C_D_id) REFERENCES district(D_W_id, D_id),
-  -- PRIMARY KEY ((C_W_id, C_D_id, C_id) HASH)
-  PRIMARY KEY (C_W_id HASH, C_D_id, C_id)
+  -- PRIMARY KEY ((C_W_id, C_D_id, C_id) ASC)
+  PRIMARY KEY (C_W_id ASC, C_D_id, C_id)
 )
 PARTITION BY RANGE (C_W_id);
 
@@ -146,8 +148,8 @@ CREATE TABLE orders (
   O_OL_cnt decimal(2,0) NOT NULL,
   O_all_local decimal(1,0) NOT NULL,
   O_entry_d timestamp NOT NULL,
-  -- PRIMARY KEY((O_W_id, O_D_id, O_id) HASH)
-  PRIMARY KEY(O_W_id HASH, O_D_id, O_id)
+  -- PRIMARY KEY((O_W_id, O_D_id, O_id) ASC)
+  PRIMARY KEY(O_W_id ASC, O_D_id, O_id)
   -- ,
   -- FOREIGN KEY (O_W_id, O_D_id, O_C_id) REFERENCES customer(C_W_id, C_D_id, C_id)
 ) PARTITION BY RANGE (O_W_id);
@@ -180,7 +182,7 @@ CREATE TABLE item (
   i_price decimal(5,2) NOT NULL,
   -- I_im_id int NOT NULL,
   -- I_data varchar(50) NOT NULL
-  PRIMARY KEY(I_id HASH)
+  PRIMARY KEY(I_id ASC)
 );
 -- insert from csv
 \copy item from '/home/stuproj/cs4224j/project_data/data_files/item_new.csv' WITH (FORMAT CSV, NULL 'null');
@@ -201,8 +203,8 @@ CREATE TABLE stock (
   S_ytd decimal(8,2) NOT NULL,
   S_order_cnt int NOT NULL,
   S_remote_cnt int NOT NULL,
-  -- PRIMARY KEY((S_W_id, S_I_id) HASH)
-  PRIMARY KEY(S_W_id HASH, S_I_id)
+  -- PRIMARY KEY((S_W_id, S_I_id) ASC)
+  PRIMARY KEY(S_W_id ASC, S_I_id)
 ) 
 PARTITION BY RANGE (S_W_id)
 ;
@@ -239,8 +241,8 @@ CREATE TABLE orderline (
   OL_supply_W_id int NOT NULL,
   OL_quantity decimal(2,0) NOT NULL,
   OL_dist_info char(24) NOT NULL,
-  -- PRIMARY KEY((OL_W_id, OL_D_id, OL_O_id, OL_number) HASH)
-  PRIMARY KEY(OL_W_id HASH, OL_D_id, OL_O_id, OL_number)
+  -- PRIMARY KEY((OL_W_id, OL_D_id, OL_O_id, OL_number) ASC)
+  PRIMARY KEY(OL_W_id ASC, OL_D_id, OL_O_id, OL_number)
   -- ,
   -- FOREIGN KEY (OL_W_id, OL_D_id, OL_O_id) REFERENCES orders(O_W_id, O_D_id, O_id)
 ) PARTITION BY RANGE (OL_W_id);
@@ -273,21 +275,22 @@ create table customer_item(
     CI_C_ID int, 
     CI_O_ID int, 
     CI_I_ID int,
-    primary key(CI_W_ID HASH, CI_D_ID, CI_C_ID, CI_O_ID, CI_I_ID) 
-);
--- PARTITION BY RANGE (CI_W_id);
-
--- CREATE TABLE ci_pt1 PARTITION OF customer_item
---   FOR VALUES FROM (1) TO (3);
--- CREATE TABLE ci_pt2 PARTITION OF customer_item
---   FOR VALUES FROM (3) TO (5);
--- CREATE TABLE ci_pt3 PARTITION OF customer_item
---   FOR VALUES FROM (5) TO (7);
--- CREATE TABLE ci_pt4 PARTITION OF customer_item
---   FOR VALUES FROM (7) TO (9);
--- CREATE TABLE ci_pt5 PARTITION OF customer_item
---   FOR VALUES FROM (9) TO (11)
+    primary key(CI_W_ID ASC, CI_D_ID, CI_C_ID, CI_O_ID, CI_I_ID) 
+)
 -- ;
+PARTITION BY RANGE (CI_W_id);
+
+CREATE TABLE ci_pt1 PARTITION OF customer_item
+  FOR VALUES FROM (1) TO (3);
+CREATE TABLE ci_pt2 PARTITION OF customer_item
+  FOR VALUES FROM (3) TO (5);
+CREATE TABLE ci_pt3 PARTITION OF customer_item
+  FOR VALUES FROM (5) TO (7);
+CREATE TABLE ci_pt4 PARTITION OF customer_item
+  FOR VALUES FROM (7) TO (9);
+CREATE TABLE ci_pt5 PARTITION OF customer_item
+  FOR VALUES FROM (9) TO (11)
+;
 
 \copy customer_item from '/home/stuproj/cs4224j/project_data/data_files/customer_item.csv' WITH (FORMAT CSV, NULL 'null');
 select count(*) as no_imported_customer_item from customer_item;
@@ -306,7 +309,7 @@ create table new_order_info (
     NO_I_ID int NOT NULL, 
     NO_SUPPLY_W_ID int NOT NULL, 
     NO_QUANTITY decimal(2,0) NOT NULL, 
-    primary key ((NO_O_ID, NO_N, NO_W_ID, NO_D_ID, NO_C_ID) HASH)
+    primary key ((NO_O_ID, NO_N, NO_W_ID, NO_D_ID, NO_C_ID) ASC)
 );
 
 
