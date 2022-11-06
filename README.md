@@ -1,4 +1,4 @@
-# 2022fall CS5424 Distributed Database Project (Group-J)
+# Distributed Database Project (Group-J)
 
 ## 0. Connect to NUS SOC VPN
 
