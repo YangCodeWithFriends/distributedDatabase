@@ -23,3 +23,4 @@ log*.txt
 *QL_clients_*.csv
 *QL_throughput_*.csv
 *QL_dbstate.csv
+tmp.txt
