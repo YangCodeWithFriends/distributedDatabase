@@ -101,7 +101,9 @@ There are several cluster-related <u>bash scripts</u> for different use cases lo
 
      ![Tablet Server Status](./src/main/resources/asset/tablet_servers.png)
 
-     then you can then build database by `./initcql_gj2.sh` for a YCQL database and `./initsql_gj2.sh` for a YSQL database. The console will show processes of importing each table/keyspace like below.
+     then you can then build database by `./initcql_gj2.sh 241` for a YCQL database and `./initsql_gj2.sh 243` for a YSQL database where 241 or 243 can be replace with [239, 240, 241, 242, 243] as long as the selected tsever in the figure above **is running**. Then the console will show some processes of importing each table/keyspace like below.
+
+     ![Console when Creating a DataBase](https://tva1.sinaimg.cn/large/008vxvgGgy1h7vqdsseahj31f40n8jvf.jpg)
 
 - When to the end of usage, to terminate the cluster, try `./end_cluster_gj2.sh`.
 
