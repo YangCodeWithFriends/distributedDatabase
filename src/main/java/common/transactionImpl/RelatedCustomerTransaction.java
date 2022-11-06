@@ -6,6 +6,7 @@ import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 import common.Transaction;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Duration;
@@ -19,9 +20,17 @@ public class RelatedCustomerTransaction extends Transaction {
     int C_ID;
 
     protected void YSQLExecute(Connection conn, Logger logger) throws SQLException {
+        ResultSet rs = null;
         conn.setAutoCommit(true);
         Statement stmt = conn.createStatement();
-        stmt.executeQuery(String.format("with target_orderline as(" +
+        // example
+//            String SQL1 = "update District set D_NEXT_O_ID = D_NEXT_O_ID + 1 where D_W_ID = ? and D_ID = ? returning D_NEXT_O_ID;";
+//            statement = conn.prepareStatement(SQL1);
+//            statement.setInt(1, W_ID);
+//            statement.setInt(2, D_ID);
+//            rs = statement.executeQuery();
+        // example end
+        rs = stmt.executeQuery(String.format("with target_orderline as(" +
                 "select " +
                 "* from customer_item " +
                 "where CI_W_ID=%d AND CI_D_ID=%d AND CI_C_ID=%d), " +

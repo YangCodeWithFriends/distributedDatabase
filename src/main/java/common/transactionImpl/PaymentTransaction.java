@@ -26,16 +26,18 @@ public class PaymentTransaction extends Transaction {
         try {
             Statement stmt = conn.createStatement();
             stmt.execute(String.format("UPDATE Warehouse SET W_YTD = W_YTD + %f WHERE W_ID = %d RETURNING W_STREET_1, W_STREET_2, W_CITY, W_STATE, W_ZIP", PAYMENT, C_W_ID));
-//            ResultSet rs = stmt.getResultSet();
-//            if (rs.next()) {
-//               logger.log(Level.FINE, rs.getString(3));
-//            }
             stmt.execute(String.format("UPDATE District SET D_YTD = D_YTD + %f WHERE D_W_ID = %d AND D_ID = %d RETURNING D_STREET_1, D_STREET_2, D_CITY, D_STATE, D_ZIP", PAYMENT, C_W_ID, C_D_ID));
-//           logger.log(Level.FINE, stmt.getResultSet());
             stmt.execute(String.format("UPDATE Customer SET C_BALANCE = C_BALANCE - %f, C_YTD_PAYMENT = C_YTD_PAYMENT + %f, C_PAYMENT_CNT = C_PAYMENT_CNT + 1 WHERE C_W_ID = %d " +
                                         "AND C_D_ID = %d AND C_ID = %d " +
                                         "RETURNING C_W_ID, C_D_ID, C_ID, C_FIRST, C_MIDDLE, C_LAST, C_STREET_1, C_STREET_2, C_CITY, " +
                                         "C_STATE, C_ZIP, C_PHONE, C_SINCE, C_CREDIT,C_CREDIT_LIM, C_DISCOUNT, C_BALANCE", PAYMENT, PAYMENT, C_W_ID, C_D_ID, C_ID));
+            // example
+//            String SQL1 = "update District set D_NEXT_O_ID = D_NEXT_O_ID + 1 where D_W_ID = ? and D_ID = ? returning D_NEXT_O_ID;";
+//            statement = conn.prepareStatement(SQL1);
+//            statement.setInt(1, W_ID);
+//            statement.setInt(2, D_ID);
+//            rs = statement.executeQuery();
+            // example end
 //           logger.log(Level.FINE, stmt.getResultSet().getString(0));
 //            stmt.execute(String.format("UPDATE Customer SET C_YTD_PAYMENT = C_YTD_PAYMENT + %f WHERE C_W_ID = %d AND C_D_ID = %d AND C_ID = %d", PAYMENT, C_W_ID, C_D_ID, C_ID));
 //            stmt.execute(String.format("UPDATE Customer SET C_PAYMENT_CNT = C_PAYMENT_CNT + %d WHERE C_W_ID = %d AND C_D_ID = %d AND C_ID = %d", 1, C_W_ID, C_D_ID, C_ID));
