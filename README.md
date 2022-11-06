@@ -1,4 +1,4 @@
-# 2022fall-cs5424-distributed-database-project
+# 2022fall CS5424 Distributed Database Project (Group-J)
 
 ## 0. Connect to NUS SOC VPN
 
@@ -130,7 +130,7 @@ We have several components for the whole programe at path `src/main/java`.
 | Transaction.java    | A template abstract class for transactions. It defines a template method for all transactions. This is the usage of `Template Method` design patterns, see more in [Template Method Toturial](https://refactoring.guru/design-patterns/template-method) |
 | transactionImpl     | Implementations for each transaction types for both YSQL and YCQL. |
 
-## 2. Configuration file
+### 2. Configuration file
 
 Our configuration files are located at `src/main/resources`.
 
@@ -139,90 +139,123 @@ Our configuration files are located at `src/main/resources`.
 | src/main/resources/scripts    | Useful `bash` scripts, such as to launch or end `20` clients, to query server load and server ram usage. |
 | src/main/resources/xact_files | Transactions raw files that clients will read and execute.   |
 
----
+## 5. Instructions on running experiments
 
+In our project, we prioritise the code design to allow easy use. **Both `YSQL` and `YCQL` use the same `.jar` file.**
 
-#### Compile `cassandra.jar` and `cockroachdb.jar`
+TODO: 修改端口和IP
+
+To run the clients, do the following:
+
+### 0) Make sure step 2 and 3 finished properly
+
+### 1) Compile Java file to `.jar`
+
+At the `root directory` of this `repo`, execute:
 
 ```zsh
 $ mvn clean package
 ```
 
-### Instructions for running experiments
+### 2) Send local `.jar` file onto `SOC` servers
 
-### YSQL
+The directory that stores all our `.jar, logs` is `~/target`.
 
-1. Run experiments for workload A/B with 40 clients
+```bash
+$ scp ./target/yugabyte-simple-java-app-1.0-SNAPSHOT.jar cs4224j@192.168.48.239:~/target
+```
 
-   ```zsh
-   $ ./scripts/run_experiments.sh <experiment-number> <workload-type> cockroachdb 26267
-   ```
+### 3) Start clients
 
-   e.g.
+#### YCQL
 
-   ```zsh
-   $ ./scripts/run_experiments.sh 1 A cockroachdb 26267
-   ```
+##### a) start clients
 
-   Outputs for each client will be stored at `out/cockroachdb-<experiment-number>-<workload-type>-<client-id>.out`
+```bash
+$ ./src/main/resources/scripts/start_client_cql.sh
+```
 
-   Final statistics will be stored at `out/cockroachdb-<experiment-number>-<workload-type>.csv`
+##### b) check logs on any SOC server
 
-   If you only need to run one client:
+```bash
+# log on SOC server
+$ ssh cs4224j@xcnd22
+$ cd ~/target
+# check number of logs, expect to be 25
+$ ls YCQL-log-*.txt | wc -l
+```
 
-   ```zsh
-   $ java -jar target/cockroachdb.jar <hostname> 26267 <workload-type> <client-id> <statistics-csv-dir> 0
-   ```
+##### c) Query overall executing status
 
-   e.g.
+```bash
+$ ./query_cql.sh
+```
 
-   ```zsh
-   $ java -jar target/cockroachdb.jar xcnd30.comp.nus.edu.sg 26267 A a clients.csv 0
-   ```
+Sample Output
 
-3. To abort experiments
-   ```
-   $ ./scripts/stop_experiments.sh
-   ```
+![Sample Output for query cql](./src/main/resources/asset/sample_query_cql.png)
 
-### YCQL
+##### d) Query the speed of a specific transaction type
 
-1. Run experiments for workload A/B with 40 clients
+```bash
+$ ./query_txn.sh YCQL N
+$ ./query_txn.sh YCQL D
+$ ./query_txn.sh YCQL P
+$ ./query_txn.sh YCQL I
+```
 
-   ```zsh
-   $ ./scripts/run_experiments.sh <experiment-number> <workload-type> cassandra 3042
-   ```
+![Sample Output for query cql](./src/main/resources/asset/sample_query_txn_cql.png)
 
-   e.g.
+#### YSQL
 
-   ```zsh
-   $ ./scripts/run_experiments.sh 1 A cassandra 3042
-   ```
+##### a) start clients
 
-   Outputs for each client will be stored at `out/cassandra-<experiment-number>-<workload-type>-<client-id>.out`
+```bash
+$ ./src/main/resources/scripts/start_client_sql.sh
+```
 
-   Final statistics will be stored at `out/cassandra-<experiment-number>-<workload-type>.csv`
+##### b) check logs on any SOC server
 
-   If you only need to run one client:
+```bash
+# log on SOC server
+$ ssh cs4224j@xcnd22
+$ cd ~/target
+# check number of logs, expect to be 25
+$ ls YSQL-log-*.txt | wc -l
+```
 
-   ```zsh
-   $ java -jar target/cassandra.jar <hostname> 3042 <workload-type> <client-id> <statistics-csv-dir> 0
-   ```
+##### c) Query overall executing status
 
-   e.g.
+```bash
+$ ./query_sql.sh
+```
 
-   ```zsh
-   $ java -jar target/cassandra.jar xcnd30.comp.nus.edu.sg 3042 A a clients.csv 0
-   ```
+Sample Output
 
-4. To abort experiments
-   ```
-   $ ./scripts/stop_experiments.sh
-   ```
+![Sample Output for query cql](./src/main/resources/asset/sample_query_sql.png)
 
+##### d) Query the speed of a specific transaction type
 
+```bash
+$ ./query_txn.sh YSQL N
+$ ./query_txn.sh YSQL D
+$ ./query_txn.sh YSQL P
+$ ./query_txn.sh YSQL I
+$ ./query_txn.sh YSQL O
+$ ./query_txn.sh YSQL R
+$ ./query_txn.sh YSQL S
+$ ./query_txn.sh YSQL T
+```
 
-## Cluster Clean-up
+![Sample Output for query cql](./src/main/resources/asset/sample_query_txn_sql_n.png)
+
+### 4) Abort clients
+
+```bash
+$ ./src/main/resources/scripts/end_client.sh
+```
+
+## 6. Cluster Clean-up
 
 - When to the end of usage, to terminate the cluster, try `./end_cluster_gj2.sh`.
 
