@@ -30,7 +30,7 @@ public class DeliveryTransaction extends Transaction {
                     "update Orders set O_CARRIER_ID = %d from min_order t \n" +
                     "where O_W_ID = t.MO_W_ID and O_D_ID = t.MO_D_ID and O_ID = t.MO_O_ID", W_ID, CARRIER_ID);
             stmt.execute(SQL1);
-            logger.log(Level.INFO, "SQL1 = " + SQL1);
+//            logger.log(Level.INFO, "SQL1 = " + SQL1);
 
             String SQL2 = String.format("with min_order as(\n" +
                     "    select O_W_ID as MO_W_ID, O_D_ID as MO_D_ID, O_ID as MO_O_ID, O_C_ID as MO_C_ID\n" +
@@ -39,7 +39,7 @@ public class DeliveryTransaction extends Transaction {
                     "update Orderline set OL_DELIVERY_D = (select current_timestamp) from min_order t \n" +
                     "where OL_W_ID = t.MO_W_ID and OL_D_ID = t.MO_D_ID and OL_O_ID = t.MO_O_ID", W_ID);
             stmt.execute(SQL2);
-            logger.log(Level.INFO, "SQL2 = " + SQL2);
+//            logger.log(Level.INFO, "SQL2 = " + SQL2);
 
             String SQL3 = String.format("with min_order as(\n" +
                     "    select O_W_ID as MO_W_ID, O_D_ID as MO_D_ID, O_ID as MO_O_ID, O_C_ID as MO_C_ID\n" +
@@ -53,10 +53,9 @@ public class DeliveryTransaction extends Transaction {
                     "update Customer set C_BALANCE = C_BALANCE + t.B, C_DELIVERY_CNT = C_DELIVERY_CNT + 1 from min_order_sum t \n" +
                     "where C_W_ID = t.MO_W_ID and C_D_ID = t.MO_D_ID and C_ID = t.MO_C_ID", W_ID);
             stmt.execute(SQL3);
-            logger.log(Level.INFO, "SQL3 = " + SQL3);
+//            logger.log(Level.INFO, "SQL3 = " + SQL3);
 
             conn.commit();
-            logger.log(Level.INFO, "D transaction ends");
         } catch (SQLException e) {
             logger.log(Level.SEVERE, String.format("Error in %s transaction, exception= ",getTransactionType().type),e);
             if (conn != null) {

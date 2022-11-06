@@ -98,7 +98,11 @@ public class TopBalanceTransaction extends Transaction {
     protected void YSQLExecute(Connection conn, Logger logger) throws SQLException {
         conn.setAutoCommit(false);
         try {
-            java.sql.ResultSet rs = conn.createStatement().executeQuery(String.format(SQLEnum.TopBalanceTransaction1.SQL));
+            String SQL1 = "with top_10_customers as( select * from Customer order by C_BALANCE desc limit 10 ) " +
+                    "select t1.C_FIRST, t1.C_MIDDLE, t1.C_LAST, t1.C_BALANCE, t2.W_NAME, t3.D_NAME from top_10_customers t1 " +
+                    "left join Warehouse t2 on t1.C_W_ID = t2.W_ID " +
+                    "left join District t3 on t1.C_W_ID = t3.D_W_ID and t1.C_D_ID = t3.D_ID";
+            java.sql.ResultSet rs = conn.createStatement().executeQuery(String.format(SQL1));
             while (rs.next()) {
                 String C_FIRST = rs.getString(1);
                 String C_MIDDLE = rs.getString(2);

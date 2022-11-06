@@ -64,10 +64,10 @@ public class ExecuteManager {
         transactionTypeList.add(new Statistics(TransactionType.TOP_BALANCE));
         transactionTypeList.add(new Statistics(TransactionType.RELATED_CUSTOMER));
 
-//        for (TransactionType transactionType : TransactionType.values()) {
-//            skipMap.put(transactionType, 0);
-//        }
-        LIMIT = 100;
+        for (TransactionType transactionType : TransactionType.values()) {
+            skipMap.put(transactionType, 0);
+        }
+        LIMIT = 1;
 
         // 正选逻辑
 //        skipSet.add(TransactionType.NEW_ORDER);
@@ -75,8 +75,8 @@ public class ExecuteManager {
 //        skipSet.add(TransactionType.RELATED_CUSTOMER);
 
         // 反选逻辑
-//        skipSet.addAll(Arrays.asList(TransactionType.values()));
-//        skipSet.remove(TransactionType.DELIVERY);
+        skipSet.addAll(Arrays.asList(TransactionType.values()));
+        skipSet.remove(TransactionType.RELATED_CUSTOMER);
 //        skipSet.remove(TransactionType.NEW_ORDER);
 //        skipSet.remove(TransactionType.PAYMENT);
     }
@@ -246,7 +246,6 @@ public class ExecuteManager {
         // get all the cql information into the result set
         SimpleStatement simpleStatement_0 = null;
         // cql1
-//        System.out.println("开始执行cql1");
         String cql1 = String.format("select sum(W_YTD) from dbycql.Warehouse");
         simpleStatement_0 = SimpleStatement.builder(cql1)
                 .setExecutionProfileName("oltp")
@@ -258,9 +257,8 @@ public class ExecuteManager {
             sum_w_ytd = Objects.requireNonNull(row.getBigDecimal(0)).floatValue();
         }
         mainLogger.log(Level.SEVERE, "Query db state result = " + sum_w_ytd);
-//        System.out.println("结束执行cql1");
+
         // cql2
-//        System.out.println("开始执行cql2");
         String cql2 = String.format("select sum(D_YTD), sum(D_NEXT_O_ID) from dbycql.District");
         simpleStatement_0 = SimpleStatement.builder(cql2)
                 .setExecutionProfileName("oltp")
@@ -274,9 +272,8 @@ public class ExecuteManager {
         }
         mainLogger.log(Level.SEVERE, "Query db state result = " + sum_d_ytd);
         mainLogger.log(Level.SEVERE, "Query db state result = " + sum_d_next_o_id);
-//        System.out.println("结束执行cql2");
+
         // cql3
-//        System.out.println("开始执行cql3");
         String cql3 = String.format("select sum(C_BALANCE), sum(C_YTD_PAYMENT), sum(C_PAYMENT_CNT), sum(C_DELIVERY_CNT) from dbycql.Customer");
         simpleStatement_0 = SimpleStatement.builder(cql3)
                 .setExecutionProfileName("oltp")
@@ -293,7 +290,7 @@ public class ExecuteManager {
         mainLogger.log(Level.SEVERE, "Query db state result = " + sum_c_balance);
         mainLogger.log(Level.SEVERE, "Query db state result = " + sum_c_ytd_payment);
         mainLogger.log(Level.SEVERE, "Query db state result = " + sum_c_payment_cnt);
-        mainLogger.log(Level.SEVERE, "Query db state result = " + sum_c_delivery_cnt);//        System.out.println("开始执行cql4");
+        mainLogger.log(Level.SEVERE, "Query db state result = " + sum_c_delivery_cnt);
         String cql4 = String.format("select max(O_ID), sum(O_OL_CNT) from dbycql.Orders");
         simpleStatement_0 = SimpleStatement.builder(cql4)
                 .setExecutionProfileName("oltp")
@@ -310,8 +307,8 @@ public class ExecuteManager {
         mainLogger.log(Level.SEVERE, "Query db state result = " + sum_o_ol_cnt);
 
         mainLogger.log(Level.SEVERE, "Query db state CQL5 start");
+
         // cql5
-//        System.out.println("开始执行cql5");
         String cql5 = String.format("select sum(OL_AMOUNT), sum(OL_QUANTITY) from dbycql.OrderLine");
         simpleStatement_0 = SimpleStatement.builder(cql5)
                 .setTimeout(Duration.ofSeconds(60))
@@ -328,7 +325,6 @@ public class ExecuteManager {
         mainLogger.log(Level.SEVERE, "Query db state CQL5 end");
 
         // cql6
-//        System.out.println("开始执行cql6");
         String cql6 = String.format("select sum(S_QUANTITY), sum(S_YTD), sum(S_ORDER_CNT), sum(S_REMOTE_CNT) from dbycql.Stock");
         simpleStatement_0 = SimpleStatement.builder(cql6)
                 .setTimeout(Duration.ofSeconds(120))
@@ -347,7 +343,6 @@ public class ExecuteManager {
         mainLogger.log(Level.SEVERE, "Query db state result = " + sum_s_order_cnt);
         mainLogger.log(Level.SEVERE, "Query db state result = " + sum_s_remote_cnt);
 
-        //        System.out.println("结束执行cql6");
         // 拿完了所有的数据，开始进行输出到文件
 //        Path path = Paths.get("dataCSV");
         try {

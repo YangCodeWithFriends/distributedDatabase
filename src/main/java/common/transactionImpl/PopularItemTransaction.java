@@ -34,7 +34,7 @@ public class PopularItemTransaction extends Transaction {
         SimpleStatement simpleStatement = null;
         Row onerow = null;
 
-       logger.log(Level.FINE, String.format("W_ID=%d,D_ID=%d,L=%d\n", W_ID, D_ID, L));
+       logger.log(Level.INFO, String.format("W_ID=%d,D_ID=%d,L=%d\n", W_ID, D_ID, L));
 
         // CQL1
         String CQL1 = String.format("select D_NEXT_O_ID from dbycql.District where D_W_ID = %d and D_ID = %d", W_ID, D_ID);
@@ -80,11 +80,11 @@ public class PopularItemTransaction extends Transaction {
                     .build();
             rs = cqlSession.execute(simpleStatement);
 
-            Row onerow = rs.one();
+            onerow = rs.one();
             String C_FIRST = onerow.getString(0);
             String C_MIDDLE = onerow.getString(1);
             String C_LAST = onerow.getString(2);
-           logger.log(Level.FINE, String.format("O_ID=%d,O_ENTRY_D=%s,C_FIRST=%s,C_MIDDLE=%s,C_LAST=%s\n", O_ID, O_ENTRY_D, C_FIRST, C_MIDDLE, C_LAST));
+           logger.log(Level.INFO, String.format("O_ID=%d,O_ENTRY_D=%s,C_FIRST=%s,C_MIDDLE=%s,C_LAST=%s\n", O_ID, O_ENTRY_D, C_FIRST, C_MIDDLE, C_LAST));
 
 
             // CQL4
@@ -125,7 +125,7 @@ public class PopularItemTransaction extends Transaction {
                         .build();
                 rs = cqlSession.execute(simpleStatement);
                 String I_NAME = rs.one().getString(0);
-               logger.log(Level.FINE, String.format("O_ID=%d,I_NAME=%s,MAX_OL_QUANTITY=%f\n", O_ID, I_NAME, MAX_OL_QUANTITY));
+               logger.log(Level.INFO, String.format("O_ID=%d,I_NAME=%s,MAX_OL_QUANTITY=%f\n", O_ID, I_NAME, MAX_OL_QUANTITY));
             }
         }
 
@@ -146,13 +146,13 @@ public class PopularItemTransaction extends Transaction {
             rs = cqlSession.execute(simpleStatement);
             long I_NUM = rs.one().getLong(0);
             double I_Percentage = I_NUM * 100.0 / L;
-            logger.log(Level.FINE, String.format("I_NAME=%s, I_Percentage= %f%% \n", I_NAME, I_Percentage));
+            logger.log(Level.INFO, String.format("I_NAME=%s, I_Percentage= %.2f%% \n", I_NAME, I_Percentage));
         }
     }
 
     @Override
     protected void YSQLExecute(Connection conn, Logger logger) throws SQLException {
-       logger.log(Level.FINE, String.format("W_ID=%d,D_ID=%d,L=%d\n", W_ID, D_ID, L));
+       logger.log(Level.INFO, String.format("W_ID=%d,D_ID=%d,L=%d\n", W_ID, D_ID, L));
         conn.setAutoCommit(false);
         try {
             // SQL1
@@ -185,7 +185,7 @@ public class PopularItemTransaction extends Transaction {
                 String C_FIRST = rs.getString(3);
                 String C_MIDDLE = rs.getString(4);
                 String C_LAST = rs.getString(5);
-               logger.log(Level.FINE, String.format("O_ID=%d,O_ENTRY_D=%s,C_FIRST=%s,C_MIDDLE=%s,C_LAST=%s\n", O_ID, O_ENTRY_D, C_FIRST, C_MIDDLE, C_LAST));
+               logger.log(Level.INFO, String.format("O_ID=%d,O_ENTRY_D=%s,C_FIRST=%s,C_MIDDLE=%s,C_LAST=%s\n", O_ID, O_ENTRY_D, C_FIRST, C_MIDDLE, C_LAST));
             }
 
             // SQL3
@@ -206,7 +206,7 @@ public class PopularItemTransaction extends Transaction {
                 int O_ID = rs.getInt(1);
                 String I_NAME = rs.getString(2);
                 int OL_QUANTITY = rs.getInt(3);
-               logger.log(Level.FINE, String.format("O_ID=%d,I_NAME=%s,OL_QUANTITY=%d\n", O_ID, I_NAME, OL_QUANTITY));
+               logger.log(Level.INFO, String.format("O_ID=%d,I_NAME=%s,OL_QUANTITY=%d\n", O_ID, I_NAME, OL_QUANTITY));
             }
 
             // SQL4
@@ -223,7 +223,7 @@ public class PopularItemTransaction extends Transaction {
             while (rs.next()) {
                 String I_NAME = rs.getString(1);
                 double percentage = rs.getDouble(2);
-               logger.log(Level.FINE, String.format("I_NAME=%s,Percentage=%f%%\n", I_NAME, percentage));
+               logger.log(Level.INFO, String.format("I_NAME=%s,Percentage=%.2f%%\n", I_NAME, percentage));
             }
 
             conn.commit();
@@ -231,7 +231,7 @@ public class PopularItemTransaction extends Transaction {
         } catch (SQLException e) {
             logger.log(Level.SEVERE, String.format("Error in %s transaction, exception= ",getTransactionType().type),e);
             if (conn != null) {
-//                System.err.print("Transaction is being rolled back\n");
+
                 logger.log(Level.WARNING, "Transaction is being rolled back");
                 conn.rollback();
             }
