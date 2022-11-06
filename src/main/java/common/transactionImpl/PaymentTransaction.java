@@ -6,6 +6,7 @@ import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 import common.Transaction;
 
 import java.sql.*;
+import java.time.Instant;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.logging.Level;
@@ -88,42 +89,17 @@ public class PaymentTransaction extends Transaction {
                 C_DISCOUNT = Objects.requireNonNull(rs.getBigDecimal(16)).floatValue();
                 C_BALANCE = Objects.requireNonNull(rs.getBigDecimal(17)).floatValue();
             }
-            logger.log(Level.FINE, String.format("W_STREET_1 = %s, W_STREET_2 = %s, W_CITY = %s, W_STATE = %s, W_ZIP = %s, " +
+            logger.log(Level.INFO, String.format("W_STREET_1 = %s, W_STREET_2 = %s, W_CITY = %s, W_STATE = %s, W_ZIP = %s, " +
                     "D_STREET_1 = %s, D_STREET_2 = %s, D_CITY = %s, D_STATE = %s, D_ZIP = %s, " +
                     "c_w_id = %d, c_d_id = %d, c_id = %d, C_FIRST = %s, C_MIDDLE = %s, C_LAST = %s," +
                     "C_STREET_1 = %s, C_STREET_2 = %s, C_CITY = %s, C_STATE = %s, C_ZIP = %s, C_PHONE = %s, C_SINCE = %s," +
                     "C_CREDIT = %s, C_CREDIT_LIM = %f, C_DISCOUNT = %f, C_BALANCE = %f, PAYMENT = %f", W_STREET_1, W_STREET_2, W_CITY, W_STATE,
                     W_ZIP, D_STREET_1, D_STREET_2, D_CITY, D_STATE, D_ZIP, c_w_id, c_d_id, c_id, C_FIRST, C_MIDDLE, C_LAST, C_STREET_1, C_STREET_2,
                     C_CITY, C_STATE, C_ZIP, C_PHONE, C_SINCE, C_CREDIT, C_CREDIT_LIM, C_DISCOUNT, C_BALANCE, PAYMENT));
-//            stmt.execute(String.format("UPDATE Warehouse SET W_YTD = W_YTD + %f WHERE W_ID = %d RETURNING W_STREET_1, W_STREET_2, W_CITY, W_STATE, W_ZIP", PAYMENT, C_W_ID));
-//            stmt.execute(String.format("UPDATE District SET D_YTD = D_YTD + %f WHERE D_W_ID = %d AND D_ID = %d RETURNING D_STREET_1, D_STREET_2, D_CITY, D_STATE, D_ZIP", PAYMENT, C_W_ID, C_D_ID));
-//            stmt.execute(String.format("UPDATE Customer SET C_BALANCE = C_BALANCE - %f, C_YTD_PAYMENT = C_YTD_PAYMENT + %f, C_PAYMENT_CNT = C_PAYMENT_CNT + 1 WHERE C_W_ID = %d " +
-//                                        "AND C_D_ID = %d AND C_ID = %d " +
-//                                        "RETURNING C_W_ID, C_D_ID, C_ID, C_FIRST, C_MIDDLE, C_LAST, C_STREET_1, C_STREET_2, C_CITY, " +
-//                                        "C_STATE, C_ZIP, C_PHONE, C_SINCE, C_CREDIT,C_CREDIT_LIM, C_DISCOUNT, C_BALANCE", PAYMENT, PAYMENT, C_W_ID, C_D_ID, C_ID));
-            // example
-//            String SQL1 = "update District set D_NEXT_O_ID = D_NEXT_O_ID + 1 where D_W_ID = ? and D_ID = ? returning D_NEXT_O_ID;";
-//            statement = conn.prepareStatement(SQL1);
-//            statement.setInt(1, W_ID);
-//            statement.setInt(2, D_ID);
-//            rs = statement.executeQuery();
-            // example end
-           logger.log(Level.FINE, "Payment Transaction正在执行中...");
-//            while (rs.next()) {
-//               logger.log(Level.FINE, "C_W_ID: " + rs.getInt(1) + "C_D_ID: " + rs.getInt(2) + "C_ID" + rs.getInt(3));
-//               logger.log(Level.FINE, "C_FIRST: " + rs.getString(4) + "C_MIDDLE: " + rs.getString(5) + "C_LAST" + rs.getString(6));
-//               logger.log(Level.FINE, "C_STREET_1: " + rs.getString(7) + "C_STREET_2: " + rs.getString(8) + "C_CITY: " + rs.getString(9) + "C_STATE: " + rs.getString(10) + "C_ZIP: " + rs.getString(11));
-//               logger.log(Level.FINE, "C_PHONE：" + rs.getString(12) + "C_SINCE: " + rs.getString(13) + "C_CREDIT: " + rs.getString(14));
-//               logger.log(Level.FINE, "C_CREDIT_LIM: " + rs.getFloat(15) + "C_DISCOUNT: " + rs.getFloat(16) + "C_BALANCE: " + rs.getFloat(17));
-//               logger.log(Level.FINE, "W_STREET_1: " + rs.getString(18) + "W_STREET_2: " + rs.getString(19) + "W_CITY: " + rs.getString(20) + "W_STATE: " + rs.getString(21) + "W_ZIP: " + rs.getString(22));
-//               logger.log(Level.FINE, "D_STREET_1: " + rs.getString(23) + "D_STREET_2: " + rs.getString(24) + "D_CITY: " + rs.getString(25) + "D_STATE: " + rs.getString(26) + "D_ZIP: " + rs.getString(27));
-//            }
-           logger.log(Level.FINE, "Payment Transaction执行完毕！");
            conn.commit();
         } catch (SQLException e) {
             logger.log(Level.SEVERE, String.format("Error in %s transaction, exception= ",getTransactionType().type),e);
             if (conn != null) {
-//                System.err.print("Transaction is being rolled back\n");
                 logger.log(Level.WARNING, "Transaction is being rolled back");
                 conn.rollback();
             }
@@ -135,7 +111,6 @@ public class PaymentTransaction extends Transaction {
 
 
     protected void YCQLExecute(CqlSession session, Logger logger) {
-       logger.log(Level.FINE, "执行payment cql中..");
         // cql1
         SimpleStatement stmt = SimpleStatement.newInstance(String.format("select W_YTD from dbycql.Warehouse where W_ID=%d", C_W_ID));
         com.datastax.oss.driver.api.core.cql.ResultSet rs1 = session.execute(stmt);
@@ -190,7 +165,7 @@ public class PaymentTransaction extends Transaction {
         String D_STREET_1 = null, D_STREET_2 = null, D_CITY = null, D_STATE = null, D_ZIP = null;
         int c_w_id = 0, c_d_id = 0, c_id = 0;
         String C_FIRST = null, C_MIDDLE = null, C_LAST = null, C_STREET_1 = null, C_STREET_2 = null, C_CITY = null, C_STATE = null, C_ZIP = null, C_PHONE = null, C_CREDIT = null;
-        String C_SINCE = null;
+        Instant C_SINCE = null;
         float C_CREDIT_LIM = 0, C_DISCOUNT = 0, C_BALANCE  = 0;
         stmt = SimpleStatement.newInstance(String.format("select\n" +
                 "            W_STREET_1, W_STREET_2, W_CITY, W_STATE, W_ZIP\n" +
@@ -230,7 +205,7 @@ public class PaymentTransaction extends Transaction {
             C_STATE = row.getString(9);
             C_ZIP = row.getString(10);
             C_PHONE = row.getString(11);
-            C_SINCE = Objects.requireNonNull(row.getLocalTime(12)).toString();
+            C_SINCE = row.getInstant(12);
             C_CREDIT = row.getString(13);
             C_CREDIT_LIM = Objects.requireNonNull(row.getBigDecimal(14)).floatValue();
             C_DISCOUNT = Objects.requireNonNull(row.getBigDecimal(15)).floatValue();
@@ -249,9 +224,9 @@ public class PaymentTransaction extends Transaction {
             D_STATE = row.getString(3);
             D_ZIP = row.getString(4);
         }
-        logger.log(Level.FINE, String.format("W_STREET_1 = %s, W_STREET_2 = %s, W_CITY = %s, W_STATE = %s, W_ZIP = %s, " +
+        logger.log(Level.INFO, String.format("W_STREET_1 = %s, W_STREET_2 = %s, W_CITY = %s, W_STATE = %s, W_ZIP = %s, " +
                         "D_STREET_1 = %s, D_STREET_2 = %s, D_CITY = %s, D_STATE = %s, D_ZIP = %s, " +
-                        "c_w_id = %d, c_d_id = %d, c_id = %d, C_FIRST = %s, C_MIDDLE = %s, C_LAST = %s," +
+                        "C_W_ID = %d, C_D_ID = %d, C_ID = %d, C_FIRST = %s, C_MIDDLE = %s, C_LAST = %s," +
                         "C_STREET_1 = %s, C_STREET_2 = %s, C_CITY = %s, C_STATE = %s, C_ZIP = %s, C_PHONE = %s, C_SINCE = %s," +
                         "C_CREDIT = %s, C_CREDIT_LIM = %f, C_DISCOUNT = %f, C_BALANCE = %f, PAYMENT = %f", W_STREET_1, W_STREET_2, W_CITY, W_STATE,
                 W_ZIP, D_STREET_1, D_STREET_2, D_CITY, D_STATE, D_ZIP, c_w_id, c_d_id, c_id, C_FIRST, C_MIDDLE, C_LAST, C_STREET_1, C_STREET_2,

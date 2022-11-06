@@ -76,7 +76,7 @@ public class StockLevelTransaction extends Transaction {
             double d = S_QUANTITY.doubleValue();
             if (d < T) num++;
         }
-       logger.log(Level.FINE, "num=" + num);
+       logger.log(Level.INFO, "num=" + num);
     }
 
     @Override
@@ -87,13 +87,12 @@ public class StockLevelTransaction extends Transaction {
             int D_NEXT_O_ID = -1;
             while (rs.next()) {
                 D_NEXT_O_ID = rs.getInt(1);
-               logger.log(Level.FINE, String.format("D_NEXT_O_ID=%d\n", D_NEXT_O_ID));
             }
             int N = D_NEXT_O_ID + 1;
             rs = conn.createStatement().executeQuery(String.format(SQLEnum.StockLevelTransaction2.SQL, W_ID, D_ID, N, L, N, T));
             while (rs.next()) {
                 int cnt = rs.getInt(1);
-               logger.log(Level.FINE, String.format("Count=%d\n", cnt));
+               logger.log(Level.INFO, String.format("Count=%d\n", cnt));
             }
 
             conn.commit();

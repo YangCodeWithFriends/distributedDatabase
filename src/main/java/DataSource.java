@@ -41,7 +41,6 @@ public class DataSource {
 
         if (MODE.equals(YSQL)) {
             Properties poolProperties = new Properties();
-//            poolProperties.setProperty("dataSourceClassName", "com.yugabyte.ysql.YBClusterAwareDataSource");
             poolProperties.setProperty("dataSourceClassName", "org.postgresql.ds.PGSimpleDataSource");
             poolProperties.setProperty("maximumPoolSize", "20");
             poolProperties.setProperty("dataSource.serverName", settings.getProperty(hostKey));
@@ -50,18 +49,7 @@ public class DataSource {
             poolProperties.setProperty("dataSource.user", settings.getProperty("dbUser"));
             poolProperties.setProperty("dataSource.password", settings.getProperty("dbPassword"));
             poolProperties.setProperty("poolName", "HikariCP");
-
             config = new HikariConfig(poolProperties);
-
-            /*
-//            config = new HikariConfig();
-//            config.setDataSourceClassName("com.nuodb.jdbc.Driver");
-            config.setUsername(settings.getProperty("dbUser"));
-            config.setPassword(settings.getProperty("dbPassword"));
-            config.addDataSourceProperty( "cachePrepStmts" , "true" );
-            config.addDataSourceProperty( "prepStmtCacheSize" , "250" );
-            config.addDataSourceProperty( "prepStmtCacheSqlLimit" , "2048" );
-            */
 
             String jdbcUrl = "jdbc:yugabytedb://" + settings.getProperty(hostKey) + ":"
                     + settings.getProperty("port_sql") + "/dbysql";
@@ -69,27 +57,11 @@ public class DataSource {
             config.validate();
 
             ds = new HikariDataSource(config);
-//            System.out.println("Connect to DB successfully");
-
-            /*
-            ds = new YBClusterAwareDataSource();
-            ds.setUrl("jdbc:yugabytedb://" + settings.getProperty(hostKey) + ":"
-                    + settings.getProperty("port_sql") + "/yugabyte");
-//            ds.setURL(jdbcUrl);
-            ds.setUser(settings.getProperty("dbUser"));
-            System.out.println("URL = " + ds.getURL());
-            ds.setPassword(settings.getProperty("dbPassword"));
-            ds.setDatabaseName("dbysql");
-            int portNumber = Integer.parseInt(settings.getProperty("port_sql"));
-            System.out.println("port= " + portNumber);
-//            ds.setPortNumbers(new int[portNumber]);
-             */
         } else if (MODE.equals(YCQL)) {
             session = CqlSession
                     .builder()
                     .addContactPoint(new InetSocketAddress(settings.getProperty(hostKey), Integer.parseInt(settings.getProperty("port_cql"))))
                     .build();
-//            System.out.println("Connect to DB successfully");
         }
         else throw new RuntimeException("mode in app.properties has to be YCQL/YSQL!");
     }

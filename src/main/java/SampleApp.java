@@ -44,7 +44,6 @@ public class SampleApp {
 
         // set server sharding index
         serverShardingIndex = Integer.parseInt(args[1]);
-//        System.out.println(serverShardingIndex);
         if (serverShardingIndex < 0 || serverShardingIndex >= 5)
             throw new RuntimeException("Second argument should be 0/1/2/3/4");
 
@@ -62,7 +61,7 @@ public class SampleApp {
         mainLogger.log(Level.SEVERE, "Your mode = " + MODE);
         mainLogger.log(Level.SEVERE, "Your server sharding index = " + serverShardingIndex);
 
-        Level outputLevel = Level.WARNING;
+        Level outputLevel = Level.INFO;
         // config input and output file for several threads
         String[] inputFileList = new String[numberOfThreads];
         String[] outputFileList = new String[numberOfThreads];
@@ -198,8 +197,6 @@ public class SampleApp {
 
 
     public void doWork(String MODE, String inputFileName, Logger logger, int serverIndex) {
-        logger.log(Level.SEVERE, Thread.currentThread().getName() + " do work");
-
         // 1. Construct requests from files.
         List<Transaction> list = new ArrayList<>();
         try {

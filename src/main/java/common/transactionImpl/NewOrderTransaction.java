@@ -32,7 +32,6 @@ public class NewOrderTransaction extends Transaction {
 
         try {
             // Transaction begin
-           logger.log(Level.FINE, String.format("Transaction starts"));
             conn.setAutoCommit(false);
             // SQL1
             String SQL1 = "update District set D_NEXT_O_ID = D_NEXT_O_ID + 1 where D_W_ID = ? and D_ID = ? returning D_NEXT_O_ID;";
@@ -92,7 +91,6 @@ public class NewOrderTransaction extends Transaction {
             statement.setInt(2, D_ID);
             statement.setInt(3, N);
             statement.setInt(4, C_ID);
-//            System.out.printf("W_ID=%d,D_ID=%d,C_ID=%d,N=%d\n",W_ID,D_ID,C_ID,N);
             statement.executeUpdate();
 
             // step 5 - OrderLine
@@ -131,7 +129,7 @@ public class NewOrderTransaction extends Transaction {
                 String C_CREDIT = rs.getString(4);
                 double C_DISCOUNT = rs.getDouble(5);
                 TOTAL_AMOUNT = TOTAL_AMOUNT * (1 + D_TAX + W_TAX) * (1 - C_DISCOUNT);
-                logger.log(Level.FINE, String.format("W_ID=%d,D_ID=%d,C_ID=%d,C_LAST=%s,C_CREDIT=%s,C_DISCOUNT=%s,W_TAX=%f,D_TAX=%f,N=%d,current_time=%s,M=%d,TOTAL_AMOUNT=%f\n", W_ID, D_ID, C_ID, C_LAST, C_CREDIT, C_DISCOUNT, W_TAX, D_TAX, N, current_time, M, TOTAL_AMOUNT));
+                logger.log(Level.INFO, String.format("W_ID=%d,D_ID=%d,C_ID=%d,C_LAST=%s,C_CREDIT=%s,C_DISCOUNT=%s,W_TAX=%f,D_TAX=%f,N=%d,current_time=%s,M=%d,TOTAL_AMOUNT=%f\n", W_ID, D_ID, C_ID, C_LAST, C_CREDIT, C_DISCOUNT, W_TAX, D_TAX, N, current_time, M, TOTAL_AMOUNT));
             }
 
             String SQL9 = "select NO_I_ID, I_NAME, NO_SUPPLY_W_ID, NO_QUANTITY, NO_QUANTITY * I_PRICE as OL_AMOUNT, S_QUANTITY " +
@@ -143,6 +141,7 @@ public class NewOrderTransaction extends Transaction {
             statement.setInt(3, N);
             statement.setInt(4, C_ID);
             rs = statement.executeQuery();
+            int counter = 0;
             while (rs.next()) {
                 int NO_I_ID = rs.getInt(1);
                 String I_NAME = rs.getString(2);
@@ -150,7 +149,8 @@ public class NewOrderTransaction extends Transaction {
                 int NO_QUANTITY = rs.getInt(4);
                 double OL_AMOUNT = rs.getDouble(5);
                 double S_QUANTITY = rs.getDouble(6);
-                logger.log(Level.FINE, String.format("NO_I_ID=%d,I_NAME=%s,NO_SUPPLY_W_ID=%d,NO_QUANTITY=%d,OL_AMOUNT=%f,S_QUANTITY=%f\n", NO_I_ID, I_NAME, NO_SUPPLY_W_ID, NO_QUANTITY, OL_AMOUNT, S_QUANTITY));
+                counter++;
+                logger.log(Level.INFO, String.format("NUM_ITEMS=%d,I_NAME=%s,NO_SUPPLY_W_ID=%d,NO_QUANTITY=%d,OL_AMOUNT=%f,S_QUANTITY=%f\n",counter, I_NAME, NO_SUPPLY_W_ID, NO_QUANTITY, OL_AMOUNT, S_QUANTITY));
             }
 
 
@@ -172,11 +172,9 @@ public class NewOrderTransaction extends Transaction {
             statement.executeUpdate();
 
             conn.commit();
-           logger.log(Level.FINE, String.format("Transaction ends"));
         } catch (SQLException e) {
             logger.log(Level.SEVERE, String.format("Error in %s transaction, exception= ",getTransactionType().type),e);
             if (conn != null) {
-//                System.err.print("Transaction is being rolled back\n");
                 logger.log(Level.WARNING, "Transaction is being rolled back");
                 conn.rollback();
             }
@@ -280,7 +278,7 @@ public class NewOrderTransaction extends Transaction {
                     .build();
             cqlSession.execute(simpleStatement);
 
-            logger.log(Level.FINE, String.format("i=%d, I_NAME=%s, OL_SUPPLY_W_ID=%d, OL_QUANTITY=%d, ITEM_AMOUNT=%f, ADJUSTED_QTY=%f\n",
+            logger.log(Level.INFO, String.format("i=%d, I_NAME=%s, OL_SUPPLY_W_ID=%d, OL_QUANTITY=%d, ITEM_AMOUNT=%f, ADJUSTED_QTY=%f\n",
                     i, I_NAME, OL_SUPPLY_W_ID, OL_QUANTITY, ITEM_AMOUNT, ADJUSTED_QTY));
         }
 
@@ -325,7 +323,7 @@ public class NewOrderTransaction extends Transaction {
         double C_DISCOUNT = oneRow.getBigDecimal(2).doubleValue();
 
         TOTAL_AMOUNT = TOTAL_AMOUNT * (1 + D_TAX + W_TAX) * (1 - C_DISCOUNT);
-       logger.log(Level.FINE, String.format("W_ID=%d, D_ID=%d, C_ID=%d, C_LAST=%s, C_CREDIT=%s, C_DISCOUNT=%f, W_TAX=%f, D_TAX=%f, N=%d, current_time=%s, M=%d, TOTAL_AMOUNT=%f\n",
+       logger.log(Level.INFO, String.format("W_ID=%d, D_ID=%d, C_ID=%d, C_LAST=%s, C_CREDIT=%s, C_DISCOUNT=%f, W_TAX=%f, D_TAX=%f, N=%d, current_time=%s, M=%d, TOTAL_AMOUNT=%f\n",
                 W_ID,D_ID,C_ID,C_LAST,C_CREDIT,C_DISCOUNT,W_TAX,D_TAX,N,current_time,M,TOTAL_AMOUNT));
     }
 
