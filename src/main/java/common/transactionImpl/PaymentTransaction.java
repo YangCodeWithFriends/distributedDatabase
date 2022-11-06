@@ -249,7 +249,7 @@ public class PaymentTransaction extends Transaction {
             D_STATE = row.getString(3);
             D_ZIP = row.getString(4);
         }
-        logger.log(Level.WARNING, String.format("W_STREET_1 = %s, W_STREET_2 = %s, W_CITY = %s, W_STATE = %s, W_ZIP = %s, " +
+        logger.log(Level.FINE, String.format("W_STREET_1 = %s, W_STREET_2 = %s, W_CITY = %s, W_STATE = %s, W_ZIP = %s, " +
                         "D_STREET_1 = %s, D_STREET_2 = %s, D_CITY = %s, D_STATE = %s, D_ZIP = %s, " +
                         "c_w_id = %d, c_d_id = %d, c_id = %d, C_FIRST = %s, C_MIDDLE = %s, C_LAST = %s," +
                         "C_STREET_1 = %s, C_STREET_2 = %s, C_CITY = %s, C_STATE = %s, C_ZIP = %s, C_PHONE = %s, C_SINCE = %s," +

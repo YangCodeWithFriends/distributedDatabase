@@ -153,14 +153,14 @@ public class RelatedCustomerTransaction extends Transaction {
         // 拿到了outputLine作为一个以List为key，MutableInteger为value的hashMap，后面对这个解析输出即可
         Set<List<Integer>> tmpSet = outputLine.keySet();
         Iterator<List<Integer>> it1 = tmpSet.iterator();
-        logger.log(Level.WARNING, String.format("target_w_id = %d, target_d_id = %d, target_c_id + %d", C_W_ID, C_D_ID, C_ID));
+        logger.log(Level.FINE, String.format("target_w_id = %d, target_d_id = %d, target_c_id + %d", C_W_ID, C_D_ID, C_ID));
         while(it1.hasNext()){
             List<Integer> tmpKey = it1.next();
             int val = outputLine.get(tmpKey);
             if (val > 1) {
 
-                logger.log(Level.WARNING, tmpKey.toString());
-                logger.log(Level.WARNING, String.valueOf(val));
+                logger.log(Level.FINE, tmpKey.toString());
+                logger.log(Level.FINE, String.valueOf(val));
             }
         }
     }
