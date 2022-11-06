@@ -11,6 +11,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.Duration;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -35,19 +36,19 @@ public class ExecuteManager {
     // 定义performance3变量
     private float sum_w_ytd = 0;
     private float sum_d_ytd = 0;
-    private int sum_d_next_o_id = 0;
+    private long sum_d_next_o_id = 0;
     private float sum_c_balance = 0;
     private float sum_c_ytd_payment = 0;
-    private int sum_c_payment_cnt = 0;
-    private int sum_c_delivery_cnt = 0;
-    private int max_o_id = 0;
-    private float sum_o_ol_cnt = 0;
+    private long sum_c_payment_cnt = 0;
+    private long sum_c_delivery_cnt = 0;
+    private long max_o_id = 0;
+    private double sum_o_ol_cnt = 0;
     private float sum_ol_amount = 0;
     private float sum_ol_quantity = 0;
     private float sum_s_quantity = 0;
     private float sum_s_ytd = 0;
-    private int sum_s_order_cnt = 0;
-    private int sum_s_remote_cnt = 0;
+    private long sum_s_order_cnt = 0;
+    private long sum_s_remote_cnt = 0;
 
     public ExecuteManager() {
         transactionTypeList = new ArrayList<>(8);
@@ -162,19 +163,19 @@ public class ExecuteManager {
             ResultSet rs2 = stmt.executeQuery(String.format("select sum(D_YTD), sum(D_NEXT_O_ID) from District"));
             if (rs2.next()) {
                 sum_d_ytd = Objects.requireNonNull(rs2.getBigDecimal(1)).floatValue();
-                sum_d_next_o_id = rs2.getInt(2);
+                sum_d_next_o_id = rs2.getLong(2);
             }
             ResultSet rs3 = stmt.executeQuery(String.format("select sum(C_BALANCE), sum(C_YTD_PAYMENT), sum(C_PAYMENT_CNT), sum(C_DELIVERY_CNT)from Customer"));
             if (rs3.next()) {
                 sum_c_balance = Objects.requireNonNull(rs3.getBigDecimal(1)).floatValue();
                 sum_c_ytd_payment = rs3.getFloat(2);
-                sum_c_payment_cnt = rs3.getInt(3);
-                sum_c_delivery_cnt = rs3.getInt(4);
+                sum_c_payment_cnt = rs3.getLong(3);
+                sum_c_delivery_cnt = rs3.getLong(4);
             }
             ResultSet rs4 = stmt.executeQuery(String.format("select max(O_ID), sum(O_OL_CNT) from Orders"));
             if (rs4.next()) {
-                max_o_id = rs4.getInt(1);
-                sum_o_ol_cnt = rs4.getInt(2);
+                max_o_id = rs4.getLong(1);
+                sum_o_ol_cnt = rs4.getDouble(2);
             }
             ResultSet rs5 = stmt.executeQuery(String.format("select sum(OL_AMOUNT), sum(OL_QUANTITY) from OrderLine"));
             if (rs5.next()) {
@@ -185,8 +186,8 @@ public class ExecuteManager {
             if (rs6.next()) {
                 sum_s_quantity = Objects.requireNonNull(rs6.getBigDecimal(1)).floatValue();
                 sum_s_ytd = Objects.requireNonNull(rs6.getBigDecimal(2)).floatValue();
-                sum_s_order_cnt = rs6.getInt(3);
-                sum_s_remote_cnt = rs6.getInt(4);
+                sum_s_order_cnt = rs6.getLong(3);
+                sum_s_remote_cnt = rs6.getLong(4);
             }
             // 拿完了所有的数据，开始进行输出到文件
 //            Path path = Paths.get("dataCSV");
@@ -313,7 +314,7 @@ public class ExecuteManager {
 //        System.out.println("开始执行cql5");
         String cql5 = String.format("select sum(OL_AMOUNT), sum(OL_QUANTITY) from dbycql.OrderLine");
         simpleStatement_0 = SimpleStatement.builder(cql5)
-                .setExecutionProfileName("oltp")
+                .setTimeout(Duration.ofSeconds(120))
                 .build();
         com.datastax.oss.driver.api.core.cql.ResultSet cs5 = session.execute(simpleStatement_0);
         Iterator<Row> rsIterator5 = cs5.iterator();
@@ -330,7 +331,7 @@ public class ExecuteManager {
 //        System.out.println("开始执行cql6");
         String cql6 = String.format("select sum(S_QUANTITY), sum(S_YTD), sum(S_ORDER_CNT), sum(S_REMOTE_CNT) from dbycql.Stock");
         simpleStatement_0 = SimpleStatement.builder(cql6)
-                .setExecutionProfileName("oltp")
+                .setTimeout(Duration.ofSeconds(120))
                 .build();
         com.datastax.oss.driver.api.core.cql.ResultSet cs6 = session.execute(simpleStatement_0);
         Iterator<Row> rsIterator6 = cs6.iterator();
@@ -338,8 +339,8 @@ public class ExecuteManager {
             Row row = rsIterator6.next();
             sum_s_quantity = Objects.requireNonNull(row.getBigDecimal(0)).floatValue();
             sum_s_ytd = Objects.requireNonNull(row.getBigDecimal(1)).floatValue();
-            sum_s_order_cnt = row.getInt(2);
-            sum_s_remote_cnt = row.getInt(3);
+            sum_s_order_cnt = row.getLong(2);
+            sum_s_remote_cnt = row.getLong(3);
         }
         mainLogger.log(Level.SEVERE, "Query db state result = " + sum_s_quantity);
         mainLogger.log(Level.SEVERE, "Query db state result = " + sum_s_ytd);
