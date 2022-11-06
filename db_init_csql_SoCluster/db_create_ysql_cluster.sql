@@ -78,7 +78,8 @@ CREATE TABLE customer (
   C_ytd_payment float NOT NULL,
   C_payment_cnt int NOT NULL,
   C_delivery_cnt int NOT NULL,
-  C_data varchar(500) NOT NULL);
+  C_data varchar(500) NOT NULL
+);
 -- insert from csv
 \copy customer from '/home/stuproj/cs4224j/project_data/data_files/customer.csv' WITH (FORMAT CSV, NULL 'null');
 select count(*) as no_imported_customers from customer;
@@ -100,7 +101,7 @@ CREATE TABLE orders (
   
 
   -- The range of O CARRIER ID is [1,10]: use smallint in pgsql(but small int is 16 bit in CQL, tinyint is 8)
-  O_carrier_id smallint, -- data has lots of null
+  O_carrier_id int, -- data has lots of null
   O_OL_cnt decimal(2,0) NOT NULL,
   O_all_local decimal(1,0) NOT NULL,
   O_entry_d timestamp NOT NULL
@@ -128,8 +129,6 @@ select count(*) as no_imported_Item from item;
 -- 1e6
 DROP TABLE if EXISTS stock CASCADE;
 CREATE TABLE stock (
-  -- S I ID is a foreign key that refers to item table. 
-  -- S W ID is a foreign key that refers to warehouse table.
   S_W_id int NOT NULL REFERENCES warehouse(W_id),
   S_I_id int NOT NULL REFERENCES item(I_id),
   PRIMARY KEY((S_W_id, S_I_id) HASH),
@@ -190,7 +189,7 @@ create table customer_item(
   CI_C_ID int, 
   CI_O_ID int, 
   CI_I_ID int,
-  primary key(CI_W_ID,CI_D_ID,CI_C_ID,CI_O_ID,CI_I_ID)
+  primary key(CI_W_ID HASH,CI_D_ID,CI_C_ID,CI_O_ID,CI_I_ID)
 );
 \copy customer_item from '/home/stuproj/cs4224j/project_data/data_files/customer_item.csv' WITH (FORMAT CSV, NULL 'null');
 select count(*) as no_imported_customer_item from customer_item; 

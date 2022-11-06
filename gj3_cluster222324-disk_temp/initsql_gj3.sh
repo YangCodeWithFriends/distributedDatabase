@@ -15,7 +15,7 @@ username=cs4224j@
 # serverhost=xcnd24.comp.nus.edu.sg
 loadIP=192.168.48.$1
 # serverip="192.168.48.242"
-cqlport=5450
+cqlport=5432
 
 echo "loading into ${username}${loadIP}"
 
