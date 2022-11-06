@@ -11,7 +11,6 @@ import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.logging.Level;
@@ -42,8 +41,6 @@ public class TopBalanceTransaction extends Transaction {
                 rs = cqlSession.execute(CQL2);
                 rows = rs.all();
                 for (Row row : rows) {
-//                    int C_W_ID = row.getInt(0);
-//                    int C_D_ID = row.getInt(1);
                     int C_ID = row.getInt(2);
                     String C_FIRST = row.getString(3);
                     String C_MIDDLE = row.getString(4);
@@ -75,7 +72,6 @@ public class TopBalanceTransaction extends Transaction {
             String C_LAST = row.getString(5);
             BigDecimal C_BALANCE = row.getBigDecimal(6);
 
-            /*
             // CQL5
             String CQL5 = String.format("select W_NAME from dbycql.Warehouse where W_ID = %d;", C_W_ID);
             rs = cqlSession.execute(CQL5);
@@ -87,7 +83,6 @@ public class TopBalanceTransaction extends Transaction {
             String D_NAME = rs.one().getString(0);
            logger.log(Level.INFO, String.format("C_FIRST=%s,C_MIDDLE=%s,C_LAST=%s,C_BALANCE=%f,W_NAME=%s,D_NAME=%s\n", C_FIRST, C_MIDDLE, C_LAST, C_BALANCE, W_NAME, D_NAME));
 
-             */
         }
 
         // CQL7
@@ -118,7 +113,6 @@ public class TopBalanceTransaction extends Transaction {
             logger.log(Level.SEVERE, String.format("Error in %s transaction, exception= ",getTransactionType().type),e);
 
             if (conn != null) {
-//                System.err.print("Transaction is being rolled back\n");
                 logger.log(Level.WARNING, "Transaction is being rolled back");
                 conn.rollback();
             }

@@ -30,14 +30,6 @@ public class NewOrderTransaction extends Transaction {
         PreparedStatement statement = null;
         ResultSet rs = null;
 
-        /*
-        // Step 1,2
-        // SQL2
-        String SQL2 = "create table if not exists new_order_info (NO_O_ID int NOT NULL, NO_N int NOT NULL, NO_W_ID int NOT NULL, NO_D_ID int NOT NULL, NO_C_ID int NOT NULL, NO_I_CNT int NOT NULL, NO_I_ID int NOT NULL, NO_SUPPLY_W_ID int NOT NULL, NO_QUANTITY decimal(2,0) NOT NULL, primary key (NO_O_ID, NO_N, NO_W_ID, NO_D_ID, NO_C_ID));";
-        statement = conn.prepareStatement(SQL2);
-        statement.executeUpdate();
-         */
-
         try {
             // Transaction begin
            logger.log(Level.FINE, String.format("Transaction starts"));
@@ -114,7 +106,6 @@ public class NewOrderTransaction extends Transaction {
             statement.setInt(4, C_ID);
             statement.executeUpdate();
 
-            /*
             // step 6
             double TOTAL_AMOUNT = 0;
             String SQL7 = "select sum(OL_AMOUNT) as TOTAL_AMOUNT from OrderLine where OL_O_ID = ? and OL_D_ID = ? and OL_W_ID = ?;";
@@ -162,8 +153,6 @@ public class NewOrderTransaction extends Transaction {
                 logger.log(Level.FINE, String.format("NO_I_ID=%d,I_NAME=%s,NO_SUPPLY_W_ID=%d,NO_QUANTITY=%d,OL_AMOUNT=%f,S_QUANTITY=%f\n", NO_I_ID, I_NAME, NO_SUPPLY_W_ID, NO_QUANTITY, OL_AMOUNT, S_QUANTITY));
             }
 
-             */
-
 
             String SQL10 = "insert into customer_item select NO_W_ID, NO_D_ID, NO_C_ID, NO_O_ID, NO_I_ID from " +
                     "(select * from new_order_info where NO_W_ID = ? and NO_D_ID = ? and NO_O_ID = ? and NO_C_ID = ?) t;";
@@ -194,12 +183,6 @@ public class NewOrderTransaction extends Transaction {
         } finally {
             conn.setAutoCommit(true);
         }
-
-        /*
-        String SQL11 = "drop table if exists new_order_info;";
-        statement = conn.prepareStatement(SQL11);
-        statement.executeUpdate();
-         */
     }
 
     @Override
@@ -311,7 +294,6 @@ public class NewOrderTransaction extends Transaction {
                 .build();
         cqlSession.execute(simpleStatement);
 
-        /*
         // CQL10
         String CQL10 = String.format("select W_TAX from dbycql.Warehouse where W_ID = %d;", W_ID);
         simpleStatement = SimpleStatement.builder(CQL10)
@@ -345,8 +327,6 @@ public class NewOrderTransaction extends Transaction {
         TOTAL_AMOUNT = TOTAL_AMOUNT * (1 + D_TAX + W_TAX) * (1 - C_DISCOUNT);
        logger.log(Level.FINE, String.format("W_ID=%d, D_ID=%d, C_ID=%d, C_LAST=%s, C_CREDIT=%s, C_DISCOUNT=%f, W_TAX=%f, D_TAX=%f, N=%d, current_time=%s, M=%d, TOTAL_AMOUNT=%f\n",
                 W_ID,D_ID,C_ID,C_LAST,C_CREDIT,C_DISCOUNT,W_TAX,D_TAX,N,current_time,M,TOTAL_AMOUNT));
-
-         */
     }
 
     public int getW_ID() {

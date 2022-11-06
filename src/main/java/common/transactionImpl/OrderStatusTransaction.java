@@ -32,7 +32,6 @@ public class OrderStatusTransaction extends Transaction {
         ResultSet rs = null;
         List<Row> rows = null;
 
-        /*
         // CQL1
         String CQL1 = String.format("select C_FIRST, C_MIDDLE, C_LAST, C_BALANCE from dbycql.Customer where C_W_ID = %d and C_D_ID = %d and C_ID = %d", C_W_ID, C_D_ID, C_ID);
         //select C_FIRST, C_MIDDLE, C_LAST, C_BALANCE from Customer where C_W_ID = 'C_W_ID' and C_D_ID = 'C_D_ID' and C_ID = 'C_ID' ;
@@ -45,8 +44,6 @@ public class OrderStatusTransaction extends Transaction {
             BigDecimal C_BALANCE = row.getBigDecimal(3);
            logger.log(Level.FINE, String.format("C_FIRST=%s,C_MIDDLE=%s,C_LAST=%s,C_BALANCE=%f\n", C_FIRST, C_MIDDLE, C_LAST, C_BALANCE));
         }
-
-         */
 
         // CQL2
         String CQL2 = String.format("select O_ID, O_ENTRY_D, O_CARRIER_ID from dbycql.Orders where O_W_ID = %d and O_D_ID = %d and O_C_ID = %d order by O_ID desc limit 1", C_W_ID, C_D_ID, C_ID);
@@ -65,7 +62,6 @@ public class OrderStatusTransaction extends Transaction {
             O_IDs.add(O_ID);
         }
 
-           /*
         for (int i = 0; i < O_IDs.size(); i++) {
             int O_ID = O_IDs.get(i);
             Instant O_ENTRY_D = O_ENTRY_Ds.get(i);
@@ -87,7 +83,6 @@ public class OrderStatusTransaction extends Transaction {
             }
 
         }
-            */
     }
 
     @Override
@@ -97,13 +92,12 @@ public class OrderStatusTransaction extends Transaction {
         java.sql.ResultSet rs = null;
 
         try {
-            /*
             String SQL1 = "select C_FIRST, C_MIDDLE, C_LAST, C_BALANCE from Customer where C_W_ID = ? and C_D_ID = ? and C_ID = ?";
-            PreparedStatement statement = conn.prepareStatement(SQL1);
+            statement = conn.prepareStatement(SQL1);
             statement.setInt(1, C_W_ID);
             statement.setInt(2, C_D_ID);
             statement.setInt(3, C_ID);
-            java.sql.ResultSet rs = statement.executeQuery();
+            rs = statement.executeQuery();
             while (rs.next()) {
                 String C_FIRST = rs.getString(1);
                 String C_MIDDLE = rs.getString(2);
@@ -111,8 +105,6 @@ public class OrderStatusTransaction extends Transaction {
                 double C_BALANCE = rs.getDouble(4);
                logger.log(Level.FINE, String.format("C_FIRST=%s,C_MIDDLE=%s,C_LAST=%s,C_BALANCE=%f\n", C_FIRST, C_MIDDLE, C_LAST, C_BALANCE));
             }
-
-             */
 
             // get O_ID
             String SQL2 = "select O_ID, O_ENTRY_D, O_CARRIER_ID from Orders where O_W_ID = ? and O_D_ID = ? and O_C_ID = ? order by O_ID desc limit 1";
@@ -133,7 +125,6 @@ public class OrderStatusTransaction extends Transaction {
                 O_IDs.add(O_ID);
             }
 
-            /*
             for (int i = 0; i < O_IDs.size(); i++) {
                 int O_ID = O_IDs.get(i);
                 Timestamp O_ENTRY_D = O_ENTRY_Ds.get(i);
@@ -155,7 +146,6 @@ public class OrderStatusTransaction extends Transaction {
                 }
             }
 
-             */
             conn.commit();
         } catch (SQLException e) {
             logger.log(Level.SEVERE, String.format("Error in %s transaction, exception= ",getTransactionType().type),e);

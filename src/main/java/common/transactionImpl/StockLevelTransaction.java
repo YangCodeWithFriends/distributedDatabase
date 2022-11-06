@@ -10,7 +10,6 @@ import common.Transaction;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.Duration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -45,8 +44,6 @@ public class StockLevelTransaction extends Transaction {
 
         // CQL1
         String CQL1 = String.format("select D_NEXT_O_ID from dbycql.District where D_W_ID = %d and D_ID = %d", W_ID, D_ID);
-        //select C_FIRST, C_MIDDLE, C_LAST, C_BALANCE from Customer where C_W_ID = 'C_W_ID' and C_D_ID = 'C_D_ID' and C_ID = 'C_ID' ;
-//        rs = cqlSession.execute(CQL1);
         simpleStatement = SimpleStatement.builder(CQL1)
                 .setExecutionProfileName("oltp")
                 .build();
@@ -56,7 +53,6 @@ public class StockLevelTransaction extends Transaction {
         // CQL2
         String CQL2 = String.format("select OL_I_ID from dbycql.OrderLine where OL_W_ID = %d and OL_D_ID = %d and OL_O_ID >= %d - %d and OL_O_ID < %d allow filtering", W_ID, D_ID, N, L, N);
         Set<Integer> OL_I_IDs = new HashSet<>();
-//        rs = cqlSession.execute(CQL2);
         simpleStatement = SimpleStatement.builder(CQL2)
                 .setExecutionProfileName("oltp")
                 .build();
@@ -72,7 +68,6 @@ public class StockLevelTransaction extends Transaction {
         int num = 0;
         for (int OL_I_ID : OL_I_IDs) {
             String CQL3 = String.format("select S_QUANTITY from dbycql.Stock where S_W_ID = %d and S_I_ID = %d allow filtering", W_ID, OL_I_ID);
-//            rs = cqlSession.execute(CQL3);
             simpleStatement = SimpleStatement.builder(CQL3)
                     .setExecutionProfileName("oltp")
                     .build();
@@ -105,7 +100,6 @@ public class StockLevelTransaction extends Transaction {
         } catch (SQLException e) {
             logger.log(Level.WARNING, "Error in STOCK Level transaction = ", e);
             if (conn != null) {
-//                System.err.print("Transaction is being rolled back\n");
                 logger.log(Level.WARNING, "Transaction is being rolled back");
                 conn.rollback();
             }
