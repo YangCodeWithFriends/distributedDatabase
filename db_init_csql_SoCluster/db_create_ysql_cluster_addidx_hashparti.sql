@@ -85,18 +85,21 @@ CREATE TABLE customer (
   C_ytd_payment float NOT NULL,
   C_payment_cnt int NOT NULL,
   C_delivery_cnt int NOT NULL,
-  -- C_data varchar(500) NOT NULL
-  -- FOREIGN KEY (C_W_id, C_D_id) REFERENCES district(D_W_id, D_id),
   -- PRIMARY KEY ((C_W_id, C_D_id, C_id) HASH)
   PRIMARY KEY (C_W_id HASH, C_D_id, C_id)
 )
 PARTITION BY HASH (C_W_id);
 
-CREATE TABLE customer_pt1 PARTITION OF customer WITH (MODULUS 5,REMAINDER 0);
-CREATE TABLE customer_pt2 PARTITION OF customer WITH (MODULUS 5, REMAINDER 1);
-CREATE TABLE customer_pt3 PARTITION OF customer WITH (MODULUS 5, REMAINDER 2);
-CREATE TABLE customer_pt4 PARTITION OF customer WITH (MODULUS 5, REMAINDER 3);
-CREATE TABLE customer_pt5 PARTITION OF customer WITH (MODULUS 5, REMAINDER 4);
+CREATE TABLE customer_pt1 PARTITION OF customer
+  FOR VALUES WITH (MODULUS 5,REMAINDER 0);
+CREATE TABLE customer_pt2 PARTITION OF customer
+  FOR VALUES WITH (MODULUS 5, REMAINDER 1);
+CREATE TABLE customer_pt3 PARTITION OF customer
+  FOR VALUES WITH (MODULUS 5, REMAINDER 2);
+CREATE TABLE customer_pt4 PARTITION OF customer
+  FOR VALUES WITH (MODULUS 5, REMAINDER 3);
+CREATE TABLE customer_pt5 PARTITION OF customer
+  FOR VALUES WITH (MODULUS 5, REMAINDER 4);
 
 
 -- insert from csv
@@ -125,11 +128,16 @@ CREATE TABLE orders (
   -- FOREIGN KEY (O_W_id, O_D_id, O_C_id) REFERENCES customer(C_W_id, C_D_id, C_id)
 ) PARTITION BY HASH (O_W_id);
 
-CREATE TABLE orders_pt1 PARTITION OF orders WITH (MODULUS 5, REMAINDER 0);
-CREATE TABLE orders_pt2 PARTITION OF orders WITH (MODULUS 5, REMAINDER 1);
-CREATE TABLE orders_pt3 PARTITION OF orders WITH (MODULUS 5, REMAINDER 2);
-CREATE TABLE orders_pt4 PARTITION OF orders WITH (MODULUS 5, REMAINDER 3);
-CREATE TABLE orders_pt5 PARTITION OF orders WITH (MODULUS 5, REMAINDER 4);
+CREATE TABLE orders_pt1 PARTITION OF orders
+  FOR VALUES WITH (MODULUS 5, REMAINDER 0);
+CREATE TABLE orders_pt2 PARTITION OF orders
+  FOR VALUES WITH (MODULUS 5, REMAINDER 1);
+CREATE TABLE orders_pt3 PARTITION OF orders
+  FOR VALUES WITH (MODULUS 5, REMAINDER 2);
+CREATE TABLE orders_pt4 PARTITION OF orders
+  FOR VALUES WITH (MODULUS 5, REMAINDER 3);
+CREATE TABLE orders_pt5 PARTITION OF orders
+  FOR VALUES WITH (MODULUS 5, REMAINDER 4);
 
 
 -- insert from csv
@@ -174,11 +182,17 @@ CREATE TABLE stock (
 ) 
 PARTITION BY HASH (S_W_id)
 ;
-CREATE TABLE stock_pt1 PARTITION OF stock WITH (MODULUS 5, REMAINDER 0);
-CREATE TABLE stock_pt2 PARTITION OF stock WITH (MODULUS 5, REMAINDER 1);
-CREATE TABLE stock_pt3 PARTITION OF stock WITH (MODULUS 5, REMAINDER 2);
-CREATE TABLE stock_pt4 PARTITION OF stock WITH (MODULUS 5, REMAINDER 3);
-CREATE TABLE stock_pt5 PARTITION OF stock WITH (MODULUS 5, REMAINDER 4);
+CREATE TABLE stock_pt1 PARTITION OF stock
+  FOR VALUES WITH (MODULUS 5, REMAINDER 0);
+CREATE TABLE stock_pt2 PARTITION OF stock
+  FOR VALUES WITH (MODULUS 5, REMAINDER 1);
+CREATE TABLE stock_pt3 PARTITION OF stock
+  FOR VALUES WITH (MODULUS 5, REMAINDER 2);
+CREATE TABLE stock_pt4 PARTITION OF stock
+  FOR VALUES WITH (MODULUS 5, REMAINDER 3);
+CREATE TABLE stock_pt5 PARTITION OF stock
+  FOR VALUES WITH (MODULUS 5, REMAINDER 4)  
+;
 
 \copy stock from '/home/stuproj/cs4224j/project_data/data_files/stock_new.csv' WITH (FORMAT CSV, NULL 'null');
 select count(*) as no_imported_stock from stock;
@@ -203,23 +217,21 @@ CREATE TABLE orderline (
   OL_dist_info char(24) NOT NULL,
   -- PRIMARY KEY((OL_W_id, OL_D_id, OL_O_id, OL_number) HASH)
   PRIMARY KEY(OL_W_id HASH, OL_D_id, OL_O_id, OL_number)
-  -- ,
-  -- FOREIGN KEY (OL_W_id, OL_D_id, OL_O_id) REFERENCES orders(O_W_id, O_D_id, O_id)
 ) PARTITION BY HASH (OL_W_id);
 
-CREATE TABLE ol_pt1 PARTITION OF orderline WITH (MODULUS 5, REMAINDER 0);
-CREATE TABLE ol_pt2 PARTITION OF orderline WITH (MODULUS 5, REMAINDER 1);
-CREATE TABLE ol_pt3 PARTITION OF orderline WITH (MODULUS 5, REMAINDER 2);
-CREATE TABLE ol_pt4 PARTITION OF orderline WITH (MODULUS 5, REMAINDER 3);
-CREATE TABLE ol_pt5 PARTITION OF orderline WITH (MODULUS 5, REMAINDER 4);
+CREATE TABLE ol_pt1 PARTITION OF orderline
+  FOR VALUES WITH (MODULUS 5, REMAINDER 0);
+CREATE TABLE ol_pt2 PARTITION OF orderline
+  FOR VALUES WITH (MODULUS 5, REMAINDER 1);
+CREATE TABLE ol_pt3 PARTITION OF orderline
+  FOR VALUES WITH (MODULUS 5, REMAINDER 2);
+CREATE TABLE ol_pt4 PARTITION OF orderline
+  FOR VALUES WITH (MODULUS 5, REMAINDER 3);
+CREATE TABLE ol_pt5 PARTITION OF orderline
+  FOR VALUES WITH (MODULUS 5, REMAINDER 4);
 
 \copy orderline from '/home/stuproj/cs4224j/project_data/data_files/order-line.csv' WITH (FORMAT CSV, NULL 'null');
 select count(*) as no_imported_OLine from "orderline";
-
--- idx on orderline
--- drop index if exists orderline_idx;
-
-
 
 -- 新表
 -- customer_item 300w
@@ -235,12 +247,16 @@ create table customer_item(
 -- ;
 PARTITION BY HASH (CI_W_id);
 
-CREATE TABLE ci_pt1 PARTITION OF customer_item WITH (MODULUS 5, REMAINDER 0);
-CREATE TABLE ci_pt2 PARTITION OF customer_item WITH (MODULUS 5, REMAINDER 1);
-CREATE TABLE ci_pt3 PARTITION OF customer_item WITH (MODULUS 5, REMAINDER 2);
-CREATE TABLE ci_pt4 PARTITION OF customer_item WITH (MODULUS 5, REMAINDER 3);
-CREATE TABLE ci_pt5 PARTITION OF customer_item WITH (MODULUS 5, REMAINDER 4)
-;
+CREATE TABLE ci_pt1 PARTITION OF customer_item
+  FOR VALUES WITH (MODULUS 5, REMAINDER 0);
+CREATE TABLE ci_pt2 PARTITION OF customer_item
+  FOR VALUES WITH (MODULUS 5, REMAINDER 1);
+CREATE TABLE ci_pt3 PARTITION OF customer_item
+  FOR VALUES WITH (MODULUS 5, REMAINDER 2);
+CREATE TABLE ci_pt4 PARTITION OF customer_item
+  FOR VALUES WITH (MODULUS 5, REMAINDER 3);
+CREATE TABLE ci_pt5 PARTITION OF customer_item
+  FOR VALUES WITH (MODULUS 5, REMAINDER 4);
 
 \copy customer_item from '/home/stuproj/cs4224j/project_data/data_files/customer_item.csv' WITH (FORMAT CSV, NULL 'null');
 select count(*) as no_imported_customer_item from customer_item;
