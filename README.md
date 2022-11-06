@@ -1,12 +1,18 @@
 # 2022fall-cs5424-distributed-database-project
 
-## SSH Public Key Authentication to 5 Servers
+## 0. Connect to NUS SOC VPN
 
-As required, we use ssh to access the 5 SoC servers. To avoid entering password repeatedly when simultaniously sending instructions to servers every time, please configure the **SSH public key authentication** to the 5 servers using the following steps.
+In order to visit NUS SOC intranet, connecting to SOC VPN is required.
+
+To setup, consider this [SOC VPN Setup Guide](https://dochub.comp.nus.edu.sg/cf/guides/network/vpn)
+
+## 1. SSH Public Key Authentication to 5 Servers
+
+As required, we use `ssh` to access the 5 SoC servers. To avoid entering password repeatedly when simultaniously sending instructions to servers every time, please configure the **SSH public key authentication** to the 5 servers using the following steps.
 
 <!--改写自邓哥-->
 
-To obtain ssh connection to 5 servers, on your **local machine**, enter ~/.ssh:
+To obtain ssh connection to 5 servers, on your **local machine**, enter `~/.ssh`:
 
 ```bash
 # build a new encryption key pair
@@ -25,7 +31,7 @@ Now you wil not enter password repeatedly when use ssh to connect any server.
 
 Note: **~** in **any xcndXX servers**, referring to `/home/stuproj/cs4224j` will frequently be use as our **default user path** in below sections.
 
-## Setup Files(at the cluster already)
+## 2. Setup Files(at the cluster already)
 
 - The data and xact raw files are already located in `~/project_data/data_files`(including our modified data) and `~/project_data/xact_files`.
 - The database initialization files, in <u>.sql</u> and <u>.cql</u> are already located in `~/db_init_csql_SoCluster`.
@@ -43,13 +49,13 @@ tar xvfz yugabyte-2.14.1.0-b36-linux-x86_64.tar.gz && cd yugabyte-2.14.1.0/
 ./bin/post_install.sh
 ```
 
-## Cluster-initialization(in this repo)
+## 3. Cluster-initialization(in this repo)
 
 ### Cluster-initialization scripts
 
-There are several cluster-related <u>bash scripts</u> for different usa case located **in our repositoy** path `gj2-ram/`. First you should change directory into the script path by `cd gj2-ram`:
+There are several cluster-related <u>bash scripts</u> for different use case located **in our repositoy** path `gj2-ram/`. First you should change directory into the script path by `cd gj2-ram`:
 
-- The **5-server cluster, with all databases, intialized in just <u>one</u> step** can be newly built from the scratch with the command `./build_new_gj2cluster.sh`. Then to check cluster status, you can:
+- The **5-server yugabyte cluster, with all databases, intialized in just <u>one</u> step** can be newly built from the scratch with the command `./build_new_gj2cluster.sh`. Then to check cluster status, you can:
 
   1. go to each server by `ssh` to check if the yb-master and yb-tserver processes are running by the command `ps -eaf | grep yb`, or
 
