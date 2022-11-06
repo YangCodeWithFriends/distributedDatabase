@@ -25,7 +25,6 @@ import java.util.logging.Logger;
 public class TopBalanceTransaction extends Transaction {
     @Override
     protected void YCQLExecute(CqlSession cqlSession, Logger logger) {
-        logger.log(Level.INFO, "Begin YCQL TOP Balance");
         ResultSet rs = null;
         List<Row> rows = null;
         SimpleStatement simpleStatement = null;
@@ -91,7 +90,6 @@ public class TopBalanceTransaction extends Transaction {
                 .setExecutionProfileName("oltp")
                 .build();
         cqlSession.execute(simpleStatement);
-        logger.log(Level.INFO, "Top Balance ends");
     }
 
     @Override

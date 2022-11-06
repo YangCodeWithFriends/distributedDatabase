@@ -64,10 +64,10 @@ public class ExecuteManager {
         transactionTypeList.add(new Statistics(TransactionType.TOP_BALANCE));
         transactionTypeList.add(new Statistics(TransactionType.RELATED_CUSTOMER));
 
-        for (TransactionType transactionType : TransactionType.values()) {
-            skipMap.put(transactionType, 0);
-        }
-        LIMIT = 1;
+//        for (TransactionType transactionType : TransactionType.values()) {
+//            skipMap.put(transactionType, 0);
+//        }
+        LIMIT = 100;
 
         // 正选逻辑
 //        skipSet.add(TransactionType.NEW_ORDER);
@@ -75,8 +75,8 @@ public class ExecuteManager {
 //        skipSet.add(TransactionType.RELATED_CUSTOMER);
 
         // 反选逻辑
-        skipSet.addAll(Arrays.asList(TransactionType.values()));
-        skipSet.remove(TransactionType.RELATED_CUSTOMER);
+//        skipSet.addAll(Arrays.asList(TransactionType.values()));
+//        skipSet.remove(TransactionType.RELATED_CUSTOMER);
 //        skipSet.remove(TransactionType.NEW_ORDER);
 //        skipSet.remove(TransactionType.PAYMENT);
     }

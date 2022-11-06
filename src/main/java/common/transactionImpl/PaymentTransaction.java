@@ -6,6 +6,7 @@ import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 import common.Transaction;
 
 import java.sql.*;
+import java.time.Instant;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.logging.Level;
@@ -164,7 +165,7 @@ public class PaymentTransaction extends Transaction {
         String D_STREET_1 = null, D_STREET_2 = null, D_CITY = null, D_STATE = null, D_ZIP = null;
         int c_w_id = 0, c_d_id = 0, c_id = 0;
         String C_FIRST = null, C_MIDDLE = null, C_LAST = null, C_STREET_1 = null, C_STREET_2 = null, C_CITY = null, C_STATE = null, C_ZIP = null, C_PHONE = null, C_CREDIT = null;
-        String C_SINCE = null;
+        Instant C_SINCE = null;
         float C_CREDIT_LIM = 0, C_DISCOUNT = 0, C_BALANCE  = 0;
         stmt = SimpleStatement.newInstance(String.format("select\n" +
                 "            W_STREET_1, W_STREET_2, W_CITY, W_STATE, W_ZIP\n" +
@@ -204,7 +205,7 @@ public class PaymentTransaction extends Transaction {
             C_STATE = row.getString(9);
             C_ZIP = row.getString(10);
             C_PHONE = row.getString(11);
-            C_SINCE = Objects.requireNonNull(row.getLocalTime(12)).toString();
+            C_SINCE = row.getInstant(12);
             C_CREDIT = row.getString(13);
             C_CREDIT_LIM = Objects.requireNonNull(row.getBigDecimal(14)).floatValue();
             C_DISCOUNT = Objects.requireNonNull(row.getBigDecimal(15)).floatValue();

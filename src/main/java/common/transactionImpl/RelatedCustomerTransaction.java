@@ -109,18 +109,19 @@ public class RelatedCustomerTransaction extends Transaction {
                     }
                 }
             }
-        }
-        // 拿到了outputLine作为一个以List为key，MutableInteger为value的hashMap，后面对这个解析输出即可
-        Set<List<Integer>> tmpSet = outputLine.keySet();
-        Iterator<List<Integer>> it1 = tmpSet.iterator();
-        logger.log(Level.INFO, String.format("target_w_id = %d, target_d_id = %d, target_c_id + %d", C_W_ID, C_D_ID, C_ID));
-        while(it1.hasNext()){
-            List<Integer> tmpKey = it1.next();
-            int val = outputLine.get(tmpKey);
-            if (val > 1) {
 
-                logger.log(Level.INFO, tmpKey.toString());
-                logger.log(Level.INFO, String.valueOf(val));
+            // 拿到了outputLine作为一个以List为key，MutableInteger为value的hashMap，后面对这个解析输出即可
+            Set<List<Integer>> tmpSet = outputLine.keySet();
+            Iterator<List<Integer>> it1 = tmpSet.iterator();
+            while(it1.hasNext()){
+                List<Integer> tmpKey = it1.next();
+                int val = outputLine.get(tmpKey);
+                if (val > 1) {
+                    int ci_w_id = tmpKey.get(0);
+                    int ci_d_id = tmpKey.get(1);
+                    int ci_c_id = tmpKey.get(2);
+                    logger.log(Level.INFO, String.format("(target_w_id = %d, target_d_id = %d, target_c_id = %d), output_w_id = %d, output_d_id = %d, output_c_id = %d", C_W_ID, C_D_ID, C_ID, ci_w_id, ci_d_id, ci_c_id));
+                }
             }
         }
     }

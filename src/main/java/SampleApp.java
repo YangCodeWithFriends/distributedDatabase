@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.*;
 
 public class SampleApp {
-    private static final int numberOfThreads = 1;
+    private static final int numberOfThreads = 4;
     private static int countDownLatchTimeout = 8;
     private static int serverShardingIndex = 0;
     private static String MODE;
