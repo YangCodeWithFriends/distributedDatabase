@@ -130,20 +130,14 @@ We have several components for the whole programe at path `src/main/java`.
 | Transaction.java    | A template abstract class for transactions. It defines a template method for all transactions. This is the usage of `Template Method` design patterns, see more in [Template Method Toturial](https://refactoring.guru/design-patterns/template-method) |
 | transactionImpl     | Implementations for each transaction types for both YSQL and YCQL. |
 
-
-
 ## 2. Configuration file
 
-Our configuration files are located at `src/main/resources`
+Our configuration files are located at `src/main/resources`.
 
-
-
-| Directory Name             | Purpose                     |
-| -------------------------- | --------------------------- |
-| src/main/resources/scripts | Entry point is Main method. |
-|                            |                             |
-|                            |                             |
-|                            |                             |
+| Directory Name                | Purpose                                                      |
+| ----------------------------- | ------------------------------------------------------------ |
+| src/main/resources/scripts    | Useful `bash` scripts, such as to launch or end `20` clients, to query server load and server ram usage. |
+| src/main/resources/xact_files | Transactions raw files that clients will read and execute.   |
 
 ---
 
