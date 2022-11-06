@@ -314,7 +314,7 @@ public class ExecuteManager {
 //        System.out.println("开始执行cql5");
         String cql5 = String.format("select sum(OL_AMOUNT), sum(OL_QUANTITY) from dbycql.OrderLine");
         simpleStatement_0 = SimpleStatement.builder(cql5)
-                .setTimeout(Duration.ofSeconds(120))
+                .setTimeout(Duration.ofSeconds(60))
                 .build();
         com.datastax.oss.driver.api.core.cql.ResultSet cs5 = session.execute(simpleStatement_0);
         Iterator<Row> rsIterator5 = cs5.iterator();
@@ -339,8 +339,8 @@ public class ExecuteManager {
             Row row = rsIterator6.next();
             sum_s_quantity = Objects.requireNonNull(row.getBigDecimal(0)).floatValue();
             sum_s_ytd = Objects.requireNonNull(row.getBigDecimal(1)).floatValue();
-            sum_s_order_cnt = row.getLong(2);
-            sum_s_remote_cnt = row.getLong(3);
+            sum_s_order_cnt = row.getInt(2);
+            sum_s_remote_cnt = row.getInt(3);
         }
         mainLogger.log(Level.SEVERE, "Query db state result = " + sum_s_quantity);
         mainLogger.log(Level.SEVERE, "Query db state result = " + sum_s_ytd);
