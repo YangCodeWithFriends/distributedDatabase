@@ -206,6 +206,29 @@ $ ./query_txn.sh YCQL I
 
 ![Sample Output for query cql](./src/main/resources/asset/sample_query_txn_cql.png)
 
+##### e）Log files
+
+Query clients:
+
+```bash
+$ ./query_clients_cql.sh
+```
+
+Query throughput:
+
+```bash
+$ ./query_throughput_cql.sh 
+
+```
+
+Query DB state:
+
+```bash
+$ cat CQL_dbstate.csv
+```
+
+
+
 #### YSQL
 
 ##### a) start clients
@@ -249,7 +272,30 @@ $ ./query_txn.sh YSQL T
 
 ![Sample Output for query cql](./src/main/resources/asset/sample_query_txn_sql_n.png)
 
+##### e）Log files
+
+Query clients:
+
+```bash
+$ ./query_clients_sql.sh
+```
+
+Query throughput:
+
+```bash
+$ ./query_throughput_sql.sh 
+
+```
+
+Query DB state:
+
+```bash
+$ cat SQL_dbstate.csv
+```
+
 ### 4) Abort clients
+
+At `root diretory` of repo on your local machine:
 
 ```bash
 $ ./src/main/resources/scripts/end_client.sh
