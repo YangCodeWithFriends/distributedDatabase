@@ -5,10 +5,7 @@ import com.datastax.oss.driver.api.core.cql.Row;
 import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 import common.Transaction;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.time.Duration;
 import java.util.*;
 import java.util.logging.Level;
@@ -22,6 +19,7 @@ public class RelatedCustomerTransaction extends Transaction {
     protected void YSQLExecute(Connection conn, Logger logger) throws SQLException {
         ResultSet rs = null;
         conn.setAutoCommit(true);
+//        PreparedStatement stmt = null;
         Statement stmt = conn.createStatement();
         // example
 //            String SQL1 = "update District set D_NEXT_O_ID = D_NEXT_O_ID + 1 where D_W_ID = ? and D_ID = ? returning D_NEXT_O_ID;";
@@ -30,6 +28,36 @@ public class RelatedCustomerTransaction extends Transaction {
 //            statement.setInt(2, D_ID);
 //            rs = statement.executeQuery();
         // example end
+//        String SQL1 = "with target_orderline as(" +
+//                "select " +
+//                "* from customer_item " +
+//                "where CI_W_ID=? AND CI_D_ID=? AND CI_C_ID=?), " +
+//                "other_orderline as(" +
+//                "select " +
+//                "* from customer_item " +
+//                "where CI_W_ID!=?) " +
+//                "select " +
+//                "target_w_id,target_d_id,target_c_id, " +
+//                "output_w_id,output_d_id,output_c_id " +
+//                "from (" +
+//                "select " +
+//                "t1.CI_W_ID as target_w_id,t1.CI_D_ID as target_d_id,t1.CI_C_ID as target_c_id, " +
+//                "t2.CI_W_ID as output_w_id,t2.CI_D_ID as output_d_id,t2.CI_C_ID as output_c_id, " +
+//                "count(*) as common_cnt " +
+//                "from " +
+//                "target_orderline as t1 " +
+//                "left join other_orderline as t2 " +
+//                "on t1.CI_I_ID=t2.CI_I_ID " +
+//                "group by t1.CI_W_ID, t1.CI_D_ID, t1.CI_C_ID, " +
+//                "t2.CI_W_ID, t2.CI_D_ID, t2.CI_C_ID " +
+//                ")a " +
+//                "where a.common_cnt>=2;";
+//        stmt = conn.prepareStatement(SQL1);
+//        stmt.setInt(1, C_W_ID);
+//        stmt.setInt(2, C_D_ID);
+//        stmt.setInt(3, C_ID);
+//        stmt.setInt(4, C_W_ID);
+
         rs = stmt.executeQuery(String.format("with target_orderline as(" +
                 "select " +
                 "* from customer_item " +
@@ -54,6 +82,14 @@ public class RelatedCustomerTransaction extends Transaction {
                 "t2.CI_W_ID, t2.CI_D_ID, t2.CI_C_ID " +
                 ")a " +
                 "where a.common_cnt>=2", C_W_ID, C_D_ID, C_ID, C_W_ID));
+        int ci_w_id = 0, ci_d_id = 0, ci_c_id = 0;
+//        rs = stmt.executeQuery();
+        while (rs.next()) {
+            ci_w_id = rs.getInt(3);
+            ci_d_id = rs.getInt(4);
+            ci_c_id = rs.getInt(5);
+            logger.log(Level.FINE, String.format("(target_w_id = %d, target_d_id = %d, target_c_id = %d), output_w_id = %d, output_d_id = %d, output_c_id = %d", C_W_ID, C_D_ID, C_ID, ci_w_id, ci_d_id, ci_c_id));
+        }
     }
 
 
@@ -113,16 +149,18 @@ public class RelatedCustomerTransaction extends Transaction {
                     }
                 }
             }
-            // 拿到了outputLine作为一个以List为key，MutableInteger为value的hashMap，后面对这个解析输出即可
-            Set<List<Integer>> tmpSet = outputLine.keySet();
-            Iterator<List<Integer>> it1 = tmpSet.iterator();
-            while(it1.hasNext()){
-                List<Integer> tmpKey = it1.next();
-                int val = outputLine.get(tmpKey);
-                if (val > 1) {
-                   logger.log(Level.FINE, tmpKey.toString());
-                   logger.log(Level.FINE, String.valueOf(val));
-                }
+        }
+        // 拿到了outputLine作为一个以List为key，MutableInteger为value的hashMap，后面对这个解析输出即可
+        Set<List<Integer>> tmpSet = outputLine.keySet();
+        Iterator<List<Integer>> it1 = tmpSet.iterator();
+        logger.log(Level.FINE, String.format("target_w_id = %d, target_d_id = %d, target_c_id + %d", C_W_ID, C_D_ID, C_ID));
+        while(it1.hasNext()){
+            List<Integer> tmpKey = it1.next();
+            int val = outputLine.get(tmpKey);
+            if (val > 1) {
+
+                logger.log(Level.FINE, tmpKey.toString());
+                logger.log(Level.FINE, String.valueOf(val));
             }
         }
     }

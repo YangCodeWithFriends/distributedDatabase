@@ -5,9 +5,7 @@ import com.datastax.oss.driver.api.core.cql.Row;
 import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 import common.Transaction;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.logging.Level;
@@ -24,13 +22,85 @@ public class PaymentTransaction extends Transaction {
     protected void YSQLExecute(Connection conn, Logger logger) throws SQLException {
         conn.setAutoCommit(false);
         try {
-            Statement stmt = conn.createStatement();
-            stmt.execute(String.format("UPDATE Warehouse SET W_YTD = W_YTD + %f WHERE W_ID = %d RETURNING W_STREET_1, W_STREET_2, W_CITY, W_STATE, W_ZIP", PAYMENT, C_W_ID));
-            stmt.execute(String.format("UPDATE District SET D_YTD = D_YTD + %f WHERE D_W_ID = %d AND D_ID = %d RETURNING D_STREET_1, D_STREET_2, D_CITY, D_STATE, D_ZIP", PAYMENT, C_W_ID, C_D_ID));
-            stmt.execute(String.format("UPDATE Customer SET C_BALANCE = C_BALANCE - %f, C_YTD_PAYMENT = C_YTD_PAYMENT + %f, C_PAYMENT_CNT = C_PAYMENT_CNT + 1 WHERE C_W_ID = %d " +
-                                        "AND C_D_ID = %d AND C_ID = %d " +
-                                        "RETURNING C_W_ID, C_D_ID, C_ID, C_FIRST, C_MIDDLE, C_LAST, C_STREET_1, C_STREET_2, C_CITY, " +
-                                        "C_STATE, C_ZIP, C_PHONE, C_SINCE, C_CREDIT,C_CREDIT_LIM, C_DISCOUNT, C_BALANCE", PAYMENT, PAYMENT, C_W_ID, C_D_ID, C_ID));
+            // Statement stmt = conn.createStatement();
+            PreparedStatement statement = null;
+            ResultSet rs = null;
+            String SQL1 = "UPDATE Warehouse SET W_YTD = W_YTD + ? WHERE W_ID = ? RETURNING W_STREET_1, W_STREET_2, W_CITY, W_STATE, W_ZIP;";
+            statement = conn.prepareStatement(SQL1);
+            statement.setFloat(1, PAYMENT);
+            statement.setInt(2, C_W_ID);
+            rs = statement.executeQuery();
+            String W_STREET_1 = null, W_STREET_2 = null, W_CITY = null, W_STATE = null, W_ZIP = null;
+            while (rs.next()) {
+                W_STREET_1 = rs.getString(1);
+                W_STREET_2 = rs.getString(2);
+                W_CITY = rs.getString(3);
+                W_STATE = rs.getString(4);
+                W_ZIP = rs.getString(5);
+            }
+
+            String SQL2 = "UPDATE District SET D_YTD = D_YTD + ? WHERE D_W_ID = ? AND D_ID = ? RETURNING D_STREET_1, D_STREET_2, D_CITY, D_STATE, D_ZIP;";
+            statement = conn.prepareStatement(SQL2);
+            statement.setFloat(1, PAYMENT);
+            statement.setInt(2, C_W_ID);
+            statement.setInt(3, C_D_ID);
+            String D_STREET_1 = null, D_STREET_2 = null, D_CITY = null, D_STATE = null, D_ZIP = null;
+            rs = statement.executeQuery();
+            while (rs.next()) {
+                D_STREET_1 = rs.getString(1);
+                D_STREET_2 = rs.getString(2);
+                D_CITY = rs.getString(3);
+                D_STATE = rs.getString(4);
+                D_ZIP = rs.getString(5);
+            }
+
+            String SQL3 = "UPDATE Customer SET C_BALANCE = C_BALANCE - ?, C_YTD_PAYMENT = C_YTD_PAYMENT + ?, C_PAYMENT_CNT = C_PAYMENT_CNT + 1 WHERE C_W_ID = ? " +
+                    "AND C_D_ID = ? AND C_ID = ? " +
+                    "RETURNING C_W_ID, C_D_ID, C_ID, C_FIRST, C_MIDDLE, C_LAST, C_STREET_1, C_STREET_2, C_CITY, " +
+                    "C_STATE, C_ZIP, C_PHONE, C_SINCE, C_CREDIT,C_CREDIT_LIM, C_DISCOUNT, C_BALANCE;";
+            statement = conn.prepareStatement(SQL3);
+            statement.setFloat(1, PAYMENT);
+            statement.setFloat(2, PAYMENT);
+            statement.setInt(3, C_W_ID);
+            statement.setInt(4, C_D_ID);
+            statement.setInt(5, C_ID);
+            int c_w_id = 0, c_d_id = 0, c_id = 0;
+            String C_FIRST = null, C_MIDDLE = null, C_LAST = null, C_STREET_1 = null, C_STREET_2 = null, C_CITY = null, C_STATE = null, C_ZIP = null, C_PHONE = null, C_CREDIT = null;
+            String C_SINCE = null;
+            float C_CREDIT_LIM = 0, C_DISCOUNT = 0, C_BALANCE  = 0;
+            rs = statement.executeQuery();
+            while (rs.next()) {
+                c_w_id = rs.getInt(1);
+                c_d_id = rs.getInt(2);
+                c_id = rs.getInt(3);
+                C_FIRST = rs.getString(4);
+                C_MIDDLE = rs.getString(5);
+                C_LAST = rs.getString(6);
+                C_STREET_1 = rs.getString(7);
+                C_STREET_2 = rs.getString(8);
+                C_CITY = rs.getString(9);
+                C_STATE = rs.getString(10);
+                C_ZIP = rs.getString(11);
+                C_PHONE = rs.getString(12);
+                C_SINCE = rs.getTimestamp(13).toString();
+                C_CREDIT = rs.getString(14);
+                C_CREDIT_LIM = Objects.requireNonNull(rs.getBigDecimal(15)).floatValue();
+                C_DISCOUNT = Objects.requireNonNull(rs.getBigDecimal(16)).floatValue();
+                C_BALANCE = Objects.requireNonNull(rs.getBigDecimal(17)).floatValue();
+            }
+            logger.log(Level.FINE, String.format("W_STREET_1 = %s, W_STREET_2 = %s, W_CITY = %s, W_STATE = %s, W_ZIP = %s, " +
+                    "D_STREET_1 = %s, D_STREET_2 = %s, D_CITY = %s, D_STATE = %s, D_ZIP = %s, " +
+                    "c_w_id = %d, c_d_id = %d, c_id = %d, C_FIRST = %s, C_MIDDLE = %s, C_LAST = %s," +
+                    "C_STREET_1 = %s, C_STREET_2 = %s, C_CITY = %s, C_STATE = %s, C_ZIP = %s, C_PHONE = %s, C_SINCE = %s," +
+                    "C_CREDIT = %s, C_CREDIT_LIM = %f, C_DISCOUNT = %f, C_BALANCE = %f, PAYMENT = %f", W_STREET_1, W_STREET_2, W_CITY, W_STATE,
+                    W_ZIP, D_STREET_1, D_STREET_2, D_CITY, D_STATE, D_ZIP, c_w_id, c_d_id, c_id, C_FIRST, C_MIDDLE, C_LAST, C_STREET_1, C_STREET_2,
+                    C_CITY, C_STATE, C_ZIP, C_PHONE, C_SINCE, C_CREDIT, C_CREDIT_LIM, C_DISCOUNT, C_BALANCE, PAYMENT));
+//            stmt.execute(String.format("UPDATE Warehouse SET W_YTD = W_YTD + %f WHERE W_ID = %d RETURNING W_STREET_1, W_STREET_2, W_CITY, W_STATE, W_ZIP", PAYMENT, C_W_ID));
+//            stmt.execute(String.format("UPDATE District SET D_YTD = D_YTD + %f WHERE D_W_ID = %d AND D_ID = %d RETURNING D_STREET_1, D_STREET_2, D_CITY, D_STATE, D_ZIP", PAYMENT, C_W_ID, C_D_ID));
+//            stmt.execute(String.format("UPDATE Customer SET C_BALANCE = C_BALANCE - %f, C_YTD_PAYMENT = C_YTD_PAYMENT + %f, C_PAYMENT_CNT = C_PAYMENT_CNT + 1 WHERE C_W_ID = %d " +
+//                                        "AND C_D_ID = %d AND C_ID = %d " +
+//                                        "RETURNING C_W_ID, C_D_ID, C_ID, C_FIRST, C_MIDDLE, C_LAST, C_STREET_1, C_STREET_2, C_CITY, " +
+//                                        "C_STATE, C_ZIP, C_PHONE, C_SINCE, C_CREDIT,C_CREDIT_LIM, C_DISCOUNT, C_BALANCE", PAYMENT, PAYMENT, C_W_ID, C_D_ID, C_ID));
             // example
 //            String SQL1 = "update District set D_NEXT_O_ID = D_NEXT_O_ID + 1 where D_W_ID = ? and D_ID = ? returning D_NEXT_O_ID;";
 //            statement = conn.prepareStatement(SQL1);
@@ -38,25 +108,6 @@ public class PaymentTransaction extends Transaction {
 //            statement.setInt(2, D_ID);
 //            rs = statement.executeQuery();
             // example end
-//           logger.log(Level.FINE, stmt.getResultSet().getString(0));
-//            stmt.execute(String.format("UPDATE Customer SET C_YTD_PAYMENT = C_YTD_PAYMENT + %f WHERE C_W_ID = %d AND C_D_ID = %d AND C_ID = %d", PAYMENT, C_W_ID, C_D_ID, C_ID));
-//            stmt.execute(String.format("UPDATE Customer SET C_PAYMENT_CNT = C_PAYMENT_CNT + %d WHERE C_W_ID = %d AND C_D_ID = %d AND C_ID = %d", 1, C_W_ID, C_D_ID, C_ID));
-//            ResultSet rs = stmt.executeQuery(String.format("select " +
-//                    "t1.C_W_ID,t1.C_D_ID,t1.C_ID, " +
-//                    "t1.C_FIRST, t1.C_MIDDLE, t1.C_LAST, " +
-//                    "t1.C_STREET_1, t1.C_STREET_2, t1.C_CITY, t1.C_STATE, t1.C_ZIP, " +
-//                    "t1.C_PHONE, t1.C_SINCE, t1.C_CREDIT, " +
-//                    "t1.C_CREDIT_LIM, t1.C_DISCOUNT, t1.C_BALANCE," +
-//                    "t2.W_STREET_1, t2.W_STREET_2, t2.W_CITY, t2.W_STATE, t2.W_ZIP, " +
-//                    "t3.D_STREET_1, t3.D_STREET_2, t3.D_CITY, t3.D_STATE, t3.D_ZIP, " +
-//                    "%f " +
-//                    "FROM Customer t1 " +
-//                    "left join " +
-//                    "Warehouse t2 " +
-//                    "on t1.C_W_ID=t2.W_ID " +
-//                    "left join District t3 " +
-//                    "on t1.C_D_ID=t3.D_ID " +
-//                    "wHERE t1.C_W_ID=%d AND t1.C_D_ID=%d AND t1.C_ID=%d", PAYMENT, C_W_ID, C_D_ID, C_ID));
            logger.log(Level.FINE, "Payment Transaction正在执行中...");
 //            while (rs.next()) {
 //               logger.log(Level.FINE, "C_W_ID: " + rs.getInt(1) + "C_D_ID: " + rs.getInt(2) + "C_ID" + rs.getInt(3));
@@ -80,6 +131,8 @@ public class PaymentTransaction extends Transaction {
             conn.setAutoCommit(true);
         }
     }
+
+
 
     protected void YCQLExecute(CqlSession session, Logger logger) {
        logger.log(Level.FINE, "执行payment cql中..");
@@ -131,12 +184,78 @@ public class PaymentTransaction extends Transaction {
                         tmp_ytd_payment, row1.getInt("C_payment_cnt"), row1.getInt("C_delivery_cnt")+1));
                 session.execute(stmt4);
             }
-//            String fourth_cql = String.format("UPDATE dbycql.Customer SET C_BALANCE=%f, C_YTD_PAYMENT=%f, C_PAYMENT_CNT=C_PAYMENT_CNT+1 WHERE C_W_ID=%d AND C_D_ID=%d AND C_ID=%d", tmp_payment, tmp_ytd_payment, C_W_ID, C_D_ID, C_ID);
-//            SimpleStatement simpleStatement = SimpleStatement.builder(fourth_cql)
-//                    .setExecutionProfileName("oltp")
-//                    .build();
-//            session.execute(simpleStatement);
         }
+        // cql4
+        String W_STREET_1 = null, W_STREET_2 = null, W_CITY = null, W_STATE = null, W_ZIP = null;
+        String D_STREET_1 = null, D_STREET_2 = null, D_CITY = null, D_STATE = null, D_ZIP = null;
+        int c_w_id = 0, c_d_id = 0, c_id = 0;
+        String C_FIRST = null, C_MIDDLE = null, C_LAST = null, C_STREET_1 = null, C_STREET_2 = null, C_CITY = null, C_STATE = null, C_ZIP = null, C_PHONE = null, C_CREDIT = null;
+        String C_SINCE = null;
+        float C_CREDIT_LIM = 0, C_DISCOUNT = 0, C_BALANCE  = 0;
+        stmt = SimpleStatement.newInstance(String.format("select\n" +
+                "            W_STREET_1, W_STREET_2, W_CITY, W_STATE, W_ZIP\n" +
+                "    from dbycql.warehouse\n" +
+                "    where W_ID=%d", C_W_ID));
+        com.datastax.oss.driver.api.core.cql.ResultSet rs5 = session.execute(stmt);
+        Iterator<Row> rs5Iterator = rs5.iterator();
+        if (rs5Iterator.hasNext()) {
+            Row row = rs5Iterator.next();
+            W_STREET_1 = row.getString(0);
+            W_STREET_2 = row.getString(1);
+            W_CITY = row.getString(2);
+            W_STATE = row.getString(3);
+            W_ZIP = row.getString(4);
+        }
+        stmt = SimpleStatement.newInstance(String.format("select\n" +
+                "            C_W_ID,C_D_ID,C_ID,\n" +
+                "            C_FIRST, C_MIDDLE, C_LAST,\n" +
+                "            C_STREET_1, C_STREET_2, C_CITY, C_STATE, C_ZIP,\n" +
+                "            C_PHONE, C_SINCE, C_CREDIT,\n" +
+                "            C_CREDIT_LIM, C_DISCOUNT, C_BALANCE\n" +
+                "    from dbycql.Customer\n" +
+                "    where C_W_ID=%d AND C_D_ID=%d AND C_ID=%d", C_W_ID, C_D_ID, C_ID));
+        com.datastax.oss.driver.api.core.cql.ResultSet rs6 = session.execute(stmt);
+        Iterator<Row> rs6Iterator = rs6.iterator();
+        if (rs6Iterator.hasNext()) {
+            Row row = rs6Iterator.next();
+            c_w_id = row.getInt(0);
+            c_d_id = row.getInt(1);
+            c_id = row.getInt(2);
+            C_FIRST = row.getString(3);
+            C_MIDDLE = row.getString(4);
+            C_LAST = row.getString(5);
+            C_STREET_1 = row.getString(6);
+            C_STREET_2 = row.getString(7);
+            C_CITY = row.getString(8);
+            C_STATE = row.getString(9);
+            C_ZIP = row.getString(10);
+            C_PHONE = row.getString(11);
+            C_SINCE = Objects.requireNonNull(row.getLocalTime(12)).toString();
+            C_CREDIT = row.getString(13);
+            C_CREDIT_LIM = Objects.requireNonNull(row.getBigDecimal(14)).floatValue();
+            C_DISCOUNT = Objects.requireNonNull(row.getBigDecimal(15)).floatValue();
+            C_BALANCE = Objects.requireNonNull(row.getBigDecimal(16)).floatValue();
+        }
+        stmt = SimpleStatement.newInstance(String.format("    select\n" +
+                "    D_STREET_1, D_STREET_2, D_CITY, D_STATE, D_ZIP from dbycql.district\n" +
+                "    where D_W_ID=%d AND D_ID=%d", C_W_ID, C_D_ID));
+        com.datastax.oss.driver.api.core.cql.ResultSet rs7 = session.execute(stmt);
+        Iterator<Row> rs7Iterator = rs7.iterator();
+        if (rs7Iterator.hasNext()) {
+            Row row = rs7Iterator.next();
+            D_STREET_1 = row.getString(0);
+            D_STREET_2 = row.getString(1);
+            D_CITY = row.getString(2);
+            D_STATE = row.getString(3);
+            D_ZIP = row.getString(4);
+        }
+        logger.log(Level.FINE, String.format("W_STREET_1 = %s, W_STREET_2 = %s, W_CITY = %s, W_STATE = %s, W_ZIP = %s, " +
+                        "D_STREET_1 = %s, D_STREET_2 = %s, D_CITY = %s, D_STATE = %s, D_ZIP = %s, " +
+                        "c_w_id = %d, c_d_id = %d, c_id = %d, C_FIRST = %s, C_MIDDLE = %s, C_LAST = %s," +
+                        "C_STREET_1 = %s, C_STREET_2 = %s, C_CITY = %s, C_STATE = %s, C_ZIP = %s, C_PHONE = %s, C_SINCE = %s," +
+                        "C_CREDIT = %s, C_CREDIT_LIM = %f, C_DISCOUNT = %f, C_BALANCE = %f, PAYMENT = %f", W_STREET_1, W_STREET_2, W_CITY, W_STATE,
+                W_ZIP, D_STREET_1, D_STREET_2, D_CITY, D_STATE, D_ZIP, c_w_id, c_d_id, c_id, C_FIRST, C_MIDDLE, C_LAST, C_STREET_1, C_STREET_2,
+                C_CITY, C_STATE, C_ZIP, C_PHONE, C_SINCE, C_CREDIT, C_CREDIT_LIM, C_DISCOUNT, C_BALANCE, PAYMENT));
     }
 
     public int getC_W_ID() {
