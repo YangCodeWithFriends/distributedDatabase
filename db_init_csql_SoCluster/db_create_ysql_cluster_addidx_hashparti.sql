@@ -1,12 +1,18 @@
 
 DROP DATABASE IF EXISTS dbysql;
 -- Colocated Tables 
-CREATE DATABASE dbysql WITH colocated = true;
+CREATE DATABASE dbysql;
+-- CREATE DATABASE dbysql WITH colocated = true;
 -- show all tables
+-- \dt;
+
+-- USE dbysql5424J; MySQL 
 \c dbysql;
 
+-- data path: /home/stuproj/cs4224j/project_data/data_files/
 
 -- 因为用了range, parittion, 所以也用range sharding
+
 --  5 entity tables --
 DROP TABLE if EXISTS warehouse CASCADE;
 CREATE TABLE warehouse(
@@ -19,9 +25,9 @@ CREATE TABLE warehouse(
   W_zip char(9) NOT NULL,
   W_tax decimal(4,4) NOT NULL,
   W_ytd decimal(12,2) NOT NULL,
-  PRIMARY KEY(W_id) -- yugabyte distrbuted table sharding
-) 
-WITH (colocated = true);
+  
+  PRIMARY KEY(W_id HASH) -- yugabyte distrbuted table sharding
+);
 
 
 \copy warehouse from '/home/stuproj/cs4224j/project_data/data_files/warehouse.csv' WITH (FORMAT CSV, NULL 'null');
@@ -47,27 +53,11 @@ CREATE TABLE district (
   D_tax decimal(4,4) NOT NULL,
   D_ytd decimal(12,2) NOT NULL,
   D_next_O_id int NOT NULL,
-  PRIMARY KEY(D_W_id, D_id)
-)
-WITH (colocated = true);
+  PRIMARY KEY(D_W_id HASH, D_id)
+);
+
 
 \copy district from '/home/stuproj/cs4224j/project_data/data_files/district.csv' WITH (FORMAT CSV, NULL 'null');
-
--- 1e5
-DROP TABLE if EXISTS item CASCADE;
-CREATE TABLE item (
-  I_id int NOT NULL,
-  I_name varchar(24) NOT NULL,
-  i_price decimal(5,2) NOT NULL,
-  -- I_im_id int NOT NULL,
-  -- I_data varchar(50) NOT NULL
-  PRIMARY KEY(I_id)
-)
-WITH (colocated = true)
-;
--- insert from csv
-\copy item from '/home/stuproj/cs4224j/project_data/data_files/item_new.csv' WITH (FORMAT CSV, NULL 'null');
-select count(*) as no_imported_Item from item;
 
 
 -- 3e5
@@ -95,22 +85,23 @@ CREATE TABLE customer (
   C_ytd_payment float NOT NULL,
   C_payment_cnt int NOT NULL,
   C_delivery_cnt int NOT NULL,
+  -- C_data varchar(500) NOT NULL
   -- FOREIGN KEY (C_W_id, C_D_id) REFERENCES district(D_W_id, D_id),
-  -- PRIMARY KEY ((C_W_id, C_D_id, C_id))
-  PRIMARY KEY (C_W_id ASC, C_D_id, C_id)
+  -- PRIMARY KEY ((C_W_id, C_D_id, C_id) HASH)
+  PRIMARY KEY (C_W_id HASH, C_D_id, C_id)
 )
-PARTITION BY RANGE (C_W_id);
+PARTITION BY HASH (C_W_id);
 
 CREATE TABLE customer_pt1 PARTITION OF customer
-  FOR VALUES FROM (1) TO (3);
+  FOR VALUES WITH (MODULUS 5,REMAINDER 0);
 CREATE TABLE customer_pt2 PARTITION OF customer
-  FOR VALUES FROM (3) TO (5);
+  FOR VALUES WITH (MODULUS 5, REMAINDER 1);
 CREATE TABLE customer_pt3 PARTITION OF customer
-  FOR VALUES FROM (5) TO (7);
+  FOR VALUES WITH (MODULUS 5, REMAINDER 2);
 CREATE TABLE customer_pt4 PARTITION OF customer
-  FOR VALUES FROM (7) TO (9);
+  FOR VALUES WITH (MODULUS 5, REMAINDER 3);
 CREATE TABLE customer_pt5 PARTITION OF customer
-  FOR VALUES FROM (9) TO (11);
+  FOR VALUES WITH (MODULUS 5, REMAINDER 4);
 
 
 -- insert from csv
@@ -118,8 +109,6 @@ CREATE TABLE customer_pt5 PARTITION OF customer
 select count(*) as no_imported_customers from customer;
 
 
--- idx 
--- drop index if exists customer_idx;
 
 
 -- Note: order is a keyword in SQL due to "order by"
@@ -135,24 +124,22 @@ CREATE TABLE orders (
   O_OL_cnt decimal(2,0) NOT NULL,
   O_all_local decimal(1,0) NOT NULL,
   O_entry_d timestamp NOT NULL,
-  -- PRIMARY KEY((O_W_id, O_D_id, O_id))
-  PRIMARY KEY(O_W_id ASC, O_D_id, O_id)
+  -- PRIMARY KEY((O_W_id, O_D_id, O_id) HASH)
+  PRIMARY KEY(O_W_id HASH, O_D_id, O_id)
   -- ,
   -- FOREIGN KEY (O_W_id, O_D_id, O_C_id) REFERENCES customer(C_W_id, C_D_id, C_id)
-)
--- ;
-PARTITION BY RANGE (O_W_id);
+) PARTITION BY HASH (O_W_id);
 
 CREATE TABLE orders_pt1 PARTITION OF orders
-  FOR VALUES FROM (1) TO (3);
+  FOR VALUES WITH (MODULUS 5, REMAINDER 0);
 CREATE TABLE orders_pt2 PARTITION OF orders
-  FOR VALUES FROM (3) TO (5);
+  FOR VALUES WITH (MODULUS 5, REMAINDER 1);
 CREATE TABLE orders_pt3 PARTITION OF orders
-  FOR VALUES FROM (5) TO (7);
+  FOR VALUES WITH (MODULUS 5, REMAINDER 2);
 CREATE TABLE orders_pt4 PARTITION OF orders
-  FOR VALUES FROM (7) TO (9);
+  FOR VALUES WITH (MODULUS 5, REMAINDER 3);
 CREATE TABLE orders_pt5 PARTITION OF orders
-  FOR VALUES FROM (9) TO (11);
+  FOR VALUES WITH (MODULUS 5, REMAINDER 4);
 
 
 -- insert from csv
@@ -162,6 +149,20 @@ select count(*) as no_imported_orders from orders;
 -- idx 
 -- drop index if exists customer_idx;
 
+
+-- 1e5
+DROP TABLE if EXISTS item CASCADE;
+CREATE TABLE item (
+  I_id int NOT NULL,
+  I_name varchar(24) NOT NULL,
+  i_price decimal(5,2) NOT NULL,
+  -- I_im_id int NOT NULL,
+  -- I_data varchar(50) NOT NULL
+  PRIMARY KEY(I_id HASH)
+);
+-- insert from csv
+\copy item from '/home/stuproj/cs4224j/project_data/data_files/item_new.csv' WITH (FORMAT CSV, NULL 'null');
+select count(*) as no_imported_Item from item;
 
 -- idx 
 -- drop index if exists customer_idx;
@@ -178,21 +179,21 @@ CREATE TABLE stock (
   S_ytd decimal(8,2) NOT NULL,
   S_order_cnt int NOT NULL,
   S_remote_cnt int NOT NULL,
-  -- PRIMARY KEY((S_W_id, S_I_id))
-  PRIMARY KEY(S_W_id ASC, S_I_id)
-)
--- ; 
-PARTITION BY RANGE (S_W_id);
+  -- PRIMARY KEY((S_W_id, S_I_id) HASH)
+  PRIMARY KEY(S_W_id HASH, S_I_id)
+) 
+PARTITION BY HASH (S_W_id)
+;
 CREATE TABLE stock_pt1 PARTITION OF stock
-  FOR VALUES FROM (1) TO (3);
+  FOR VALUES WITH (MODULUS 5, REMAINDER 0);
 CREATE TABLE stock_pt2 PARTITION OF stock
-  FOR VALUES FROM (3) TO (5);
+  FOR VALUES WITH (MODULUS 5, REMAINDER 1);
 CREATE TABLE stock_pt3 PARTITION OF stock
-  FOR VALUES FROM (5) TO (7);
+  FOR VALUES WITH (MODULUS 5, REMAINDER 2);
 CREATE TABLE stock_pt4 PARTITION OF stock
-  FOR VALUES FROM (7) TO (9);
+  FOR VALUES WITH (MODULUS 5, REMAINDER 3);
 CREATE TABLE stock_pt5 PARTITION OF stock
-  FOR VALUES FROM (9) TO (11)  
+  FOR VALUES WITH (MODULUS 5, REMAINDER 4)  
 ;
 
 \copy stock from '/home/stuproj/cs4224j/project_data/data_files/stock_new.csv' WITH (FORMAT CSV, NULL 'null');
@@ -216,24 +217,22 @@ CREATE TABLE orderline (
   OL_supply_W_id int NOT NULL,
   OL_quantity decimal(2,0) NOT NULL,
   OL_dist_info char(24) NOT NULL,
-  -- PRIMARY KEY((OL_W_id, OL_D_id, OL_O_id, OL_number))
-  PRIMARY KEY(OL_W_id ASC, OL_D_id, OL_O_id, OL_number)
+  -- PRIMARY KEY((OL_W_id, OL_D_id, OL_O_id, OL_number) HASH)
+  PRIMARY KEY(OL_W_id HASH, OL_D_id, OL_O_id, OL_number)
   -- ,
   -- FOREIGN KEY (OL_W_id, OL_D_id, OL_O_id) REFERENCES orders(O_W_id, O_D_id, O_id)
-)
--- ;
-PARTITION BY RANGE (OL_W_id);
+) PARTITION BY HASH (OL_W_id);
 
 CREATE TABLE ol_pt1 PARTITION OF orderline
-  FOR VALUES FROM (1) TO (3);
+  FOR VALUES WITH (MODULUS 5, REMAINDER 0);
 CREATE TABLE ol_pt2 PARTITION OF orderline
-  FOR VALUES FROM (3) TO (5);
+  FOR VALUES WITH (MODULUS 5, REMAINDER 1);
 CREATE TABLE ol_pt3 PARTITION OF orderline
-  FOR VALUES FROM (5) TO (7);
+  FOR VALUES WITH (MODULUS 5, REMAINDER 2);
 CREATE TABLE ol_pt4 PARTITION OF orderline
-  FOR VALUES FROM (7) TO (9);
+  FOR VALUES WITH (MODULUS 5, REMAINDER 3);
 CREATE TABLE ol_pt5 PARTITION OF orderline
-  FOR VALUES FROM (9) TO (11);
+  FOR VALUES WITH (MODULUS 5, REMAINDER 4);
 
 \copy orderline from '/home/stuproj/cs4224j/project_data/data_files/order-line.csv' WITH (FORMAT CSV, NULL 'null');
 select count(*) as no_imported_OLine from "orderline";
@@ -252,21 +251,21 @@ create table customer_item(
     CI_C_ID int, 
     CI_O_ID int, 
     CI_I_ID int,
-    primary key(CI_W_ID ASC, CI_D_ID, CI_C_ID, CI_O_ID, CI_I_ID) 
+    primary key(CI_W_ID HASH, CI_D_ID, CI_C_ID, CI_O_ID, CI_I_ID) 
 )
 -- ;
-PARTITION BY RANGE (CI_W_id);
+PARTITION BY HASH (CI_W_id);
 
 CREATE TABLE ci_pt1 PARTITION OF customer_item
-  FOR VALUES FROM (1) TO (3);
+  FOR VALUES WITH (MODULUS 5, REMAINDER 0);
 CREATE TABLE ci_pt2 PARTITION OF customer_item
-  FOR VALUES FROM (3) TO (5);
+  FOR VALUES WITH (MODULUS 5, REMAINDER 1);
 CREATE TABLE ci_pt3 PARTITION OF customer_item
-  FOR VALUES FROM (5) TO (7);
+  FOR VALUES WITH (MODULUS 5, REMAINDER 2);
 CREATE TABLE ci_pt4 PARTITION OF customer_item
-  FOR VALUES FROM (7) TO (9);
+  FOR VALUES WITH (MODULUS 5, REMAINDER 3);
 CREATE TABLE ci_pt5 PARTITION OF customer_item
-  FOR VALUES FROM (9) TO (11)
+  FOR VALUES WITH (MODULUS 5, REMAINDER 4)
 ;
 
 \copy customer_item from '/home/stuproj/cs4224j/project_data/data_files/customer_item.csv' WITH (FORMAT CSV, NULL 'null');
@@ -286,7 +285,7 @@ create table new_order_info (
     NO_I_ID int NOT NULL, 
     NO_SUPPLY_W_ID int NOT NULL, 
     NO_QUANTITY decimal(2,0) NOT NULL, 
-    primary key (NO_O_ID, NO_N, NO_W_ID, NO_D_ID, NO_C_ID)
+    primary key (NO_O_ID HASH, NO_N, NO_W_ID, NO_D_ID, NO_C_ID)
 );
 
 

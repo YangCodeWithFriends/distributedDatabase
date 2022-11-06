@@ -53,68 +53,61 @@ tar xvfz yugabyte-2.14.1.0-b36-linux-x86_64.tar.gz && cd yugabyte-2.14.1.0/
 
 There are several cluster-related <u>bash scripts</u> for different use cases located **in our repositoy** in one of cluster deployment file paths `gj2-ram/` ("gj2-ram" means this cluster is _group j_'s 2nd cluster using non-default ports deployed at ` /mnt/ramdisk/`). First you should change directory into the script path by `cd gj2-ram`:
 
-- The 5-server yugabyte cluster, with full SQL/CQL databases, can be newly built from scratch with just one command `./build_new_gj2cluster.sh`. Then to check cluster status, you can do either of the 2:
+- The 5-server yugabyte cluster, with full SQL/CQL databases, can be newly built from scratch with below steps separately:
 
-  1. go to each server by `ssh` to check if the yb-master and yb-tserver processes are running by the command `ps -eaf | grep yb`, or
+  1. To build and start a cluster, then run `./start_cluster_gj2.sh`. For the status check, go as mentioned just above.
 
-  2. check the yugabyte web server monitoring UI in your **browser** at the url `http://xcnd21.comp.nus.edu.sg:7300/` (if doesn't work, replace `xncd21` in the url to any other serverID among [xncd20, xncd22, xncd23, xncd24] ). If all servers are smoothly started, the number of nodes in the UI should be 5 as below.
      ![Cluster UI](./src/main/resources/asset/cluster_UI.png)
 
-- Also you can initialize a 5-server cluster with all databases step by step, try below steps separately:
+  2. If some server fails to start a ybmaster/tserver process, you have to start it at the node(s) **manually**:
 
-  1.  if you want to only start cluster first, then run `./start_cluster_gj2.sh`. For the status check, go as mentioned just above.
+     ```bash
+     # On xcnd20.comp.nus.edu.sg
+     ssh cs4224j@xcnd20.comp.nus.edu.sg
+     # and/or start a ybmaster
+     cd ~/yugabyte-2.14.1.0/bin && ./yb-master --flagfile 2ms20.conf >& /mnt/ramdisk/gj2/disk1/yb-master.out &
+     # and/or start a tserver
+     cd ~/yugabyte-2.14.1.0/bin && ./yb-tserver --flagfile 2ts20.conf >& /mnt/ramdisk/gj2/disk1/yb-tserver.out &
+     
+     # On xcnd21.comp.nus.edu.sg
+     ssh cs4224j@xcnd21.comp.nus.edu.sg
+     # and/or start a ybmaster
+     cd ~/yugabyte-2.14.1.0/bin && ./yb-master --flagfile 2ms21.conf >& /mnt/ramdisk/gj2/disk1/yb-master.out &
+     # and/or start a tserver
+     cd ~/yugabyte-2.14.1.0/bin && ./yb-tserver --flagfile 2ts21.conf >& /mnt/ramdisk/gj2/disk1/yb-tserver.out &
+     
+     # On xcnd22.comp.nus.edu.sg
+     ssh cs4224j@xcnd22.comp.nus.edu.sg
+     # and/or start a ybmaster
+     cd ~/yugabyte-2.14.1.0/bin && ./yb-master --flagfile 2ms22.conf >& /mnt/ramdisk/gj2/disk1/yb-master.out &
+     # and/or start a tserver
+     cd ~/yugabyte-2.14.1.0/bin && ./yb-tserver --flagfile 2ts22.conf >& /mnt/ramdisk/gj2/disk1/yb-tserver.out &
+     
+     # On xcnd23.comp.nus.edu.sg
+     ssh cs4224j@xcnd23.comp.nus.edu.sg
+     # and/or start a ybmaster
+     cd ~/yugabyte-2.14.1.0/bin && ./yb-master --flagfile 2ms23.conf >& /mnt/ramdisk/gj2/disk1/yb-master.out &
+     # and/or start a tserver
+     cd ~/yugabyte-2.14.1.0/bin && ./yb-tserver --flagfile 2ts23.conf >& /mnt/ramdisk/gj2/disk1/yb-tserver.out &
+     
+     ssh cs4224j@xcnd24.comp.nus.edu.sg
+     # and/or start a ybmaster
+     cd ~/yugabyte-2.14.1.0/bin && ./yb-master --flagfile 2ms24.conf >& /mnt/ramdisk/gj2/disk1/yb-master.out &
+     # and/or start a tserver
+     cd ~/yugabyte-2.14.1.0/bin && ./yb-tserver --flagfile 2ts24.conf >& /mnt/ramdisk/gj2/disk1/yb-tserver.out &
+     ```
 
-  2.  If some server fails to start a ybmaster/tserver process, you have to start it at the node(s) **manually**:
+  3. If the cluster has already started with at least 3 master servers and **at least 3 tservers** (go into the **Tablet Servers** on the left to see how many tservers are alive as below),
 
-      ```bash
-      # On xcnd20.comp.nus.edu.sg
-      ssh cs4224j@xcnd20.comp.nus.edu.sg
-      # and/or start a ybmaster
-      cd ~/yugabyte-2.14.1.0/bin && ./yb-master --flagfile 2ms20.conf >& /mnt/ramdisk/gj2/disk1/yb-master.out &
-      # and/or start a tserver
-      cd ~/yugabyte-2.14.1.0/bin && ./yb-tserver --flagfile 2ts20.conf >& /mnt/ramdisk/gj2/disk1/yb-tserver.out &
+     ![Tablet Server Status](./src/main/resources/asset/tablet_servers.png)
 
-      # On xcnd21.comp.nus.edu.sg
-      ssh cs4224j@xcnd21.comp.nus.edu.sg
-      # and/or start a ybmaster
-      cd ~/yugabyte-2.14.1.0/bin && ./yb-master --flagfile 2ms21.conf >& /mnt/ramdisk/gj2/disk1/yb-master.out &
-      # and/or start a tserver
-      cd ~/yugabyte-2.14.1.0/bin && ./yb-tserver --flagfile 2ts21.conf >& /mnt/ramdisk/gj2/disk1/yb-tserver.out &
-
-      # On xcnd22.comp.nus.edu.sg
-      ssh cs4224j@xcnd22.comp.nus.edu.sg
-      # and/or start a ybmaster
-      cd ~/yugabyte-2.14.1.0/bin && ./yb-master --flagfile 2ms22.conf >& /mnt/ramdisk/gj2/disk1/yb-master.out &
-      # and/or start a tserver
-      cd ~/yugabyte-2.14.1.0/bin && ./yb-tserver --flagfile 2ts22.conf >& /mnt/ramdisk/gj2/disk1/yb-tserver.out &
-
-      # On xcnd23.comp.nus.edu.sg
-      ssh cs4224j@xcnd23.comp.nus.edu.sg
-      # and/or start a ybmaster
-      cd ~/yugabyte-2.14.1.0/bin && ./yb-master --flagfile 2ms23.conf >& /mnt/ramdisk/gj2/disk1/yb-master.out &
-      # and/or start a tserver
-      cd ~/yugabyte-2.14.1.0/bin && ./yb-tserver --flagfile 2ts23.conf >& /mnt/ramdisk/gj2/disk1/yb-tserver.out &
-
-      ssh cs4224j@xcnd24.comp.nus.edu.sg
-      # and/or start a ybmaster
-      cd ~/yugabyte-2.14.1.0/bin && ./yb-master --flagfile 2ms24.conf >& /mnt/ramdisk/gj2/disk1/yb-master.out &
-      # and/or start a tserver
-      cd ~/yugabyte-2.14.1.0/bin && ./yb-tserver --flagfile 2ts24.conf >& /mnt/ramdisk/gj2/disk1/yb-tserver.out &
-      ```
-
-  3.  If the cluster has already started with at least 3 master servers and **at least 3 tservers** (go into the **Tablet Servers** on the left to see how many tservers are alive as below),
-
-      ![Tablet Server Status](./src/main/resources/asset/tablet_servers.png)
-
-      then you can then build database by `./initcql_gj2.sh` for a YCQL database and `./initsql_gj2.sh` for a YSQL database. The console will show processes of importing each table/keyspace like below.
+     then you can then build database by `./initcql_gj2.sh` for a YCQL database and `./initsql_gj2.sh` for a YSQL database. The console will show processes of importing each table/keyspace like below.
 
 - When to the end of usage, to terminate the cluster, try `./end_cluster_gj2.sh`.
 
 - To delete a cluster completely by removing all the cluster-related files, try `./rm_files_gj2.sh`.
 
 ## 4. Project Files(in this repo)
-
-
 
 ### 1. Java Program
 
