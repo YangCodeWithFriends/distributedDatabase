@@ -10,8 +10,6 @@ To setup, consider this [SOC VPN Setup Guide](https://dochub.comp.nus.edu.sg/cf/
 
 As required, we use `ssh` to access the 5 SoC servers. To avoid entering password repeatedly when simultaniously sending instructions to servers every time, please configure the **SSH public key authentication** to the 5 servers using the following steps.
 
-<!--改写自邓哥-->
-
 To obtain ssh connection to 5 servers, on your **local machine**, enter `~/.ssh`:
 
 ```bash
@@ -55,19 +53,18 @@ tar xvfz yugabyte-2.14.1.0-b36-linux-x86_64.tar.gz && cd yugabyte-2.14.1.0/
 
 There are several cluster-related <u>bash scripts</u> for different use case located **in our repositoy** path `gj2-ram/`. First you should change directory into the script path by `cd gj2-ram`:
 
-- The **5-server yugabyte cluster, with all databases, intialized in just <u>one</u> step** can be newly built from the scratch with the command `./build_new_gj2cluster.sh`. Then to check cluster status, you can:
+- The 5-server yugabyte cluster, with full SQL/CQL databases, can be newly built from scratch with just one command `./build_new_gj2cluster.sh`. Then to check cluster status, you can do either of the 2:
 
   1. go to each server by `ssh` to check if the yb-master and yb-tserver processes are running by the command `ps -eaf | grep yb`, or
 
   2. check the yugabyte web server monitoring UI in your **browser** at the url `http://xcnd21.comp.nus.edu.sg:7300/` (if doesn't work, replace `xncd21` in the url to any other serverID among [xncd20, xncd22, xncd23, xncd24] ). If all servers are smoothly started, the number of nodes in the UI should be 5 as below.
-
-     ![cluster monitoring UI](https://tva1.sinaimg.cn/large/008vxvgGgy1h7u63xyb0aj31k90u0gp1.jpg)
+  ![Cluster UI](./src/main/resources/asset/cluster_UI.png)
 
 - Also you can initialize a 5-server cluster with all databases step by step, try below steps separately:
 
   1.  if you want to only start cluster first, then run `./start_cluster_gj2.sh`. For the status check, go as mentioned just above.
 
-  1.  If some server fails to start a ybmaster/tserver process, you have to start it at the node(s) **manually**:
+  2.  If some server fails to start a ybmaster/tserver process, you have to start it at the node(s) **manually**:
 
       ```bash
       # On xcnd20.comp.nus.edu.sg
@@ -105,21 +102,51 @@ There are several cluster-related <u>bash scripts</u> for different use case loc
       cd ~/yugabyte-2.14.1.0/bin && ./yb-tserver --flagfile 2ts24.conf >& /mnt/ramdisk/gj2/disk1/yb-tserver.out &
       ```
 
-  1. If the cluster has already started with at least 3 master servers and **at least 3 tservers** (go into the **Tablet Servers** on the left to see how many tservers are alive as below),
+  3. If the cluster has already started with at least 3 master servers and **at least 3 tservers** (go into the **Tablet Servers** on the left to see how many tservers are alive as below),
 
-     ![Tablet Server Status](https://tva1.sinaimg.cn/large/008vxvgGgy1h7u7008yafj31b70u0gpq.jpg)
+     ![Tablet Server Status](./src/main/resources/asset/tablet_servers.png)
 
      then you can then build database by `./initcql_gj2.sh` for a YCQL database and `./initsql_gj2.sh` for a YSQL database. The console will show processes of importing each table/keyspace like below.
 
      
 
-  1.  When to the end of usage, to terminate the cluster, try `./end_cluster_gj2.sh`.
+- When to the end of usage, to terminate the cluster, try `./end_cluster_gj2.sh`.
 
 - To delete a cluster completely by removing all the cluster-related files, try `./rm_files_gj2.sh`.
 
-## Experiment Files(in this repo)
+## 4. Project Files(in this repo)
 
 TODO 阳哥介绍下 java 的运行程序文件放在 repo 的哪, **分别干啥的 怎么运行 **
+### 1. Java Program
+We have several components for the whole programe at path `src/main/java`.
+
+| Class Object        | Purpose                                                      |
+| ------------------- | ------------------------------------------------------------ |
+| SampleApp.java      | Entry point is Main method. This is the main thread, then 4 worker thread will be launched to execute transactions. |
+| Statistics.java     | Record metrics for each of 8 transactions, such as total executing time, max, min, and average time for executed transactions. |
+| ExecuteManager.java | Responsible for executing transactions for both YSQL and YCQL, and reporting statistic metrics. |
+| DBState.java        | Responsible for querying database state only.                |
+| DataSource.java     | Responsible for connecting to YSQL or YCQL database using corresponding `JDBC` driver. |
+| Transaction.java    | A template abstract class for transactions. It defines a template method for all transactions. This is the usage of `Template Method` design patterns, see more in [Template Method Toturial](https://refactoring.guru/design-patterns/template-method) |
+| transactionImpl     | Implementations for each transaction types for both YSQL and YCQL. |
+
+
+
+## 2. Configuration file
+
+Our configuration files are located at `src/main/resources`
+
+
+
+| Directory Name             | Purpose                     |
+| -------------------------- | --------------------------- |
+| src/main/resources/scripts | Entry point is Main method. |
+|                            |                             |
+|                            |                             |
+|                            |                             |
+
+---
+
 
 #### Compile `cassandra.jar` and `cockroachdb.jar`
 
