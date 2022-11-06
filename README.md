@@ -18,11 +18,11 @@ cd ~/.ssh && ssh-keygen
 # keep typing 'enter' until the key pair is generated
 ```
 
-Given user `cs4224j`'s password `+rW8FLp3`, now copy the generated ssh public key into each server by the below command and repeat this command **for xcnd21 to xcnd 24**.
+Given user `cs4224j`'s password `xxxx`, now copy the generated ssh public key into each server by the below command and repeat this command **for xcnd21 to xcnd 24**.
 
 ```bash
 ssh-copy-id cs4224j@xcnd20.comp.nus.edu.sg
-# and type 'yes' or the user password `+rW8FLp3` when see according messages
+# and type 'yes' or the user password `xxxx` when see according messages
 ```
 
 Now you wil not enter password repeatedly when use ssh to connect any server.
