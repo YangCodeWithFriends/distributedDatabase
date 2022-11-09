@@ -68,28 +68,28 @@ There are several cluster-related <u>bash scripts</u> for different use cases lo
      cd ~/yugabyte-2.14.1.0/bin && ./yb-master --flagfile 2ms20.conf >& /mnt/ramdisk/gj2/disk1/yb-master.out &
      # and/or start a tserver
      cd ~/yugabyte-2.14.1.0/bin && ./yb-tserver --flagfile 2ts20.conf >& /mnt/ramdisk/gj2/disk1/yb-tserver.out &
-     
+
      # On xcnd21.comp.nus.edu.sg
      ssh cs4224j@xcnd21.comp.nus.edu.sg
      # and/or start a ybmaster
      cd ~/yugabyte-2.14.1.0/bin && ./yb-master --flagfile 2ms21.conf >& /mnt/ramdisk/gj2/disk1/yb-master.out &
      # and/or start a tserver
      cd ~/yugabyte-2.14.1.0/bin && ./yb-tserver --flagfile 2ts21.conf >& /mnt/ramdisk/gj2/disk1/yb-tserver.out &
-     
+
      # On xcnd22.comp.nus.edu.sg
      ssh cs4224j@xcnd22.comp.nus.edu.sg
      # and/or start a ybmaster
      cd ~/yugabyte-2.14.1.0/bin && ./yb-master --flagfile 2ms22.conf >& /mnt/ramdisk/gj2/disk1/yb-master.out &
      # and/or start a tserver
      cd ~/yugabyte-2.14.1.0/bin && ./yb-tserver --flagfile 2ts22.conf >& /mnt/ramdisk/gj2/disk1/yb-tserver.out &
-     
+
      # On xcnd23.comp.nus.edu.sg
      ssh cs4224j@xcnd23.comp.nus.edu.sg
      # and/or start a ybmaster
      cd ~/yugabyte-2.14.1.0/bin && ./yb-master --flagfile 2ms23.conf >& /mnt/ramdisk/gj2/disk1/yb-master.out &
      # and/or start a tserver
      cd ~/yugabyte-2.14.1.0/bin && ./yb-tserver --flagfile 2ts23.conf >& /mnt/ramdisk/gj2/disk1/yb-tserver.out &
-     
+
      ssh cs4224j@xcnd24.comp.nus.edu.sg
      # and/or start a ybmaster
      cd ~/yugabyte-2.14.1.0/bin && ./yb-master --flagfile 2ms24.conf >& /mnt/ramdisk/gj2/disk1/yb-master.out &
@@ -101,7 +101,7 @@ There are several cluster-related <u>bash scripts</u> for different use cases lo
 
      ![Tablet Server Status](./src/main/resources/asset/tablet_servers.png)
 
-     then you can then build database by `./initcql_gj2.sh 241` for a YCQL database and `./initsql_gj2.sh 243` for a YSQL database where 241 or 243 can be replace with [239, 240, 241, 242, 243] as long as the selected tsever in the figure above **is running**. Then the console will show some processes of importing each table/keyspace like below.
+     then you can then build database by `./initcql_gj2.sh 241` (or `./initsql_gj2_parti.sh 241` for database with partitioning) or for a YCQL database and `./initsql_gj2.sh 243` for a YSQL database where 241 or 243 can be replace with [239, 240, 241, 242, 243] as long as the selected tsever in the figure above **is running**. Then the console will show some processes of importing each table/keyspace like below.
 
      ![Console when Creating a DataBase](https://tva1.sinaimg.cn/large/008vxvgGgy1h7vqdsseahj31f40n8jvf.jpg)
 
